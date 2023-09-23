@@ -1,0 +1,14 @@
+pandas
+openai
+tldextract
+OTXv2
+cfscrape
+requests
+pysocks
+ipwhois
+lxml
+pymongo
+tiktoken
+wordcloud
+gensim
+nltk
