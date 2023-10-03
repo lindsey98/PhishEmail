@@ -8,7 +8,3 @@ pysocks
 ipwhois
 lxml
 pymongo
-tiktoken
-wordcloud
-gensim
-nltk

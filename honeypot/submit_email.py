@@ -1,19 +1,21 @@
-import requests
-from xdriver.XDriver import XDriver
-from xdriver.xutils.Logger import Logger
-from xdriver.xutils.forms.Form import Form
-from mmocr.apis import MMOCRInferencer
-from xdriver.xutils.forms.SubmissionButtonLocator import SubmissionButtonLocator
-from xdriver.xutils.PhishIntentionWrapper import PhishIntentionWrapper
+from honeypot.web_utils.Logger import Logger
+from honeypot.web_utils.CustomDriver import CustomWebDriver
+from honeypot.web_utils.Form import Form
+from honeypot.web_utils.SubmissionButtonLocator import SubmissionButtonLocator
+from honeypot.web_utils.PhishIntentionWrapper import PhishIntentionWrapper
+from honeypot.web_utils.utils import *
 import time
-import logging
-import os
 import signal
 from tldextract import tldextract
 import subprocess
 import os
-from datetime import datetime, date
-from mongodb import get_all
+from honeypot.mongodb import get_all
+import logging
+# Suppress warning from urllib3
+logging.getLogger("urllib3").setLevel(logging.ERROR)
+# Suppress debug logs from selenium
+logging.getLogger("selenium").setLevel(logging.ERROR)
+logging.getLogger("PIL").setLevel(logging.ERROR)
 
 def handler(signum, frame):
     print("Signal received, shutting down...")
@@ -24,37 +26,24 @@ def handler(signum, frame):
 signal.signal(signal.SIGTERM, handler)
 signal.signal(signal.SIGINT, handler)
 
-def fetch_phish_data(url):
-    try:
-        response = requests.get(url)
-        response.raise_for_status()  # Raise an exception for HTTP errors
-        data = response.text.split('\n')  # Split by newlines to get a list
-        return data
-    except requests.RequestException as e:
-        print(f"An error occurred: {e}")
-        return []
-
-
 if __name__ == '__main__':
     openphish_feed_url = "https://openphish.com/feed.txt"
 
-    sleep_time = 5; timeout_time = 60
-    XDriver.set_headless()
-    XDriver.enable_proxy(port=7890) # remove this if you didnt set proxy
-    driver = XDriver.boot(chrome=True)
-    time.sleep(sleep_time)
+    timeout_time = 60
+    proxy_url = "127.0.0.1:7890"
+    driver = CustomWebDriver.boot(proxy_server=proxy_url)  # Using the proxy_url variable
+    time.sleep(3)
     driver.set_script_timeout(timeout_time / 2)
     driver.set_page_load_timeout(timeout_time)
     Logger.set_debug_on()
 
     # load phishintention, mmocr, button_locator_model
     phishintention_cls = PhishIntentionWrapper()
-    mmocr_model = MMOCRInferencer(det=None, rec='ABINet', device='cuda')
     button_locator_model = SubmissionButtonLocator(
         button_locator_config='/home/ruofan/git_space/MyXdriver_pub/xutils/forms/button_locator_models/config.yaml',
         button_locator_weights_path='/home/ruofan/git_space/MyXdriver_pub/xutils/forms/button_locator_models/model_final.pth')
 
-    honeypot_dir = 'datasets/honeypot'
+    honeypot_dir = './datasets/honeypot'
     os.makedirs(honeypot_dir, exist_ok=True)
     while True:
         try:
@@ -78,15 +67,20 @@ if __name__ == '__main__':
 
                 # initialization
                 try:
-                    driver.delete_all_cookies()
-                    driver.get(orig_url, allow_redirections=True)
-                    time.sleep(10)  # fixme: wait until page is fully loaded
-                    Logger.spit('URL={}'.format(orig_url), caller_prefix=XDriver._caller_prefix, debug=True)
+                    driver.get(orig_url)
+                    time.sleep(3)  # fixme: wait until page is fully loaded
+                    Logger.spit('URL={}'.format(orig_url), caller_prefix=CustomWebDriver._caller_prefix, debug=True)
+
+                    # CRP transition first
+                    is_crp_page = phishintention_cls.perform_crp_classification(driver)
+                    Logger.spit('Is it a CRP page? {}'.format(is_crp_page), caller_prefix=CustomWebDriver._caller_prefix, debug=True)
+                    if not is_crp_page:
+                        phishintention_cls.perform_crp_transition(driver)
+                    driver.scroll_to_top()
 
                     loop = 0
                     while loop <= 2:
-                        form = Form(driver, phishintention_cls, mmocr_model, button_locator_model,
-                                    obfuscate=False)  # initialize form
+                        form = Form(driver=driver, phishintention_cls=phishintention_cls, submission_button_locator=button_locator_model)  # initialize form
                         loop += 1
 
                         if len(form._inputs) > 0:
@@ -115,7 +109,7 @@ if __name__ == '__main__':
                             break
 
                 except Exception as e:
-                    Logger.spit('Exception when getting the URL {}'.format(e), caller_prefix=XDriver._caller_prefix, warning=True)
+                    Logger.spit('Exception when getting the URL {}'.format(e), caller_prefix=CustomWebDriver._caller_prefix, warning=True)
                     continue
 
                 with open('./honeypot/submitted.txt', 'a+') as f:
@@ -123,20 +117,16 @@ if __name__ == '__main__':
 
                 if (it+1)% 50 == 0:
                     driver.quit()
-                    XDriver.set_headless()
-                    XDriver.enable_proxy(port=7890)
-                    driver = XDriver.boot(chrome=True)
-                    time.sleep(sleep_time)
+                    driver = CustomWebDriver.boot(proxy_server=proxy_url)
+                    time.sleep(3)
                     driver.set_script_timeout(timeout_time / 2)
                     driver.set_page_load_timeout(timeout_time)
                     Logger.set_debug_on()
 
-            time.sleep(300)  # Sleep for 5 minutes
+            time.sleep(3600)  # Sleep for 1 hour
             driver.quit()
-            XDriver.set_headless()
-            XDriver.enable_proxy(port=7890)
-            driver = XDriver.boot(chrome=True)
-            time.sleep(sleep_time)
+            driver = CustomWebDriver.boot(proxy_server=proxy_url)
+            time.sleep(3)
             driver.set_script_timeout(timeout_time / 2)
             driver.set_page_load_timeout(timeout_time)
             Logger.set_debug_on()
