@@ -1,4 +1,5 @@
 pandas
+numpy
 openai
 tldextract
 OTXv2
@@ -8,3 +9,11 @@ pysocks
 ipwhois
 lxml
 pymongo
+Pillow
+opencv-python
+opencv-contrib-python
+selenium
+selenium-wire
+webdriver-manager
+Faker
+urllib3

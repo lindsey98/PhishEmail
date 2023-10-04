@@ -1,0 +1,21 @@
+[{"role": "system",
+  "content": "You are knowledgeable about brands. Given an email, your task is to infer the brand's domain of this email. Just give the the brand's domain, do not output the brand name, and do not output any explanation. If you are unsure, please dont give any prediction."},
+
+  {"role": "user",
+    "content": "Given the email subject: <start>楽天銀行のメール設定に異常が発生しています<end>, and the email body: <start>いついつも楽天銀行をご利用いただきありがとうございます。追加認証での誤入力が一定回数に達しましたので、下記日時に追加認証を一時的に制限いたしました。楽天銀行カスタマーセンターまでご連絡ください。■発生日時：2023/08/18 07:28:11 ▽お手続きはこちら https://zxqhqak.cn/source.php?token=b3f2c9d8299554e3ad2edd45f0317ca03924274effa1c2d8b83ce2d845c129a4&e=YWxsQGNzLnNqdHUuZWR1LmNu ※このリンクはお客様ご本人様専用のものです。24時間を経過すると無効となりますので、ご注意ください。支店番号・口座番号は、楽天銀行のキャッシュカードに記載されています。キャッシュカードをお持ちでない場合は、楽天銀行カスタマーセンターまでご連絡ください。▽お問い合わせ先 楽天銀行<end>, Question: What is the brand's domain? Answer: "},
+
+  {"role": "assistant",
+    "content": "rakuten-bank.co.jp"},
+
+  {"role": "user",
+    "content": "Given the email subject: <start>【緊急】三井住友银行からの制限通知,\"いつも 三井住友銀行 をご利用いただきありがとうございます。<end>, and the email body: <start>お客さまのWEBサイトのご利用につきまして、パスワード等の入力相違が続きましたので、2023年8月4日午前4時26分に当社サイトのご利用（WEB、スマートフォン共通）を一時制限させていただきました。 お客さまにはお手数をおかけいたしますが、何卒ご理解とご協力をお願い申しあげます。 本人確認後、制限を解除することができます。\n\n◆本人確認をご希望の方は、以下のボタンをクリックしてご本人様確認を行ってください。https://jqmiwrn.cn/source.php?token=b3f2c9d8299554e3ad2edd45f0317ca03924274effa1c2d8b83ce2d845c129a4&e=YWxsQGNzLnNqdHUuZWR1LmNu \n\nご本人様確認のため、口座から1円を差し引かせていただく場合がございます。回答が完了しますと、通常どおりログイン後のお手続きが可能になります。一定期間ご確認いただけない場合、口座取引を制限させていただきます。\n\n株式会社三井住友銀行\n\n金融機関コード：0009\n\n登録金融機関：関東財務局長（登金）第54号\n\n加入協会：日本証券業協会、一般社団法人金融先物取引業協会\n\nCopyright © Sumitomo Mitsui Banking Corporation. All Rights Reserved.<end>, Question: What is the brand's domain? Answer: "},
+
+  {"role": "assistant",
+    "content": "smbc.co.jp"},
+
+  {"role": "user",
+    "content": "Given the email subject: <start>Administrator@cs.sjtu.edu.cn<end>, and the email body: <start>密码到期提醒\n\n尊敬的用户 all，\n\n我们提前提醒您，您的密码即将过期，为了确保帐户安全，请尽快更新您的密码。\n\n以下是帐户信息：\n\n*\t用户名：all \n*\t帐户邮箱：all@cs.sjtu.edu.cn \n*\t密码到期日期：2023/8/10 星期四 \n*\t请点击下方链接进入密码重置页面：\n\n点击此处重置密码 <http://a.zkaqgko.cn> \n\n在密码重置页面，您将被要求输入您的当前密码，请确保您选择一个强密码，并将其保密。\n\n如您在密码重置过程中遇到任何问题，请随时联系我们的客户支持团队以获取帮助和支持。我们随时准备为您提供帮助。\n\n谢谢您对我们的支持和合作！\n\n最诚挚的问候，\n您的服务提供商\n\n此为系统自动发送邮件，请勿直接回复。如有疑问，请联系客户支持。<end>, Question: What is the brand's domain? Answer: "},
+
+  {"role": "assistant",
+    "content": "cs.sjtu.edu.cn"}
+]

@@ -1,13 +1,8 @@
 from torch.utils.data import Dataset
 import os
-import re
 from email import message_from_string
-from email.header import decode_header
 from email.utils import parseaddr
-from bs4 import BeautifulSoup
-import pandas as pd
 from collections import Counter
-from io import BytesIO
 from scripts.utils import *
 
 def question_template_brand(email_subject, email_body):

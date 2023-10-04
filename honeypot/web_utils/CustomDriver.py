@@ -33,7 +33,12 @@ class CustomWebDriver(webdriver.Chrome):
         chrome_options.add_argument('--disable-gpu')
         chrome_options.add_argument("--window-size=1920,1080")
         chrome_options.add_argument("--headless")
-
+        prefs = {
+            "download.default_directory": './trash',
+            "download.prompt_for_download": False,  # To disable the download prompt and download automatically
+            "download_restrictions": 3  # Attempt to restrict all downloads
+        }
+        chrome_options.add_experimental_option("prefs", prefs)
         self._proxy_server = proxy_server
         if proxy_server:
             chrome_options.add_argument(f"--proxy-server={proxy_server}")
