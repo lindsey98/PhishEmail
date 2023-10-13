@@ -5,6 +5,7 @@ import time
 from scripts.dataloader import *
 from scripts.utils import *
 from honeypot.web_utils.Logger import Logger
+from honeypot.web_utils.CustomDriver import CustomWebDriver
 import argparse
 import yaml
 import pandas
@@ -45,7 +46,7 @@ class TestLLM():
                 )
                 inference_done = True
             except Exception as e:
-                Logger.spit('LLM Exception {}'.format(e), caller_prefix=XDriver._caller_prefix, warning=True)
+                Logger.spit('LLM Exception {}'.format(e), caller_prefix=CustomWebDriver._caller_prefix, warning=True)
                 prompt[-1]['content'] = prompt[-1]['content'][:len(prompt[-1]['content']) // 2] # truncate the email content
                 time.sleep(self.brand_recog_sleep)
 
@@ -76,7 +77,7 @@ class TestLLM():
                 )
                 inference_done = True
             except Exception as e:
-                Logger.spit('LLM Exception {}'.format(e), caller_prefix=XDriver._caller_prefix, warning=True)
+                Logger.spit('LLM Exception {}'.format(e), caller_prefix=CustomWebDriver._caller_prefix, warning=True)
                 prompt[-1]['content'] = prompt[-1]['content'][:len(prompt[-1]['content']) // 2] # truncate the email content
                 time.sleep(self.action_sleep)
 
@@ -94,16 +95,16 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     openai.api_key = os.getenv("OPENAI_API_KEY")
-    openai.proxy = "http://127.0.0.1:7890" # set openai proxy
+    # openai.proxy = "http://127.0.0.1:7890" # set openai proxy
 
     # load hyperparameters
     with open(args.config) as file:
         param_dict = yaml.load(file, Loader=yaml.FullLoader)
 
     llm_cls = TestLLM(param_dict=param_dict,
-                      proxies={"http": "http://127.0.0.1:7890",
-                               "https": "http://127.0.0.1:7890",
-                              }
+                      # proxies={"http": "http://127.0.0.1:7890",
+                      #          "https": "http://127.0.0.1:7890",
+                      #         }
                       )
 
     # df = pandas.read_csv('./datasets/junk-mail.csv')

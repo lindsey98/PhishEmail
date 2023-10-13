@@ -16,6 +16,7 @@ logging.getLogger("urllib3").setLevel(logging.ERROR)
 # Suppress debug logs from selenium
 logging.getLogger("selenium").setLevel(logging.ERROR)
 logging.getLogger("PIL").setLevel(logging.ERROR)
+logging.getLogger('faker').setLevel(logging.ERROR)
 
 def handler(signum, frame):
     print("Signal received, shutting down...")
