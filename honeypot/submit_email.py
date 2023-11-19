@@ -11,9 +11,7 @@ import subprocess
 import os
 from honeypot.mongodb import get_all
 import logging
-# Suppress warning from urllib3
 logging.getLogger("urllib3").setLevel(logging.ERROR)
-# Suppress debug logs from selenium
 logging.getLogger("selenium").setLevel(logging.ERROR)
 logging.getLogger("PIL").setLevel(logging.ERROR)
 logging.getLogger('faker').setLevel(logging.ERROR)
@@ -52,14 +50,15 @@ if __name__ == '__main__':
             print(f'From openphish {len(phish_list)}')
             subprocess.run(["chmod", "+x", "./honeypot/download_github_phishing_feed.sh"])
             subprocess.run(["./honeypot/download_github_phishing_feed.sh"])
-            phish_list2 = [x.strip() for x in open('./datasets/phishing-links-ACTIVE-TODAY.txt').readlines()]
-            phish_list.extend(phish_list2)
-            print(f'From openphish {len(phish_list2)}')
+            if os.path.exists('./datasets/phishing-links-ACTIVE-TODAY.txt'):
+                phish_list2 = [x.strip() for x in open('./datasets/phishing-links-ACTIVE-TODAY.txt').readlines()]
+                phish_list.extend(phish_list2)
+                print(f'From github repo {len(phish_list2)}')
             # from our dynaphish
-            dynaphish_db = get_all(filter = {"phish_prediction": 1})
-            phish_list3 = [x['url'] for x in dynaphish_db]
-            print(f'From dynaphish {len(phish_list3)}')
-            phish_list.extend(phish_list3)
+            # dynaphish_db = get_all(filter = {"phish_prediction": 1})
+            # phish_list3 = [x['url'] for x in dynaphish_db]
+            # print(f'From dynaphish {len(phish_list3)}')
+            # phish_list.extend(phish_list3)
 
             for it, orig_url in enumerate(phish_list):
                 if os.path.exists('./honeypot/submitted.txt') and orig_url in open('./honeypot/submitted.txt').read():

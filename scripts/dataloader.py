@@ -4,41 +4,51 @@ from email import message_from_string
 from email.utils import parseaddr
 from collections import Counter
 from scripts.utils import *
+import pandas as pd
+from tqdm import tqdm
+# def question_template_brand(email_subject, email_body):
+#     question = f'''
+#         Given the email subject <start>{email_subject}<end>, and the email body <start>{email_body}<end>,
+#         Question: What is the brand's domain? Answer:
+#     '''
+#     return {
+#         "role": "user",
+#         "content": question
+#     }
+#
+# def question_template_motivation(email_subject, email_body):
+#     question = f'''
+#         Given the email subject <start>{email_subject}<end>, and the email body <start>{email_body}<end>,
+#         Question: Select one option that is appropriate to describe the email from the following:
+#         A. The email triggers a sense of urgency, fear, or greed.
+#         B. The email doesn’t trigger a sense of urgency, fear, or greed. Answer:
+#     '''
+#     return {
+#         "role": "user",
+#         "content": question
+#     }
+#
+# def question_template_action(email_subject, email_body):
+#     question = f'''
+#         Given the email subject <start>{email_subject}<end>, and the email body <start>{email_body}<end>,
+#         Question: Select one option that is appropriate to describe the email from the following:
+#         A. The email has a clear call to action, urging the recipient to click a link or provide sensitive information.
+#         B. The email doesn’t have a clear call to action.
+#     '''
+#     return {
+#         "role": "user",
+#         "content": question
+#     }
 
-def question_template_brand(email_subject, email_body):
-    question = f'''
-        Given the email subject <start>{email_subject}<end>, and the email body <start>{email_body}<end>,
-        Question: What is the brand's domain? Answer: 
-    '''
-    return {
-        "role": "user",
-        "content": question
-    }
+def extract_links(soup):
+    """
+        Extracts href attributes from <a> tags and replaces the tag with its href. Because this is the real link to click.
+    """
+    for a_tag in soup.find_all('a'):
+        href = a_tag.get('href', '')
+        a_tag.replace_with(href)
 
-def question_template_motivation(email_subject, email_body):
-    question = f'''
-        Given the email subject <start>{email_subject}<end>, and the email body <start>{email_body}<end>,
-        Question: Select one option that is appropriate to describe the email from the following: 
-        A. The email triggers a sense of urgency, fear, or greed.
-        B. The email doesn’t trigger a sense of urgency, fear, or greed. Answer: 
-    '''
-    return {
-        "role": "user",
-        "content": question
-    }
-
-def question_template_action(email_subject, email_body):
-    question = f'''
-        Given the email subject <start>{email_subject}<end>, and the email body <start>{email_body}<end>,
-        Question: Select one option that is appropriate to describe the email from the following: 
-        A. The email has a clear call to action, urging the recipient to click a link or provide sensitive information.
-        B. The email doesn’t have a clear call to action.
-    '''
-    return {
-        "role": "user",
-        "content": question
-    }
-
+    return soup.get_text()
 
 def process_email_parts(email_part, email_content_collection):
     html_tags = ['<table', '<tr', '<td', '<font', '<a', '<html', '<body', '<meta']
@@ -52,7 +62,12 @@ def process_email_parts(email_part, email_content_collection):
         if any(tag in payload.lower() for tag in html_tags): # html inside the plain text
             content_type = "text/html"
             soup = BeautifulSoup(payload, 'html.parser')
-            text_content = soup.get_text()
+            # Process <a> tags separately
+            for a_tag in soup.find_all('a'):
+                a_tag.replace_with(str(a_tag))
+
+            # Extract text for the rest of the content
+            text_content = ''.join(soup.stripped_strings)
         else:
             text_content = payload
 
@@ -60,12 +75,18 @@ def process_email_parts(email_part, email_content_collection):
 
         return email_content_collection + [(content_type, payload, text_content)]
 
+
     # If it's HTML, extract text content
     elif content_type.startswith("text/html"):
         payload = email_part.get_payload(decode=True).decode('ISO-8859-1')
 
         soup = BeautifulSoup(payload, 'html.parser')
-        text_content = soup.get_text()
+        # Process <a> tags separately
+        for a_tag in soup.find_all('a'):
+            a_tag.replace_with(str(a_tag))
+
+        # Extract text for the rest of the content
+        text_content = ''.join(soup.stripped_strings)
         text_content = remove_specific_special_chars(text_content)
 
         return email_content_collection + [(content_type, payload, text_content)]
@@ -159,56 +180,56 @@ class Nazario(Dataset):
 
         return email_file_path, (from_email_address, subject, content_collection)
 
-class SpamAssassin(Dataset):
-    def __init__(self, root_path):
-        file_list = []
-        label_list = []
-        for dirpath, dirnames, filenames in os.walk(root_path):
-            for filename in filenames:
-                if 'tar.bz' in filename:
-                    continue
-                full_path = os.path.join(dirpath, filename)
-                file_list.append(full_path)
-                if 'ham' in dirpath: # benign
-                    label_list.append(1)
-                else: # spam, not phishing
-                    label_list.append(0)
-
-        self.file_list = file_list
-        self.labels = label_list
-
-    @property
-    def get_dist(self):
-        return Counter(self.labels)
-
-    def __len__(self):
-        return len(self.file_list)
-
-    def __getitem__(self, idx):
-        email_file_path = self.file_list[idx]
-        label = self.labels[idx]
-        email_content = open(email_file_path, encoding="ISO-8859-1").read()
-
-        # Parse the email
-        email_message = message_from_string(email_content)
-
-        # Get 'From' header
-        from_header = email_message['From']  # fixme: from header can be spoofed
-        from_email_address = parseaddr(from_header)[1]
-
-        # Get 'Subject' header and decode if needed
-        subject = email_message['Subject']
-
-        content_collection = []
-
-        # Walk through each part of the email to find text or HTML body
-        for part in email_message.walk():
-            content_collection = process_email_parts(part, content_collection)
-
-        # remove duplicates
-        content_collection = sorted(set(content_collection), key=content_collection.index)
-
-        return email_file_path, (from_email_address, subject, content_collection), label
+# class SpamAssassin(Dataset):
+#     def __init__(self, root_path):
+#         file_list = []
+#         label_list = []
+#         for dirpath, dirnames, filenames in os.walk(root_path):
+#             for filename in filenames:
+#                 if 'tar.bz' in filename:
+#                     continue
+#                 full_path = os.path.join(dirpath, filename)
+#                 file_list.append(full_path)
+#                 if 'ham' in dirpath: # benign
+#                     label_list.append(1)
+#                 else: # spam, not phishing
+#                     label_list.append(0)
+#
+#         self.file_list = file_list
+#         self.labels = label_list
+#
+#     @property
+#     def get_dist(self):
+#         return Counter(self.labels)
+#
+#     def __len__(self):
+#         return len(self.file_list)
+#
+#     def __getitem__(self, idx):
+#         email_file_path = self.file_list[idx]
+#         label = self.labels[idx]
+#         email_content = open(email_file_path, encoding="ISO-8859-1").read()
+#
+#         # Parse the email
+#         email_message = message_from_string(email_content)
+#
+#         # Get 'From' header
+#         from_header = email_message['From']  # fixme: from header can be spoofed
+#         from_email_address = parseaddr(from_header)[1]
+#
+#         # Get 'Subject' header and decode if needed
+#         subject = email_message['Subject']
+#
+#         content_collection = []
+#
+#         # Walk through each part of the email to find text or HTML body
+#         for part in email_message.walk():
+#             content_collection = process_email_parts(part, content_collection)
+#
+#         # remove duplicates
+#         content_collection = sorted(set(content_collection), key=content_collection.index)
+#
+#         return email_file_path, (from_email_address, subject, content_collection), label
 
 # class CSDMC(Dataset):
 #     def __init__(self, root_path):
@@ -301,6 +322,20 @@ if __name__ == '__main__':
     dataset = Nazario(root_path = './datasets/Nazario_2005')
     print(len(dataset))
     print(dataset[2500])
+
+    columns = ['Id', 'Subject', 'Body', 'From']
+
+    # Create an empty DataFrame with these columns
+    df = pd.DataFrame(columns=columns)
+
+    for it, item in tqdm(enumerate(dataset)):
+        email_file_path, (sender_address, email_subject, email_content_collection) = item
+        email_body_text, email_image, email_links = parse_email_content(email_content_collection)
+
+        entry = {'Id': it, 'Subject': email_subject, 'Body': email_body_text, 'From': sender_address}
+
+        df = pd.concat([df, pd.DataFrame([entry])], ignore_index=True)
+        df.to_csv('./datasets/nazario-annot.csv', index=False)
 
     # dataset = CSDMC(root_path = './datasets/CSDMC2010_SPAM/CSDMC2010_SPAM')
     # print(dataset.get_dist) # 1 stands for a HAM and 0 stands for a SPAM.
