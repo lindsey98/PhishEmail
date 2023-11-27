@@ -1,3 +1,0 @@
-[{"role": "system",
-  "content": "You are good at text comprehension. Given an email, your task is to infer whether the email has a clear call to action, urging the recipient to click a link or provide sensitive information."}
-]
