@@ -1,0 +1,13 @@
+scipy
+tldextract
+opencv-python
+pandas
+numpy
+tqdm
+Pillow==8.4.0
+pathlib
+fvcore
+pycocotools
+scikit-learn
+lxml
+gdown
