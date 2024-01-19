@@ -1,4 +1,6 @@
 import json
+import wandb
+import re
 
 def load_jsonl(file_path):
     data = []
@@ -35,19 +37,25 @@ def extract_non_labeled_text(body_text, labels):
 
     return non_labeled_text
 
+
 def process_data(data, start_index, end_index, output_file, downsample=True):
     for item in data[start_index:end_index]:
         body_text = item['text']
         labels = item['label']
-        motivations = [x for x in labels if x[-1] == 'motivation']
         instructions = [x for x in labels if x[-1] == 'action instruction']
 
-        if len(motivations) > 0 and len(instructions) > 0:
-            motivation_text = ' '.join([body_text[m[0]:m[1]] for m in motivations])
+        all_sentences = re.split(r'(?<=[,.])\s', body_text)
+
+        if len(instructions) > 0:
             instruction_text = ' '.join([body_text[i[0]:i[1]] for i in instructions])
 
-            other_text = extract_non_labeled_text(body_text, labels)
-            other_text = other_text.split("Body: ")[1]
+
+            other_text = [s for s in all_sentences \
+                             if not any([have_overlap_over_half(body_text[i[0]:i[1]], s) \
+                                           for i in instructions])]
+            other_text = ''.join(other_text)
+            if "Body:" in other_text:
+                other_text = other_text.split("Body:")[1]
             other_text = other_text.replace('domain.com', '').replace('<<link>>', '').replace('\n', '')
             other_text_list = [x for x in other_text.split('.') if len(x) > 3]
             if downsample:
@@ -81,22 +89,33 @@ if __name__ == '__main__':
     iwspa_eval_txt = './datasets/iwspa-eval.txt'
     iwspa_filtered_eval_txt = './datasets/iwspa-eval-filtered.txt'
 
-    # labeled_dict = {'motivation': 1, 'action instruction': 2}
+    labeled_dict = {'motivation': 1, 'action instruction': 2}
 
-    # train_eval_split_point = int(len(data)*0.8)
-    # process_data(data, 0, train_eval_split_point, iwspa_train_txt, downsample=True)
-    #
-    # # Process evaluation data
-    # process_data(data, train_eval_split_point, len(data), iwspa_eval_txt, downsample=False)
-    #
+    train_eval_split_point = int(len(data)*0.8)
+    process_data(data, 0, train_eval_split_point, iwspa_train_txt, downsample=True)
+
+    # Process evaluation data
+    process_data(data, train_eval_split_point, len(data), iwspa_eval_txt, downsample=False)
+
+    # log to wandb
+    with wandb.init(project="spamarchieve_instruction"):
+
+        at2 = wandb.Artifact(
+            name="spamarchieve_instruction_splitted",
+            type="dataset",
+            description="A GPT generated Alpaca like dataset for instruction finetunning",
+        )
+        at2.add_file(iwspa_train_txt)
+        at2.add_file(iwspa_eval_txt)
+        wandb.log_artifact(at2)
+
     # # filter duplicates
     # filtered_content = filter_duplicates(iwspa_train_txt)
     # for line in filtered_content:
     #     with open(iwspa_filtered_train_txt, 'a+') as f:
     #         f.write(line)
-
-    filtered_content = filter_duplicates(iwspa_eval_txt)
-    # You can now write filtered_content to a new file or process it as needed
-    for line in filtered_content:
-        with open(iwspa_filtered_eval_txt, 'a+') as f:
-            f.write(line)
+    #
+    # filtered_content = filter_duplicates(iwspa_eval_txt)
+    # for line in filtered_content:
+    #     with open(iwspa_filtered_eval_txt, 'a+') as f:
+    #         f.write(line)
