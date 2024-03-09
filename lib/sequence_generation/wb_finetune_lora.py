@@ -16,7 +16,7 @@ from transformers import get_cosine_schedule_with_warmup
 from transformers import GenerationConfig
 from tqdm.auto import tqdm
 from pathlib import Path
-from lib.llm.wb_log_dataset import load_jsonl, formatting_prompts_func, create_prompt_no_anwer
+from lib.sequence_generation.wb_log_dataset import load_jsonl, formatting_prompts_func, create_prompt_no_anwer
 from peft import LoraConfig, get_peft_model
 from transformers import TrainingArguments
 from trl import SFTTrainer, DataCollatorForCompletionOnlyLM
@@ -47,7 +47,7 @@ class LLMSampleCB(WandbCallback):
     def generate(self, prompt):
         tokenized_prompt = self.tokenizer(prompt, return_tensors='pt')['input_ids'].cuda()
         with torch.inference_mode():
-            output = self.model.generate(inputs=tokenized_prompt, generation_config=self.gen_config)
+            output = self.model.classify(inputs=tokenized_prompt, generation_config=self.gen_config)
         return self.tokenizer.decode(output[0][len(tokenized_prompt[0]):], skip_special_tokens=True)
 
     def samples_table(self, examples):
@@ -81,7 +81,6 @@ def save_model(model, model_name, models_folder="models", log=False):
         at = wandb.Artifact(model_name, type="model")
         at.add_dir(file_name)
         wandb.log_artifact(at)
-
 
 
 
