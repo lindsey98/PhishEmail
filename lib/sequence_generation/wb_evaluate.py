@@ -24,9 +24,9 @@ def _generate(prompt, model, tokenizer, gen_config):
         t0 = perf_counter()
         output = model.generate(input_ids=tokenized_prompt,
                                 generation_config=gen_config)
+        total_time = perf_counter() - t0
         generation_ids = output[0][len(tokenized_prompt[0]):]
         num_gen_tokens = len(generation_ids)
-        total_time = perf_counter() - t0
         generation = tokenizer.decode(generation_ids, skip_special_tokens=True)
         return dict(generation=generation, generation_ids=generation_ids.tolist(), total_time=total_time,
                     num_gen_tokens=num_gen_tokens)
@@ -160,6 +160,7 @@ if __name__ == '__main__':
         t0 = perf_counter()
         results = _generate(prompt, model, tokenizer, gen_config)
         results = results['generation']
+        print(results)
         total_time = perf_counter() - t0
         runtime.append(total_time)
 

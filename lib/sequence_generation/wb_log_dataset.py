@@ -27,14 +27,17 @@ def remove_urls(text):
 
 def prompt_input(row, max_seq_len=500):
     cleaned_input = remove_urls(row['input'])  # Assuming 'input' is a key in the row dictionary
-    cleaned_input = cleaned_input[:max_seq_len]
+    words = cleaned_input.split()  # Split the text into words
+    cleaned_input = ' '.join(words[:max_seq_len])  # Join the first 500 words back into a string
+    cleaned_input = cleaned_input.strip()
+    # return f"Write a response that appropriately completes the request. ### Instruction: {row['instruction']} \n ### Input: {cleaned_input} \n ### Response: "
     return f"### Instruction:\n{row['instruction']}\n\n### Input:\n{cleaned_input}\n\n### Response:\n"
 
-# remove answers
-def create_prompt_no_anwer(row):
-    row["output"] = ""
-    return {"text": prompt_input(row)}
 
+# remove answers
+def create_prompt_no_anwer(row, max_seq_len=500):
+    row["output"] = ""
+    return {"text": prompt_input(row, max_seq_len=max_seq_len)}
 
 def formatting_prompts_func_no_out(examples, max_seq_len=500):
     output_text = []
@@ -64,7 +67,7 @@ def formatting_prompts_func_no_out(examples, max_seq_len=500):
 def formatting_prompts_func(examples, max_seq_len=500):
     output_text = []
     for i in range(len(examples["instruction"])):
-        instruction = examples["instruction"][i]
+        instruction = "Step 1: Identify the claimed capabilities of the sender. Step 2: Identify the claimed organization. Step 3: Infer the role of the sender inside this organization: department or title. For Step 1 and Step 2, give an explanation by quoting the most informative phrases from the original paragraph." # shared instruciton
         input_text = examples["input"][i]
         response = examples["output"][i]
 
@@ -73,17 +76,7 @@ def formatting_prompts_func(examples, max_seq_len=500):
         input_text = ' '.join(words[:max_seq_len])  # Join the first 500 words back into a string
         input_text = input_text.strip()
 
-        text = f'''Write a response that appropriately completes the request.
-
-                ### Instruction:
-                {instruction}
-
-                ### Input:
-                {input_text}
-
-                ### Response:
-                {response}
-                '''
+        text = f'''Write a response that appropriately completes the request. ### Instruction: {instruction} \n ### Input: {input_text} \n ### Response: {response}'''
 
         output_text.append(text)
 
@@ -200,6 +193,7 @@ if __name__ == '__main__':
     train_dataset = [{"prompt": s, "output": t, "example": s + t} for s, t in zip(train_prompts, train_outputs)]
     eval_dataset = [{"prompt": s, "output": t, "example": s + t} for s, t in zip(eval_prompts, eval_outputs)]
 
+    '''visualize the examples'''
     # result_dir = './datasets/iwspa-cot/'
     # os.makedirs(result_dir, exist_ok=True)
     #
@@ -208,10 +202,8 @@ if __name__ == '__main__':
     #     output = data['output']
     #     wrap_html(input, output, result_dir, it)
     #
-    '''Pack the after tokenization'''
-    # We will pack multiple short examples into a longer chunk, so we can train more efficiently!
 
-    # log to wandb
+    '''log dataset'''
     with wandb.init(project="spamarchieve_ft"):
         at1 = wandb.Artifact(
             name="spamarchieve_gpt",

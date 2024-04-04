@@ -20,12 +20,4 @@ def special_character_replacement(query: str):
 	query = query.translate(str.maketrans('', '', r"""!"#$%'()*+,-/:;<=>?@[\]^_`{|}~"""))
 	return query
 
-def fetch_phish_data(url):
-	try:
-		response = requests.get(url)
-		response.raise_for_status()  # Raise an exception for HTTP errors
-		data = response.text.split('\n')  # Split by newlines to get a list
-		return data
-	except requests.RequestException as e:
-		print(f"An error occurred: {e}")
-		return []
+

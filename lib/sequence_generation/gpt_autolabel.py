@@ -1,16 +1,9 @@
-import shutil
-
 import openai
-from lib.data.download_miller import parse_json
 from lib.prompt.prompt import PromptClass
 import os
-from tqdm import tqdm
-from lib.deprecated.ner.auto_label import chat_completion
-import re
-import json
-import socket
+from lib.sequence_generation.auto_label import chat_completion
 from lib.data.utils import *
-from tldextract import tldextract
+
 os.environ['OPENAI_API_KEY'] = open('./datasets/openai_key.txt').read()
 
 if __name__ == '__main__':
