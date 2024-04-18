@@ -1,0 +1,22 @@
+[
+  {
+    "role": "system",
+    "content": "Given an email, classify whether the sender is claimed to from the internal organization (e.g. colleague, boss, admin staff, subordinate, teacher, student, etc.) or external organization as the recipient. Answer 'A' if internal, answer 'B' if external, answer 'Unclear' if unsure. Do not give any explanation."
+  },
+
+  {"role": "user",
+    "content": "Subject: Please Update Your Profile - Personal Information Error \n From (Name): Amazon Service \n Body: Dear Amazon Customer, During our regularly scheduled account maintenance and verification procedures, we have detected a slight error in your account information. To securely confirm your personal information please click on the link bellow: https://amazon.com/account_signin/webscr_/verify/index.html. Confirm Your Amazon Account to enjoy the benefits of online shopping and to avoid identity theft and fraudulent activities on your account. Note: We will be upgrading our yearly SSL EncryptedServer to pr event fraudulent activity. A9 2015 Amazon & Co. All rights reserved. "
+  },
+
+  {"role": "assistant",
+    "content": "B."
+  },
+
+  {"role": "user",
+    "content": "Subject: Upgrade Email Storage Now \n From (Name): Email Admin \n Body: Email Security Alert for service@sjtu.edu.cn. Dear service@sjtu.edu.cn, Our server detects that your email storage has exceeded its limit and needs to be upgraded immediately. Click here now to upgrade your email storage If you fail to comply, we will lock your account and all email data will be permanenly lost. Source: Email Administrator"
+  },
+
+  {"role": "assistant",
+    "content": "A."
+  }
+]
