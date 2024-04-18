@@ -16,16 +16,17 @@ from transformers import get_cosine_schedule_with_warmup
 from transformers import GenerationConfig
 from tqdm.auto import tqdm
 from pathlib import Path
-from lib.sequence_generation.wb_log_dataset import load_jsonl, formatting_prompts_func, create_prompt_no_anwer
+from lib.data.utils import prepare_prompt_batch, prepare_prompt, create_prompt_no_answer
 from peft import LoraConfig, get_peft_model
 from transformers import TrainingArguments
 from trl import SFTTrainer, DataCollatorForCompletionOnlyLM
 from transformers.integrations import WandbCallback
 from datasets import load_dataset
+from functools import partial
+from lib.data.utils import load_jsonl, prepare_prompt_no_output, remove_urls, pad_eos
 
 os.environ['http_proxy'] = 'http://127.0.0.1:7890'
 os.environ['https_proxy'] = 'http://127.0.0.1:7890'
-os.environ["WANDB_PROJECT"] = "spamarchieve_ft"  # name your W&B project
 os.environ["WANDB_LOG_MODEL"] = "checkpoint"  # log all model checkpoints
 
 
@@ -90,22 +91,22 @@ if __name__ == '__main__':
     model_id = 'meta-llama/Llama-2-7b-hf'
     tokenizer = AutoTokenizer.from_pretrained(model_id)
     tokenizer.pad_token = tokenizer.eos_token
+    # dataset = "enron" #
+    dataset = 'spamarchieve'
+    os.environ["WANDB_PROJECT"] = f"{dataset}_ft"  # name your W&B project
+
+    output_dir = "./output/"
+    batch_size = 1
+    gradient_accumulation_steps = 2
+    num_train_epochs = 2
+    max_seq_length = 4096
 
     api = Api()
-    artifact = api.artifact('lindsey98/spamarchieve_ft/spamarchieve_gpt_splitted:latest', type='dataset')
+    artifact = api.artifact(f'lindsey98/{dataset}_ft/{dataset}_gpt_splitted:latest', type='dataset')
     dataset_dir = artifact.download()
     ds = load_dataset("json", data_dir=dataset_dir)
     train_dataset = ds["train"]
     eval_dataset = ds["test"]
-    test_dataset = eval_dataset.map(create_prompt_no_anwer)
-    #
-
-    '''dataloader'''
-    output_dir = "./output/"
-    batch_size = 1
-    gradient_accumulation_steps = 2
-    num_train_epochs = 4
-    max_seq_length = 4096
 
     '''Configurations'''
     total_num_steps = num_train_epochs * len(train_dataset) // (batch_size * gradient_accumulation_steps)
@@ -151,8 +152,9 @@ if __name__ == '__main__':
         use_cache=False,
     )
 
-    response_template = "### Response:\n"
-    collator = DataCollatorForCompletionOnlyLM(response_template, tokenizer=tokenizer)
+    response_template = "\n### Response:" # Note: For llama2, the response_template with context and w/o context are encoded differently. https://huggingface.co/docs/trl/en/sft_trainer#using-tokenids-directly-for-responsetemplate
+    response_template_ids = tokenizer.encode(response_template, add_special_tokens=False)[2:]  # ignore the \n part
+    collator = DataCollatorForCompletionOnlyLM(response_template_ids, tokenizer=tokenizer)
 
     trainer = SFTTrainer(
         model=model_id,
@@ -160,16 +162,16 @@ if __name__ == '__main__':
         train_dataset=train_dataset,
         eval_dataset=eval_dataset,
         data_collator=collator,
+        formatting_func=partial(prepare_prompt_batch, tokenizer=tokenizer, max_seq_len=max_seq_length),
         packing=False,
         max_seq_length=max_seq_length,
         args=training_args,
-        formatting_func=formatting_prompts_func,
         peft_config=peft_config,
+        dataset_batch_size=100,
     )
+
     '''Train'''
-    # wandb.init(project="spamarchieve_ft", job_type='train')
-    # wandb_callback = LLMSampleCB(trainer, test_dataset, num_samples=10, max_new_tokens=256)
-    # trainer.add_callback(wandb_callback)
-    # trainer.train()
-    # wandb.finish()
+    wandb.init(project=os.getenv("WANDB_PROJECT"), job_type='train')
+    trainer.train()
+    wandb.finish()
 

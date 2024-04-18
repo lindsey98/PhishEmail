@@ -7,80 +7,58 @@ import pandas as pd
 import os
 from datasets import load_from_disk  # for some reason load_dataset gives an error
 import json
+from lib.data.utils import load_jsonl, prepare_prompt, remove_urls
+from transformers import AutoModelForCausalLM, AutoTokenizer, GenerationConfig
+os.environ['http_proxy'] = 'http://127.0.0.1:7890'
+os.environ['https_proxy'] = 'http://127.0.0.1:7890'
 
-def save_jsonl(data, filename):
-    with open(filename, 'w') as file:
-        for entry in data:
-            json.dump(entry, file)
-            file.write('\n')
-
-def load_jsonl(filename):
-    data = []
-    with open(filename, 'r') as file:
-        for line in file:
-            data.append(json.loads(line))
-    return data
-
-def remove_urls(text):
-    pattern = r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
-    return re.sub(pattern, '', text)
-
-def prompt_input(row, max_seq_len=500):
-    cleaned_input = remove_urls(row['input'])  # Assuming 'input' is a key in the row dictionary
-    words = cleaned_input.split()  # Split the text into words
-    cleaned_input = ' '.join(words[:max_seq_len])  # Join the first 500 words back into a string
-    cleaned_input = cleaned_input.strip()
-    # return f"Write a response that appropriately completes the request. ### Instruction: {row['instruction']} \n ### Input: {cleaned_input} \n ### Response: "
-    return f"### Instruction:\n{row['instruction']}\n\n### Input:\n{cleaned_input}\n\n### Response:\n"
-
-
-# remove answers
-def create_prompt_no_anwer(row, max_seq_len=500):
-    row["output"] = ""
-    return {"text": prompt_input(row, max_seq_len=max_seq_len)}
-
-def formatting_prompts_func_no_out(examples, max_seq_len=500):
-    output_text = []
-    for i in range(len(examples["instruction"])):
-        instruction = examples["instruction"][i]
-        input_text = examples["input"][i]
-
-        input_text = remove_urls(input_text)  # Assuming 'input' is a key in the row dictionary
-        words = input_text.split()  # Split the text into words
-        input_text = ' '.join(words[:max_seq_len])  # Join the first 500 words back into a string
-
-        text = f'''Write a response that appropriately completes the request.
-
-                ### Instruction:
-                {instruction}
-
-                ### Input:
-                {input_text}
-
-                ### Response:
-                '''
-
-        output_text.append(text)
-
-    return output_text
-
-def formatting_prompts_func(examples, max_seq_len=500):
-    output_text = []
-    for i in range(len(examples["instruction"])):
-        instruction = "Step 1: Identify the claimed capabilities of the sender. Step 2: Identify the claimed organization. Step 3: Infer the role of the sender inside this organization: department or title. For Step 1 and Step 2, give an explanation by quoting the most informative phrases from the original paragraph." # shared instruciton
-        input_text = examples["input"][i]
-        response = examples["output"][i]
-
-        input_text = remove_urls(input_text)  # Assuming 'input' is a key in the row dictionary
-        words = input_text.split()  # Split the text into words
-        input_text = ' '.join(words[:max_seq_len])  # Join the first 500 words back into a string
-        input_text = input_text.strip()
-
-        text = f'''Write a response that appropriately completes the request. ### Instruction: {instruction} \n ### Input: {input_text} \n ### Response: {response}'''
-
-        output_text.append(text)
-
-    return output_text
+# # remove answers
+# def create_prompt_no_anwer(row, tokenizer, max_seq_len=4096):
+#     row["output"] = ""
+#     return {"text": prepare_prompt(remove_urls(row['input']), tokenizer, max_seq_len=max_seq_len)}
+#
+# def formatting_prompts_func_no_out(examples, max_seq_len=500):
+#     output_text = []
+#     for i in range(len(examples["instruction"])):
+#         instruction = examples["instruction"][i]
+#         input_text = examples["input"][i]
+#
+#         input_text = remove_urls(input_text)  # Assuming 'input' is a key in the row dictionary
+#         words = input_text.split()  # Split the text into words
+#         input_text = ' '.join(words[:max_seq_len])  # Join the first 500 words back into a string
+#
+#         text = f'''Write a response that appropriately completes the request.
+#
+#                 ### Instruction:
+#                 {instruction}
+#
+#                 ### Input:
+#                 {input_text}
+#
+#                 ### Response:
+#                 '''
+#
+#         output_text.append(text)
+#
+#     return output_text
+#
+# def formatting_prompts_func(examples, max_seq_len=500):
+#     output_text = []
+#     for i in range(len(examples["instruction"])):
+#         instruction = "Step 1: Identify the claimed capabilities of the sender. Step 2: Identify the claimed organization. Step 3: Infer the role of the sender inside this organization: department or title. For Step 1 and Step 2, give an explanation by quoting the most informative phrases from the original paragraph." # shared instruciton
+#         input_text = examples["input"][i]
+#         response = examples["output"][i]
+#
+#         input_text = remove_urls(input_text)  # Assuming 'input' is a key in the row dictionary
+#         words = input_text.split()  # Split the text into words
+#         input_text = ' '.join(words[:max_seq_len])  # Join the first 500 words back into a string
+#         input_text = input_text.strip()
+#
+#         text = f'''Write a response that appropriately completes the request. ### Instruction: {instruction} \n ### Input: {input_text} \n ### Response: {response}'''
+#
+#         output_text.append(text)
+#
+#     return output_text
 
 
 def pad_eos(ds):
@@ -157,14 +135,19 @@ def wrap_html(text, answer, result_dir, i):
 
 
 if __name__ == '__main__':
-    model_id = 'NousResearch/llama-2-7b-hf'
-    tokenizer = AutoTokenizer.from_pretrained(model_id)
-    tokenizer.pad_token = tokenizer.eos_token
+    # model_id = 'NousResearch/llama-2-7b-hf'
+    # tokenizer = AutoTokenizer.from_pretrained(model_id)
+    # tokenizer.pad_token = tokenizer.eos_token
+    # gen_config = GenerationConfig.from_pretrained(model_id,
+    #                                               temperature=0.001,
+    #                                               max_new_tokens=500)
 
     data = []
-    dataset_file = "./datasets/spamarchieve-annot-2023.jsonl"
+    dataset = 'spamarchieve' # or spamarchieve
 
-    with open(dataset_file, 'r', encoding='utf-8') as file:
+    dataset_file_spam = "./datasets/spamarchieve-annot-2023.jsonl"
+
+    with open(dataset_file_spam, 'r', encoding='utf-8') as file:
         for line in file:
             entry = json.loads(line)
             data.append(entry)
@@ -179,19 +162,47 @@ if __name__ == '__main__':
     train_table = wandb.Table(dataframe=train_df)
     eval_table = wandb.Table(dataframe=eval_df)
 
-    train_df.to_json("./datasets/spamarchieve_gpt_train.jsonl", orient='records', lines=True)
-    eval_df.to_json("./datasets/spamarchieve_gpt_eval.jsonl", orient='records', lines=True)
+    train_df.to_json(f"./datasets/{dataset}_gpt_train.jsonl", orient='records', lines=True)
+    eval_df.to_json(f"./datasets/{dataset}_gpt_eval.jsonl", orient='records', lines=True)
 
-    train_dataset = load_jsonl("./datasets/spamarchieve_gpt_train.jsonl")
-    eval_dataset = load_jsonl("./datasets/spamarchieve_gpt_eval.jsonl")
-    train_prompts = [prompt_input(row) for row in train_dataset]
-    eval_prompts = [prompt_input(row) for row in eval_dataset]
+    train_dataset = load_jsonl(f"./datasets/{dataset}_gpt_train.jsonl")
+    eval_dataset = load_jsonl(f"./datasets/{dataset}_gpt_eval.jsonl")
+    #
+    # train_prompts = [prepare_prompt(row, tokenizer, gen_config.max_length) for row in train_dataset]
+    # eval_prompts = [prepare_prompt(row, tokenizer, gen_config.max_length) for row in eval_dataset]
+    #
+    # train_outputs = pad_eos(train_dataset)
+    # eval_outputs = pad_eos(eval_dataset)
+    #
+    # train_dataset = [{"prompt": s, "output": t, "example": s + t} for s, t in zip(train_prompts, train_outputs)]
+    # eval_dataset = [{"prompt": s, "output": t, "example": s + t} for s, t in zip(eval_prompts, eval_outputs)]
 
-    train_outputs = pad_eos(train_dataset)
-    eval_outputs = pad_eos(eval_dataset)
+    '''log dataset'''
+    with wandb.init(project=f"{dataset}_ft"):
+        at1 = wandb.Artifact(
+            name=f"{dataset}_gpt",
+            type="dataset",
+            description="A GPT generated Alpaca like dataset for instruction finetunning",
+        )
+        at1.add_file(dataset_file_spam)
 
-    train_dataset = [{"prompt": s, "output": t, "example": s + t} for s, t in zip(train_prompts, train_outputs)]
-    eval_dataset = [{"prompt": s, "output": t, "example": s + t} for s, t in zip(eval_prompts, eval_outputs)]
+        # log as a table
+        table = wandb.Table(columns=list(data[0].keys()))
+        for row in data:
+            table.add_data(*row.values())
+        wandb.log({f"{dataset}_gpt_table": table})
+
+        at2 = wandb.Artifact(
+            name=f"{dataset}_gpt_splitted",
+            type="dataset",
+            description="A GPT generated Alpaca like dataset for instruction finetunning",
+        )
+        at2.add_file(f"./datasets/{dataset}_gpt_train.jsonl")
+        at2.add_file(f"./datasets/{dataset}_gpt_eval.jsonl")
+        wandb.log_artifact(at2)
+        wandb.log({"train_dataset": train_table,
+                   "eval_dataset": eval_table})
+
 
     '''visualize the examples'''
     # result_dir = './datasets/iwspa-cot/'
@@ -202,28 +213,3 @@ if __name__ == '__main__':
     #     output = data['output']
     #     wrap_html(input, output, result_dir, it)
     #
-
-    '''log dataset'''
-    with wandb.init(project="spamarchieve_ft"):
-        at1 = wandb.Artifact(
-            name="spamarchieve_gpt",
-            type="dataset",
-            description="A GPT generated Alpaca like dataset for instruction finetunning",
-        )
-        at1.add_file(dataset_file)
-
-        # log as a table
-        table = wandb.Table(columns=list(data[0].keys()))
-        for row in data:
-            table.add_data(*row.values())
-        wandb.log({"spamarchieve_gpt_table": table})
-
-        at2 = wandb.Artifact(
-            name="spamarchieve_gpt_splitted",
-            type="dataset",
-            description="A GPT generated Alpaca like dataset for instruction finetunning",
-        )
-        at2.add_file("./datasets/spamarchieve_gpt_train.jsonl")
-        at2.add_file("./datasets/spamarchieve_gpt_eval.jsonl")
-        wandb.log_artifact(at2)
-        wandb.log({"train_dataset": train_table, "eval_dataset": eval_table})
