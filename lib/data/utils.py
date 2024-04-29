@@ -10,21 +10,18 @@ from io import BytesIO, StringIO
 import urllib.parse
 from requests.exceptions import Timeout, ConnectionError
 import base64
-import spacy
-from spacy.lang.en.stop_words import STOP_WORDS
+# import spacy
+# from spacy.lang.en.stop_words import STOP_WORDS
 import pandas as pd
 from tqdm import tqdm
 import json
-from email.parser import BytesParser
-from email.policy import default
-import re
 import socket
 import re
 from ipaddress import ip_address
 from typing import Tuple
 
-stop_words = list(STOP_WORDS)
-stop_words.extend(['from', 'subject', 're', 'edu', 'use', 'cc', 'email', 'bcc', 'subject']) # add some email stopwords
+# stop_words = list(STOP_WORDS)
+# stop_words.extend(['from', 'subject', 're', 'edu', 'use', 'cc', 'email', 'bcc', 'subject']) # add some email stopwords
 
 
 def remove_specific_special_chars(text):
@@ -267,7 +264,7 @@ def parse_email_content(email_content_collection):
 
     return email_body_text, email_images
 
-def sanitize_text(text):
+def remove_wildcards(text):
     # Implement any specific sanitization rules here
     sanitized_text = re.sub(r'[^\x20-\x7E]', ' ', text)  # Removes non-printable characters
     # Replace homoglyphs
@@ -333,6 +330,17 @@ def sanitize_text(text):
 
     return sanitized_text
 
+def remove_extra_spaces(text):
+    # remove text surrounded by <>, since they are likely be comments that are invisible
+    text_content = re.sub(r'<[^>]*>', '', text)
+    # replace multiple newline characters with a single period
+    text_content = re.sub(r'\n+', '. ', text_content)
+    # replace multiple consecutive periods with a single period
+    text_content = re.sub(r'\.{2,}', '', text_content)
+    # replace multiple spaces with a single space
+    text_content = re.sub(r'\s+', ' ', text_content)
+    return text_content
+
 def process_enron_dataset(csv_path):
     df = pd.read_csv(csv_path)
     message_list = list(df['message'])
@@ -362,7 +370,7 @@ def process_enron_dataset(csv_path):
         email_body_text = re.sub(r'\n+', '. ', email_body_text)
         email_body_text = re.sub(r'\.{2,}', '', email_body_text)
         email_body_text = re.sub(r'\s+', ' ', email_body_text)
-        email_body_text = sanitize_text(email_body_text)  # Assuming sanitize_text is defined
+        email_body_text = remove_wildcards(email_body_text)  # Assuming sanitize_text is defined
 
         parsed_email = f'Subject: {subject} \n From: (Name) {sender_name} \n Body: {email_body_text}'
 
@@ -378,7 +386,6 @@ def process_enron_dataset(csv_path):
         # Add the processed text as a new column to the DataFrame
         email_df = pd.DataFrame(email_data)
         email_df.to_csv('./datasets/enron_mail_2015/emails_processed_clean_processed.csv', index=False)
-
 
 
 def parse_json(text, delimiter='{"text":'):
@@ -429,3 +436,73 @@ def reverse_dns(ip_address):
         return socket.gethostbyaddr(ip_address)[0]
     except (socket.herror, socket.gaierror):
         return "No domain associated with the IP address."
+
+def save_jsonl(data, filename):
+    with open(filename, 'w') as file:
+        for entry in data:
+            json.dump(entry, file)
+            file.write('\n')
+
+def load_jsonl(filename):
+    data = []
+    with open(filename, 'r') as file:
+        for line in file:
+            data.append(json.loads(line))
+    return data
+
+def remove_urls(text):
+    pattern = r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
+    return re.sub(pattern, '', text)
+
+
+def prepare_prompt_no_output(raw_input, tokenizer, max_seq_len=4096):
+    input = remove_extra_spaces(remove_urls(raw_input['input']))
+    instruction = raw_input['instruction']
+    length_predefined_prompt = len(tokenizer.tokenize(f"### Instruction:\n{instruction}\n\n### Input:\n\n\n### Response:\n"))
+
+    # Tokenize the input and truncate to the max_seq_len
+    tokens = tokenizer.tokenize(input)[:max_seq_len-length_predefined_prompt-50]  # Reserving space for an EOS token, if necessary
+    cleaned_input = tokenizer.convert_tokens_to_string(tokens)  # Convert tokens back to a string
+
+    return f"[INST]### Instruction:\n{instruction}\n\n### Input:\n{cleaned_input}[/INST]\n\n### Response:\n<s>"
+
+def prepare_prompt(raw_input, tokenizer, max_seq_len=4096):
+    input = remove_extra_spaces(remove_urls(raw_input['input']))
+    instruction = raw_input['instruction']
+    response = raw_input['output']
+    length_predefined_prompt = len(tokenizer.tokenize(f"### Instruction:\n{instruction}\n\n### Input:\n\n\n### Response:\n"))
+
+    # Tokenize the input and truncate to the max_seq_len
+    tokens = tokenizer.tokenize(input)[:max_seq_len-length_predefined_prompt-50]  # Reserving space for an EOS token, if necessary
+    cleaned_input = tokenizer.convert_tokens_to_string(tokens)  # Convert tokens back to a string
+
+    return f"[INST]### Instruction:\n{instruction}\n\n### Input:\n{cleaned_input}[/INST]\n\n### Response:\n<s>{response}</s>\n"
+
+def create_prompt_no_answer(row, tokenizer, max_seq_len=4096):
+    return {"text": prepare_prompt_no_output(row, tokenizer, max_seq_len=max_seq_len)}
+
+def prepare_prompt_batch(examples, tokenizer, max_seq_len=500):
+
+    instruction = examples["instruction"][0]  # shared instruciton
+    length_predefined_prompt = len(tokenizer.tokenize(f"### Instruction:\n{instruction}\n\n### Input:\n\n\n### Response:\n"))
+
+    # return output_text
+    output_text = []
+    for i in range(len(examples["instruction"])):
+        input_text = examples["input"][i]
+        response = examples["output"][i]
+
+        input_text = remove_extra_spaces(remove_urls(input_text))  # Assuming 'input' is a key in the row dictionary
+        tokens = tokenizer.tokenize(input_text)[:max_seq_len - length_predefined_prompt - 50]  # Reserving space for an EOS token, if necessary
+        cleaned_input = tokenizer.convert_tokens_to_string(tokens)  # Convert tokens back to a string
+
+        text = f'''[INST]### Instruction:{instruction}\n\n### Input:{cleaned_input}[/INST]\n\n### Response:\n<s>{response}</s>\n'''
+
+        output_text.append(text)
+
+    return output_text
+
+def pad_eos(ds):
+    EOS_TOKEN = "</s>"
+    return [f"{row['output']}{EOS_TOKEN}" for row in ds]
+
