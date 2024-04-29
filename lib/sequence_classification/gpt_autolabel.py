@@ -3,8 +3,33 @@ from lib.prompt.prompt import PromptClass
 import os
 from lib.prompt.prompt import chat_completion
 from lib.data.utils import *
-
+from fuzzywuzzy import process, fuzz
+import numpy as np
+import concurrent.futures
 os.environ['OPENAI_API_KEY'] = open('./datasets/openai_key.txt').read()
+
+def find_unique_subjects(sub_df, unique_subjects):
+    local_unique = []
+    for subject in sub_df['Subject']:
+        if not process.extractOne(subject, unique_subjects + local_unique, scorer=fuzz.token_sort_ratio, score_cutoff=85):
+            local_unique.append(subject)
+    return local_unique
+
+def drop_similar_subjects(df):
+    num_splits = 10  # Number of splits can be adjusted based on your system's capabilities
+    split_dfs = np.array_split(df, num_splits)
+    unique_subjects = []
+
+    with concurrent.futures.ProcessPoolExecutor() as executor:
+        results = executor.map(find_unique_subjects, split_dfs, [unique_subjects]*num_splits)
+
+    # Combine results
+    for result in results:
+        unique_subjects.extend(result)
+
+    # Filter DataFrame to keep only unique subjects
+    final_df = df[df['Subject'].isin(unique_subjects)]
+    return final_df
 
 if __name__ == '__main__':
     openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -22,8 +47,10 @@ if __name__ == '__main__':
 
     elif dataset == 'enron':
         data_list = pd.read_csv('./datasets/enron_mail_2015/emails_processed_clean.csv')
+        data_list = data_list.drop_duplicates(subset=['Subject'])
         print(len(data_list))
-        data_list = data_list.head(10000) # fixme
+        data_list = data_list.sample(frac=1, random_state=1234)
+        data_list = data_list.head(5000) # fixme
         data_list = data_list.to_dict(orient='records')
         annot_json = './datasets/enron-annot-classificaiton.jsonl'
 
@@ -63,12 +90,12 @@ if __name__ == '__main__':
 
         answer = chat_completion(model_name=model_name,
                                  filled_content=body,
-                                prompt_template=PromptClass.classify,
-                                functions = [None],
-                                function_name = None)
+                                 prompt_template=PromptClass.ask_relation,
+                                 functions = [None],
+                                 function_name = None)
 
         new_entry =  {
-            "instruction": "Given an email, classify whether the sender is claimed to from the internal organization (e.g. colleague, boss, admin staff, subordinate, teacher, student, etc.) or external organization as the recipient. Answer 'A' if internal, answer 'B' if external, answer 'Unclear' if unsure. Do not give any explanation.",
+            "instruction": "Given an email, infer the relationship between the sender and recipient. Select ONE of the following: 1. Colleague. 2. Manager and Team Members. 3. Executive and Employees. 4. Admin (from IT, HR, other internal departments) and Staff. 5. Student and Teacher. 6. Mentor and Mentee. 7. Friend. 8. Family. 9. Client and Service Provider. 10. Customer and Business.  11. None of the above.",
             "input": f"{body}",
             "output": f"{answer}",
             "metadata": {
@@ -88,26 +115,3 @@ if __name__ == '__main__':
                 for item in data:
                     file.write(json.dumps(item, ensure_ascii=False) + '\n')
 
-    ### TODO: check those A. internal organization
-    # ct = 0
-    # with open(annot_json, 'r', encoding='utf-8') as file:
-    #     for line in file:
-    #         entry = json.loads(line)
-    #         answer = entry['output']
-    #         if 'Step 1: A.' in answer:
-    #             ct += 1
-    # print(ct)
-
-    ## TODO correct instruction
-    # data = []
-    # annot_json = './datasets/spamarchieve-annot-2023-relation-corrected.jsonl'
-    #
-    # with open(annot_json, 'r', encoding='utf-8') as file:
-    #     for line in file:
-    #         entry = json.loads(line)
-    #         entry["instruction"] = "Step 1: Based on the inferred relationship between message sender and recipient, output 'A' if the message sender is from the internal organization as the message recipient (e.g. colleague, supervisor, or admin), output 'B' if from external organization (e.g. service provider from certain brand), or output 'Unclear' if relationship is not clear. Step 2: Identify the claimed capabilities of the sender, answer 'Unclear' if none. Step 3: Identify the claimed organization, answer 'Unclear' if none. For step 1, give inferred relationship as explanation. For step 2 and 3, quote the one most decisive phrase as explanation."
-    #         data.append(entry)
-    #
-    # with open('./datasets/spamarchieve-annot-2023-relation-corrected.jsonl', 'w', encoding='utf-8') as file:
-    #     for item in data:
-    #         file.write(json.dumps(item, ensure_ascii=False) + '\n')

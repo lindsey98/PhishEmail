@@ -43,7 +43,9 @@ class LLMSampleCB(WandbCallback):
         self.sample_dataset = test_dataset.select(range(num_samples))
         self.model, self.tokenizer = trainer.model, trainer.tokenizer
         self.gen_config = GenerationConfig.from_pretrained(trainer.model.name_or_path,
-                                                           max_new_tokens=max_new_tokens)
+                                                           max_new_tokens=max_new_tokens,
+                                                           return_full_text=False, # to not repeat the question, set to False
+                                                            )
 
     def generate(self, prompt):
         tokenized_prompt = self.tokenizer(prompt, return_tensors='pt')['input_ids'].cuda()
@@ -95,8 +97,8 @@ if __name__ == '__main__':
     model_id = 'meta-llama/Meta-Llama-3-8B'
     tokenizer = AutoTokenizer.from_pretrained(model_id)
     tokenizer.pad_token = tokenizer.eos_token
-    # dataset = "enron" #
-    dataset = 'spamarchieve'
+    dataset = "enron_relation_classification" #
+    # dataset = 'spamarchieve'
     os.environ["WANDB_PROJECT"] = f"{dataset}_ft"  # name your W&B project
 
     output_dir = "./output/"
@@ -190,7 +192,7 @@ if __name__ == '__main__':
 
     '''Train'''
     wandb.init(project=os.getenv("WANDB_PROJECT"), job_type='train', name=model_id)
-    wandb_callback = LLMSampleCB(trainer, test_dataset, num_samples=25, max_new_tokens=100)
+    wandb_callback = LLMSampleCB(trainer, test_dataset, num_samples=25, max_new_tokens=50)
     trainer.add_callback(wandb_callback)
     trainer.train()
     wandb.finish()

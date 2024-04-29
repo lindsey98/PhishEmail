@@ -135,12 +135,7 @@ def wrap_html(text, answer, result_dir, i):
 
 
 if __name__ == '__main__':
-    # model_id = 'NousResearch/llama-2-7b-hf'
-    # tokenizer = AutoTokenizer.from_pretrained(model_id)
-    # tokenizer.pad_token = tokenizer.eos_token
-    # gen_config = GenerationConfig.from_pretrained(model_id,
-    #                                               temperature=0.001,
-    #                                               max_new_tokens=500)
+
 
     data = []
     dataset = 'spamarchieve' # or spamarchieve
@@ -167,15 +162,6 @@ if __name__ == '__main__':
 
     train_dataset = load_jsonl(f"./datasets/{dataset}_gpt_train.jsonl")
     eval_dataset = load_jsonl(f"./datasets/{dataset}_gpt_eval.jsonl")
-    #
-    # train_prompts = [prepare_prompt(row, tokenizer, gen_config.max_length) for row in train_dataset]
-    # eval_prompts = [prepare_prompt(row, tokenizer, gen_config.max_length) for row in eval_dataset]
-    #
-    # train_outputs = pad_eos(train_dataset)
-    # eval_outputs = pad_eos(eval_dataset)
-    #
-    # train_dataset = [{"prompt": s, "output": t, "example": s + t} for s, t in zip(train_prompts, train_outputs)]
-    # eval_dataset = [{"prompt": s, "output": t, "example": s + t} for s, t in zip(eval_prompts, eval_outputs)]
 
     '''log dataset'''
     with wandb.init(project=f"{dataset}_ft"):
@@ -203,13 +189,3 @@ if __name__ == '__main__':
         wandb.log({"train_dataset": train_table,
                    "eval_dataset": eval_table})
 
-
-    '''visualize the examples'''
-    # result_dir = './datasets/iwspa-cot/'
-    # os.makedirs(result_dir, exist_ok=True)
-    #
-    # for it, data in enumerate(train_dataset):
-    #     input = data['input']
-    #     output = data['output']
-    #     wrap_html(input, output, result_dir, it)
-    #

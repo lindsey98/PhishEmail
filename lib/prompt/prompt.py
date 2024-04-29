@@ -1,7 +1,7 @@
 import json
 import openai
 import time
-from typing import Callable
+from typing import Callable, Union
 
 def chat_completion(model_name: str,
                     filled_content: str,
@@ -73,8 +73,9 @@ def truncate_json_string(json_string):
 
 class PromptClass:
 
-    def ask_orgization(filled_content:str) -> str:
-        with open('./lib/prompt/ner_prompt.json', 'rb') as handle:
+    def ask_identity(filled_content:str) -> str:
+        ""
+        with open('./lib/prompt/identity_recognition_prompt.json', 'rb') as handle:
             context = json.load(handle)
 
         fresh_content = {"role": "user", "content": f"{filled_content}"}
@@ -83,39 +84,12 @@ class PromptClass:
         return context
 
     def ask_relation(filled_content:str) -> str:
-        with open('./lib/prompt/relation_prompt.json', 'rb') as handle:
-            context = json.load(handle)
-
-        fresh_content = {"role": "user", "content": f"{filled_content}"}
-        context.append(fresh_content)
-
-        return context
-
-    def find_instruction(filled_content:str) -> str:
-        with open('./lib/prompt/instruction_prompt.json', 'rb') as handle:
-            context = json.load(handle)
-
-        fresh_content = {"role": "user", "content": f"{filled_content}"}
-        context.append(fresh_content)
-
-        return context
-
-    def rephrase_instruction(filled_content:str) -> str:
         ""
-        with open('./lib/prompt/rephrase_prompt.json', 'rb') as handle:
+        with open('./lib/prompt/relationship_inference_prompt.json', 'rb') as handle:
             context = json.load(handle)
 
-        fresh_content = {"role": "user", "content": f"{filled_content}"}
-        context.append(fresh_content)
-
-        return context
-
-    def cot(filled_content:str) -> str:
-        ""
-        with open('./lib/prompt/cot_prompt.json', 'rb') as handle:
-            context = json.load(handle)
-
-        fresh_content = {"role": "user", "content": f"{filled_content}"}
+        fresh_content = {"role": "user",
+                         "content": f"{filled_content}"}
         context.append(fresh_content)
 
         return context

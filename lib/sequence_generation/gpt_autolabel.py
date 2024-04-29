@@ -62,7 +62,7 @@ if __name__ == '__main__':
             continue
 
         answer = chat_completion(model_name=model_name, filled_content=body,
-                                prompt_template=PromptClass.cot,
+                                prompt_template=PromptClass.ask_identity,
                                 functions = [None],
                                 function_name = None)
 
@@ -87,26 +87,5 @@ if __name__ == '__main__':
                 for item in data:
                     file.write(json.dumps(item, ensure_ascii=False) + '\n')
 
-    ### TODO: check those A. internal organization
-    # ct = 0
-    # with open(annot_json, 'r', encoding='utf-8') as file:
-    #     for line in file:
-    #         entry = json.loads(line)
-    #         answer = entry['output']
-    #         if 'Step 1: A.' in answer:
-    #             ct += 1
-    # print(ct)
+    ### TODO: maximize the diversity in answer
 
-    ## TODO correct instruction
-    # data = []
-    # annot_json = './datasets/spamarchieve-annot-2023-relation-corrected.jsonl'
-    #
-    # with open(annot_json, 'r', encoding='utf-8') as file:
-    #     for line in file:
-    #         entry = json.loads(line)
-    #         entry["instruction"] = "Step 1: Based on the inferred relationship between message sender and recipient, output 'A' if the message sender is from the internal organization as the message recipient (e.g. colleague, supervisor, or admin), output 'B' if from external organization (e.g. service provider from certain brand), or output 'Unclear' if relationship is not clear. Step 2: Identify the claimed capabilities of the sender, answer 'Unclear' if none. Step 3: Identify the claimed organization, answer 'Unclear' if none. For step 1, give inferred relationship as explanation. For step 2 and 3, quote the one most decisive phrase as explanation."
-    #         data.append(entry)
-    #
-    # with open('./datasets/spamarchieve-annot-2023-relation-corrected.jsonl', 'w', encoding='utf-8') as file:
-    #     for item in data:
-    #         file.write(json.dumps(item, ensure_ascii=False) + '\n')
