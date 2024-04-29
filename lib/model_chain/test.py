@@ -3,16 +3,10 @@
 from lib.sequence_generation.wb_evaluate import _generate_identity
 from lib.sequence_classification.wb_evaluate import _generate_relation
 import re
-from transformers import AutoModelForCausalLM, AutoTokenizer, GenerationConfig, AutoModelForSequenceClassification, pipeline
-from email import generator
-from pathlib import Path
+from transformers import AutoModelForCausalLM, AutoTokenizer, GenerationConfig
 import os
 import chardet
 import json
-import email
-from email import message_from_string
-from email.utils import parseaddr
-from lib.data.dataloader import Nazario, extract_sender_ip
 from lib.data.utils import remove_extra_spaces, remove_urls
 from bs4 import BeautifulSoup
 from email import policy
@@ -22,12 +16,7 @@ from tqdm import tqdm
 from time import perf_counter
 import csv
 import pandas as pd
-from email.header import decode_header
-from translate import Translator
-from email.utils import parseaddr, getaddresses
-import pypff
-import quopri
-import base64
+from lib.data.dataloader import EmailDataset
 
 def decode_body(body_bytes):
     detected_encoding = chardet.detect(body_bytes)['encoding']
@@ -88,112 +77,6 @@ def pst_to_eml(source_folder, desc_folder):
             continue
         with open(filename, 'w', encoding='utf-8') as f: # must set this encoding
             f.write(message_eml)
-
-class Feed(Nazario):
-    def __init__(self, root_path):
-        super().__init__(root_path)
-        file_list = []
-
-        for root, dirs, files in os.walk(root_path):
-            for filename in files:
-                if filename.endswith('.eml'):
-                    full_path = os.path.join(root, filename)  # Join root with filename
-                    file_list.append(full_path)
-
-        self.file_list = file_list
-
-    def __getitem__(self, idx):
-        email_file_path = self.file_list[idx]
-        email_content = message_from_string(open(email_file_path).read())
-
-        # sender IP
-        # sender_ip = extract_sender_ip(email_content._headers)
-        headers = str(email_content._headers)
-        # Assuming email_message is your email object
-        sender_name, sender_address = parseaddr(email_content.get('From', ''))
-        if len(sender_name):
-            sender_name = decode_header(sender_name)
-            sender_name = ''.join(part if isinstance(part, str) else part.decode(charset or 'utf-8') for part, charset in sender_name)
-
-        # Extracting all recipients
-        to_addresses = email_content.get('To', '')
-        cc_addresses = email_content.get('Cc', '')  # Handling Cc if needed
-        bcc_addresses = email_content.get('Bcc', '')  # Handling Bcc if needed, though Bcc should not be visible
-
-        # Parsing multiple addresses
-        all_recipients = getaddresses([to_addresses, cc_addresses, bcc_addresses])
-
-        # Extract just the email addresses, and filter out any empty entries
-        to_names = [name for name, addr in all_recipients if addr]
-        to_addresses = [addr for name, addr in all_recipients if addr]
-
-        # Joining all recipient email addresses with a comma
-        to_names = ', '.join(to_names)
-        to_addresses = ', '.join(to_addresses)
-
-        subject = email_content.get('subject', '')
-        if len(subject):
-            subject = decode_header(subject)
-            if not isinstance(subject, str):
-                try:
-                    subject = ''.join(part if isinstance(part, str) else part.decode(charset or 'utf-8') for part, charset in subject)
-                except UnicodeDecodeError: # unicode error
-                    subject = email_content.get('subject', '')
-
-        # Check if the email message is multipart
-        if email_content.is_multipart():
-            text_content = ""
-            # Iterate over each part of the email
-            for part in email_content.get_payload():
-                content_type = part.get_content_type()
-                content_transfer_encoding = part.get('Content-Transfer-Encoding')
-
-                # If part is text/plain or text/html and not an attachment, process it
-                if content_type in ('text/plain', 'text/html'):
-                    raw_email_content = part.get_payload()
-
-                    if content_transfer_encoding == 'base64':
-                        decoded_content = base64.b64decode(raw_email_content).decode('utf-8', 'ignore')
-                    else:
-                        decoded_content = quopri.decodestring(raw_email_content.encode()).decode('utf-8', 'ignore')
-
-                    soup = BeautifulSoup(decoded_content, 'html.parser')
-                    text_part = ' '.join(soup.stripped_strings)
-                    text_content += text_part
-        else:
-            raw_email_content = email_content.get_payload()
-            content_transfer_encoding = email_content.get('Content-Transfer-Encoding')
-
-            if content_transfer_encoding == 'base64':
-                decoded_content = base64.b64decode(raw_email_content).decode('utf-8', 'ignore')
-            else:
-                decoded_content = quopri.decodestring(raw_email_content.encode()).decode('utf-8', 'ignore')
-
-            soup = BeautifulSoup(decoded_content, 'html.parser')
-            text_part = ' '.join(soup.stripped_strings)
-            text_content = text_part
-
-        # remove text surrounded by <>, since they are likely be comments that are invisible
-        text_content = re.sub(r'<[^>]*>', '', text_content)
-        # replace multiple newline characters with a single newline
-        text_content = re.sub(r'\n{2,}', '\n', text_content)
-        # replace multiple consecutive periods with a single period
-        text_content = re.sub(r'\.{2,}', '', text_content)
-        # replace multiple spaces with a single space
-        text_content = re.sub(r'\s+', ' ', text_content)
-        # Deal with &nbsp
-        text_content = re.sub(r'\xa0', ' ', text_content)
-        text_content = re.sub(r'&nbsp;', ' ', text_content)
-        # Deal with invisible -
-        text_content = re.sub(r'\xad', '', text_content)
-        text_content = re.sub(r'&shy;', '', text_content)
-
-        return email_file_path, \
-               (sender_name, sender_address), \
-                (to_names, to_addresses), \
-                subject, \
-                text_content, \
-                headers
 
 
 # Function to read existing email_file_paths from the CSV
@@ -262,14 +145,15 @@ if __name__ == '__main__':
     gen_config = GenerationConfig.from_pretrained(
                                                   model_id,
                                                   temperature=0.001,
-                                                  max_new_tokens=100,
+                                                  max_new_tokens=50,
                                                   return_full_text=False,
                                                   )
 
     ''''''
     # desc_folder = './datasets/sjtu_phish'
     desc_folder = './datasets/nazario-recent'
-    dataset = Feed(desc_folder)
+    # desc_folder = './datasets/Dataset_Full_Header_Training/Dataset_Submit_Legit'
+    dataset = EmailDataset(desc_folder)
     # csv_file_path = './datasets/sjtu_phish_results.csv'
     csv_file_path = './datasets/nazario_results.csv'
 
