@@ -1,14 +1,7 @@
 from torch.utils.data import Dataset, DataLoader
-import os
-import pandas as pd
-from tqdm import tqdm
-import re
-import numpy as np
 from lib.data.utils import *
 import os, sys, email, re
-import json
 from email.utils import parseaddr, getaddresses
-import pypff
 import quopri
 import base64
 from email.header import decode_header
@@ -32,7 +25,9 @@ class EmailDataset(Dataset):
 
     def __getitem__(self, idx):
         email_file_path = self.file_list[idx]
-        email_content = message_from_string(open(email_file_path).read())
+        with open(email_file_path, 'r', encoding='utf-8', errors='ignore') as file:
+            email_content = file.read()
+        email_content = message_from_string(email_content)
 
         # sender IP
         # sender_ip = extract_sender_ip(email_content._headers)
@@ -55,9 +50,14 @@ class EmailDataset(Dataset):
         to_names = [name for name, addr in all_recipients if addr]
         to_addresses = [addr for name, addr in all_recipients if addr]
 
-        # Joining all recipient email addresses with a comma
-        to_names = ', '.join(to_names)
-        to_addresses = ', '.join(to_addresses)
+        # If 'To' addresses are missing, use 'Delivered-To' as a fallback
+        if len(to_addresses) == 0:
+            to_names = ', '.join(to_names)
+            to_addresses = email_content.get('Delivered-To', '')
+        else:
+            # Joining all recipient email addresses with a comma
+            to_names = ', '.join(to_names)
+            to_addresses = ', '.join(to_addresses)
 
         subject = email_content.get('subject', '')
         if len(subject):
@@ -115,8 +115,12 @@ class EmailDataset(Dataset):
         # Deal with invisible hyphen
         text_content = re.sub(r'\xad', '', text_content)
         text_content = re.sub(r'&shy;', '', text_content)
-        # Deal with ZWSP
+        # Deal with ZWSP, ESC etc
         text_content = re.sub(r'\u200B', '', text_content)
+        text_content = re.sub(r'\x1b\[[0-?]*[ -/]*[@-~]', '', text_content)
+        text_content = re.sub(re.compile(r'[\u0090\u200C\u009F\u008F\uFEFF]'), '', text_content)
+        # Removes non-printable characters
+        text_content = re.sub(r'[^\x20-\x7E]', ' ', text_content)
 
         return email_file_path, \
                (sender_name, sender_address), \

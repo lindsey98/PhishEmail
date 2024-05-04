@@ -1,7 +1,6 @@
 
 
 from lib.sequence_generation.wb_evaluate import _generate_identity
-from lib.sequence_classification.wb_evaluate import _generate_relation
 import re
 from transformers import AutoModelForCausalLM, AutoTokenizer, GenerationConfig
 import os
@@ -17,6 +16,7 @@ from time import perf_counter
 import csv
 import pandas as pd
 from lib.data.dataloader import EmailDataset
+import torch
 
 def decode_body(body_bytes):
     detected_encoding = chardet.detect(body_bytes)['encoding']
@@ -114,26 +114,16 @@ if __name__ == '__main__':
     # pst_to_eml(root, desc_folder='./datasets/sjtu_phish')
     # pst_file.close()
 
-    '''Load relationship inference model'''
-    relation_checkpoint_path = "./checkpoints/output_relation/checkpoint-llama3"
-    relation_tokenizer = AutoTokenizer.from_pretrained(relation_checkpoint_path)
-    relation_tokenizer.pad_token = relation_tokenizer.eos_token
-    relation_model = AutoModelForCausalLM.from_pretrained(relation_checkpoint_path,
-                                                          use_cache=False,
-                                                          device_map="auto")
-    relation_model.eval()
-
-    with open('./lib/prompt/relationship_inference_prompt.json', 'rb') as handle:
-        relation_prompt = json.load(handle)
-    relation_instruction = relation_prompt[0]["content"]
-
     '''Load identity detection model'''
-    identity_checkpoint_path = './checkpoints/output_identity/checkpoint-llama3'
+    identity_checkpoint_path = './checkpoints/output_identity/checkpoint-rgggae5i:v0'
     identity_tokenizer = AutoTokenizer.from_pretrained(identity_checkpoint_path)
     identity_tokenizer.pad_token = identity_tokenizer.eos_token
     identity_model = AutoModelForCausalLM.from_pretrained(identity_checkpoint_path,
-                                                     use_cache=False,
-                                                     device_map="auto")
+                                                         use_cache=False,
+                                                         device_map="auto",
+                                                         torch_dtype=torch.bfloat16,
+                                                        )
+
     identity_model.eval()
 
     with open('./lib/prompt/identity_recognition_prompt.json', 'rb') as handle:
@@ -145,17 +135,18 @@ if __name__ == '__main__':
     gen_config = GenerationConfig.from_pretrained(
                                                   model_id,
                                                   temperature=0.001,
-                                                  max_new_tokens=50,
+                                                  max_new_tokens=75,
                                                   return_full_text=False,
                                                   )
 
     ''''''
-    # desc_folder = './datasets/sjtu_phish'
-    desc_folder = './datasets/nazario-recent'
-    # desc_folder = './datasets/Dataset_Full_Header_Training/Dataset_Submit_Legit'
+    desc_folder = './datasets/sjtu_phish'
+    # desc_folder = './datasets/nazario-recent'
+    # desc_folder = './datasets/CSDMC2010/Ham'
     dataset = EmailDataset(desc_folder)
-    # csv_file_path = './datasets/sjtu_phish_results.csv'
-    csv_file_path = './datasets/nazario_results.csv'
+    csv_file_path = './datasets/sjtu_phish_results.csv'
+    # csv_file_path = './datasets/nazario_results.csv'
+    # csv_file_path = './datasets/CSDMC2010_benign_results.csv'
 
     # Check if we're writing to a new file, and write the header if so
     if not os.path.exists(csv_file_path):
@@ -163,19 +154,18 @@ if __name__ == '__main__':
             writer = csv.writer(file)
             writer.writerow(['email_file_path', 'sender_name', 'sender_address',
                              'to_names', 'to_addresses',
-                             'subject', 'email_body_text', 'header',
-                             'relation_pred',
+                             'subject', 'email_body_text',
+                             'header',
                              'capability_pred',
                              'identity_pred',
-                             'extra_response',
-                             'relation_pred_time',
+                             'action_pred',
                              'identity_pred_time'])
 
     for it in tqdm(range(len(dataset))):
         if dataset.file_list[it] in [x.split(',')[0] for x in open(csv_file_path).readlines()]:
             continue
         #
-        # if dataset.file_list[it] not in ['./datasets/sjtu_phish/2108292.eml']:
+        # if dataset.file_list[it] not in ['./datasets/CSDMC2010/Ham/TRAIN_03441.eml']:
         #     continue
 
         email_file_path, (sender_name, sender_address), \
@@ -183,18 +173,6 @@ if __name__ == '__main__':
         subject, email_body_text, header = dataset[it]
 
         parsed_email = f'Subject: {subject} \n From: {sender_name} \n Recipient address: {to_addresses} \n Body: {email_body_text}'
-
-        ## infer the relationship between sender and recipient
-        query_relation = prepare_prompt_no_output_unstucture(parsed_email,
-                                                             tokenizer=relation_tokenizer,
-                                                             instruction=relation_instruction)
-        relation_results = _generate_relation(prompt=query_relation,
-                                              model=relation_model,
-                                              tokenizer=relation_tokenizer,
-                                              gen_config=gen_config)
-        match = re.search(r'^(.*?)\n', relation_results['generation'], re.DOTALL)
-        relation_pred = match.group(1).strip() if match else None
-        relation_pred_time = relation_results['total_time'] # todo: you can stop if this step predicts the sender is a marketers
 
         ## infer the sender claimed organization
         query_identity = prepare_prompt_no_output_unstucture(parsed_email,
@@ -205,14 +183,14 @@ if __name__ == '__main__':
                                            tokenizer=identity_tokenizer,
                                            gen_config=gen_config)
 
-        step_1_match = re.search(r"(Step 1:.*?)(?=Step 2)", identity_results['generation'], re.DOTALL)
+        step_1_match = re.search(r"(Step 1:.*?)(?=Step 2)", identity_results['generation'], re.DOTALL | re.IGNORECASE)
         step_1_text = step_1_match.group(1).strip() if step_1_match else None
 
-        step_2_match = re.search(r"(Step 2:.*?\.)(?=\s|$)", identity_results['generation'], re.DOTALL)
+        step_2_match = re.search(r"(Step 2:.*?)(?=Step 3)", identity_results['generation'], re.DOTALL | re.IGNORECASE)
         step_2_text = step_2_match.group(1).strip() if step_2_match else None
 
-        extra_match = re.search(r"Step 2:.*?\n(.*)", identity_results['generation'], re.DOTALL)
-        extra_response_text = extra_match.group(1).strip() if extra_match else None
+        step_3_match = re.search(r"Step 3:.*", identity_results['generation'], re.DOTALL | re.IGNORECASE)
+        step_3_text = step_3_match.group().strip() if step_3_match else None
 
         identity_pred_time = identity_results['total_time']
 
@@ -221,19 +199,17 @@ if __name__ == '__main__':
         email_body_text = email_body_text.replace('\n', '.')  # Preserving visual indication of newlines
         step_1_text = step_1_text.replace('\n', ' ') if step_1_text else None
         step_2_text = step_2_text.replace('\n', ' ') if step_2_text else None
-        extra_response_text = extra_response_text.replace('\n', ' ') if extra_response_text else None
+        step_3_text = step_3_text.replace('\n', ' ') if step_3_text else None
 
         # Append the new row to the CSV file
-        with open(csv_file_path, mode='a', newline='', encoding='utf-8') as file:
+        with open(csv_file_path, mode='a', newline='', encoding='utf-8', errors='ignore') as file:
             writer = csv.writer(file)
             writer.writerow([email_file_path, sender_name, sender_address,
                              to_names, to_addresses,
                              subject, email_body_text, header,
-                             relation_pred,
                              step_1_text,
                              step_2_text,
-                             extra_response_text,
-                             relation_pred_time,
+                             step_3_text,
                              identity_pred_time
                              ])
 

@@ -39,7 +39,8 @@ def chat_completion(model_name: str,
                     response = openai.ChatCompletion.create(
                         model=model_name,
                         messages=prompt,
-                        temperature=temperature
+                        temperature=temperature,
+                        max_tokens=100
                     )
                 inference_done = True
             except Exception as e: # too long
@@ -83,76 +84,5 @@ class PromptClass:
 
         return context
 
-    def ask_relation(filled_content:str) -> str:
-        ""
-        with open('./lib/prompt/relationship_inference_prompt.json', 'rb') as handle:
-            context = json.load(handle)
 
-        fresh_content = {"role": "user",
-                         "content": f"{filled_content}"}
-        context.append(fresh_content)
-
-        return context
-
-
-class FunctionCall:
-    ner_gpt_functions =  \
-    [
-        {
-            "name": "find_ner_organization",
-            "description": "Extracts named entities (in particular 'organizations') from the input text.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "entities": {
-                        "type": "array",
-                        "items": {
-                            "type": "object",
-                            "properties": {
-                                "start": {
-                                    "type": "integer",
-                                    "description": "The starting position of the recognized organization."
-                                },
-                                "end": {
-                                    "type": "integer",
-                                    "description": "The ending position of the recognized organization."
-                                },
-                                "organization": {
-                                    "type": "string",
-                                    "description": "A Named entity (organization) extracted from text."
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-        "required": ["entities"]  # 'required' inside 'parameters'
-        }
-    ]
-
-    action_gpt_functions = \
-        [
-            {
-                "name": "find_action",
-                "description": "Finds the sentences that are instructions to the message recipients.",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "entities": {
-                            "type": "array",
-                            "items": {
-                                "type": "object",
-                                "properties": {
-                                    "instruction": {
-                                        "type": "string",
-                                        "description": "Detected instruction."
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                "required": ["entities"]  # 'required' inside 'parameters'
-            }
-        ]
 

@@ -17,11 +17,7 @@ from tqdm import tqdm
 import json
 import socket
 import re
-from ipaddress import ip_address
-from typing import Tuple
 
-# stop_words = list(STOP_WORDS)
-# stop_words.extend(['from', 'subject', 're', 'edu', 'use', 'cc', 'email', 'bcc', 'subject']) # add some email stopwords
 
 
 def remove_specific_special_chars(text):
@@ -410,32 +406,6 @@ def parse_json(text, delimiter='{"text":'):
         start += len(delimiter)
     return json_objects
 
-def extract_sender_ip(email_headers: Tuple) -> str:
-    # Regular expression pattern to extract IP addresses from "Received" lines
-    ip_regex = re.compile(r'\b(?:\d{1,3}\.){3}\d{1,3}\b')
-    ips = []
-    for header in email_headers:
-        if header[0].startswith('Received'):
-            found_ips = ip_regex.findall(header[1])
-            ips.extend(found_ips)
-
-    # Iterate over the found IPs in reverse order (start from the original sender)
-    for ip in reversed(ips):
-        try:
-            # Check if the IP address is a private address
-            if not ip_address(ip).is_private:
-                return ip
-        except ValueError:
-            # If IP address is invalid, continue to the next
-            continue
-
-    return "NotFound"
-
-def reverse_dns(ip_address):
-    try:
-        return socket.gethostbyaddr(ip_address)[0]
-    except (socket.herror, socket.gaierror):
-        return "No domain associated with the IP address."
 
 def save_jsonl(data, filename):
     with open(filename, 'w') as file:

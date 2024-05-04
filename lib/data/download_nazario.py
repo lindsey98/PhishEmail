@@ -1,3 +1,5 @@
+import shutil
+
 from lib.web_utils.CustomDriver import CustomWebDriver
 import time
 from selenium.webdriver.common.by import By
@@ -7,6 +9,8 @@ import re
 import bs4 as BeautifulSoup
 import os
 import requests
+os.environ['http_proxy'] = 'http://127.0.0.1:7890'
+os.environ['https_proxy'] = 'http://127.0.0.1:7890'
 
 def extract_emails(text):
     # Regex pattern to identify email sections
@@ -22,31 +26,6 @@ def extract_emails(text):
     return emails
 
 
-def download_eml_files(base_url, folder_url):
-    # Create a session object to persist certain parameters across requests
-    session = requests.Session()
-    # Get the page
-    response = session.get(folder_url)
-    # Parse the page with BeautifulSoup
-    soup = BeautifulSoup(response.text, 'html.parser')
-
-    # Find all links on the page
-    for link in soup.find_all('a'):
-        href = link.get('href')
-        # Check if the link is to an .eml file
-        if href and href.endswith('.eml'):
-            download_url = base_url + href
-            # Get the file name
-            file_name = href.split('/')[-1]
-            # Download the .eml file
-            file_response = session.get(download_url)
-            if file_response.status_code == 200:
-                # Save the file
-                with open(file_name, 'wb') as file:
-                    file.write(file_response.content)
-                print(f"Downloaded {file_name}")
-            else:
-                print(f"Failed to download {file_name}")
 
 if __name__ == '__main__':
     '''Nazario recent'''
@@ -58,13 +37,14 @@ if __name__ == '__main__':
     #     with open(os.path.join('./datasets/nazario-recent/2023', f"{it}.eml"), 'w', encoding='utf-8') as f: # must set this encoding
     #         f.write(email)
 
-    '''phishing pot'''
-    base_url = 'https://github.com'
-    folder_url = 'https://raw.githubusercontent.com/rf-peixoto/phishing_pot/main/email'
-
-    # Create a directory to save the downloaded files
-    os.makedirs('./datasets/phishing_pot', exist_ok=True)
-    os.chdir('./datasets/phishing_pot')
-
-    # Call the function
-    download_eml_files(base_url, folder_url)
+    '''CSDMC2010'''
+    labels = open('./datasets/CSDMC2010/SPAMTrain.label').readlines()
+    # 1 is ham
+    ct = 0
+    for l in labels:
+        if l.split()[0] == '1':
+            ct += 1
+            os.makedirs('./datasets/CSDMC2010/Ham', exist_ok=True)
+            shutil.copyfile(f'./datasets/CSDMC2010/TRAINING/{l.split()[1].strip()}',
+                            f'./datasets/CSDMC2010/Ham/{l.split()[1].strip()}')
+    print(ct)
