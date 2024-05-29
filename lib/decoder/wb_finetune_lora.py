@@ -103,8 +103,8 @@ if __name__ == '__main__':
     batch_size = 1
     gradient_accumulation_steps = 2
     num_train_epochs = 2
-    max_seq_length = {'meta-llama/Llama-2-7b-hf': 4096,
-                      'meta-llama/Meta-Llama-3-8B': 4096} # by right llama3 can reach 8k
+    max_seq_length = {'meta-llama/Llama-2-7b-hf': 2048,
+                      'meta-llama/Meta-Llama-3-8B': 2048} # by right llama3 can reach 8k
 
     api = Api()
     artifact = api.artifact(f'lindsey98/{dataset}_ft/{dataset}_gpt_splitted:latest', type='dataset')

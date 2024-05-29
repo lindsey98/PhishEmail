@@ -139,13 +139,56 @@ if __name__ == '__main__':
 
     data = []
     dataset = 'spamarchieve' # or spamarchieve
+    internal_ct = 0
+    external_ct = 0
+    unclear_ct = 0
 
-    dataset_file_spam = "./datasets/spamarchieve-annot-2023.jsonl"
+    dataset_file_spam = "./datasets/spamarchieve-annot-2023-corrected.jsonl"
 
     with open(dataset_file_spam, 'r', encoding='utf-8') as file:
         for line in file:
             entry = json.loads(line)
+            entry['metadata'].pop('Id', None)
             data.append(entry)
+
+            if "Step 1: Internal" in entry["output"]:
+                internal_ct += 1
+            elif "Step 1: Ambiguous" in entry["output"]:
+                unclear_ct += 1
+            else:
+                external_ct += 1
+
+    print(f"Length of Ambiguous = {unclear_ct}")
+    print(f"Length of External = {external_ct}")
+    print(f"Length of Internal = {internal_ct}")
+    exit()
+
+    dataset_file_benign = './datasets/enron-annot-corrected.jsonl'
+    with open(dataset_file_benign, 'r', encoding='utf-8') as file:
+        for line in file:
+            entry = json.loads(line)
+            entry['metadata'].pop('Id', None)
+            data.append(entry)
+
+            if "Step 1: Internal" in entry["output"]:
+                internal_ct += 1
+            elif "Step 1: Ambiguous" in entry["output"]:
+                unclear_ct += 1
+            else:
+                external_ct += 1
+
+    # dataset_file_benign = './datasets/nus-annot.jsonl'
+    # with open(dataset_file_benign, 'r', encoding='utf-8') as file:
+    #     for line in file:
+    #         entry = json.loads(line)
+    #         entry['metadata'].pop('Id', None)
+    #         if "Step 1: Internal" in entry["output"]:
+    #             internal_ct += 1
+    #             data.append(entry)
+
+    print(f"Length of Ambiguous = {unclear_ct}")
+    print(f"Length of External = {external_ct}")
+    print(f"Length of Internal = {internal_ct}")
 
     random.seed(1234)
     random.shuffle(data)  # shuffle inplace
@@ -154,8 +197,8 @@ if __name__ == '__main__':
     train_df = pd.DataFrame(train_dataset)
     eval_df = pd.DataFrame(eval_dataset)
 
-    train_table = wandb.Table(dataframe=train_df)
-    eval_table = wandb.Table(dataframe=eval_df)
+    # train_table = wandb.Table(dataframe=train_df)
+    # eval_table = wandb.Table(dataframe=eval_df)
 
     train_df.to_json(f"./datasets/{dataset}_gpt_train.jsonl", orient='records', lines=True)
     eval_df.to_json(f"./datasets/{dataset}_gpt_eval.jsonl", orient='records', lines=True)
@@ -186,6 +229,6 @@ if __name__ == '__main__':
         at2.add_file(f"./datasets/{dataset}_gpt_train.jsonl")
         at2.add_file(f"./datasets/{dataset}_gpt_eval.jsonl")
         wandb.log_artifact(at2)
-        wandb.log({"train_dataset": train_table,
-                   "eval_dataset": eval_table})
+        # wandb.log({"train_dataset": train_table,
+        #            "eval_dataset": eval_table})
 

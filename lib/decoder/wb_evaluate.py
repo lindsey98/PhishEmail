@@ -11,29 +11,51 @@ from tqdm.auto import tqdm
 from time import perf_counter
 from transformers import AutoModelForCausalLM, AutoTokenizer, GenerationConfig
 from lib.data.utils import prepare_prompt_batch, prepare_prompt, create_prompt_no_answer, pad_eos, prepare_prompt_no_output
-from peft import LoraConfig, get_peft_model
-from transformers import TrainingArguments
-from trl import SFTTrainer, DataCollatorForCompletionOnlyLM
-from peft import AutoPeftModelForCausalLM
+from trl import DataCollatorForCompletionOnlyLM
 import math
 import numpy as np
 import re
 import evaluate
 from functools import partial
+from transformers import StoppingCriteria, StoppingCriteriaList
+
 os.environ['http_proxy'] = 'http://127.0.0.1:7890'
 os.environ['https_proxy'] = 'http://127.0.0.1:7890'
 
-def _generate(prompt, model, tokenizer, gen_config):
+class StopAtMultipleTokensCriteria(StoppingCriteria):
+    def __init__(self, tokenizer, stop_sequences):
+        # Encode each sequence to token IDs using the tokenizer
+        self.stop_token_ids_list = [tokenizer.encode(seq, add_special_tokens=False) for seq in stop_sequences]
+
+    def __call__(self, input_ids, scores):
+        input_len = input_ids.shape[1]
+        # Check each set of stop token IDs
+        for stop_token_ids in self.stop_token_ids_list:
+            seq_len = len(stop_token_ids)
+            if input_len >= seq_len:
+                # Compare the last generated tokens against the current stop token IDs set
+                if all(input_ids[0, -seq_len + i] == stop_token_ids[i] for i in range(seq_len)):
+                    return True
+        return False
+
+
+def _generate_identity(prompt, model, tokenizer, gen_config):
     tokenized_prompt = tokenizer(prompt, return_tensors='pt')['input_ids'].to(model.device)
+    stop_sequences = ['###', '</s>']
+    stopping_criterion = StoppingCriteriaList([StopAtMultipleTokensCriteria(tokenizer, stop_sequences)])
+
     with torch.inference_mode():
         t0 = perf_counter()
         output = model.generate(input_ids=tokenized_prompt,
+                                stopping_criteria=stopping_criterion,
                                 generation_config=gen_config)
         total_time = perf_counter() - t0
         generation_ids = output[0][len(tokenized_prompt[0]):]
         num_gen_tokens = len(generation_ids)
         generation = tokenizer.decode(generation_ids, skip_special_tokens=True)
-        return dict(generation=generation, generation_ids=generation_ids.tolist(), total_time=total_time,
+        return dict(generation=generation,
+                    generation_ids=generation_ids.tolist(),
+                    total_time=total_time,
                     num_gen_tokens=num_gen_tokens)
 
 
@@ -47,45 +69,45 @@ def _generate(prompt, model, tokenizer, gen_config):
 #         data.append((prompt, label, *list(output.values()), gen_config.temperature, gen_config.max_new_tokens))
 #     return data, columns
 
-@torch.inference_mode()
-def compute_perplexity(eval_dataloader, model):
-    model.eval()
-    nlls = []
-
-    for i, batch in tqdm(enumerate(eval_dataloader)):
-        if (batch["labels"] == -100).all():
-            continue  # Skip this batch
-        batch = {k: v.cuda() for k, v in batch.items()}
-        with torch.amp.autocast("cuda", dtype=torch.bfloat16):
-            out = model(**batch)
-            neg_log_likelihood = out.loss
-
-        nlls.append(neg_log_likelihood)
-
-    # Log results at the end
-    ppl = torch.exp(torch.stack(nlls).mean()).item()
-    return ppl
+# @torch.inference_mode()
+# def compute_perplexity(eval_dataloader, model):
+#     model.eval()
+#     nlls = []
+#
+#     for i, batch in tqdm(enumerate(eval_dataloader)):
+#         if (batch["labels"] == -100).all():
+#             continue  # Skip this batch
+#         batch = {k: v.cuda() for k, v in batch.items()}
+#         with torch.amp.autocast("cuda", dtype=torch.bfloat16):
+#             out = model(**batch)
+#             neg_log_likelihood = out.loss
+#
+#         nlls.append(neg_log_likelihood)
+#
+#     # Log results at the end
+#     ppl = torch.exp(torch.stack(nlls).mean()).item()
+#     return ppl
 
 def split_by_step(results):
     step_1_match = re.search(r"(Step 1:.*?)(?=Step 2)", results, re.DOTALL)
     step_1_text = step_1_match.group(1).strip() if step_1_match else ''
 
-    step_2_match = re.search(r"(Step 2:.*?)(?=Step 3)", results, re.DOTALL)
+    step_2_match = re.search(r"(Step 2:.*?)(?=\n|(</s>))", results, re.DOTALL)
     step_2_text = step_2_match.group(1).strip() if step_2_match else ''
 
-    step_3_match = re.search(r"(Step 3:.*?)(?=\n|(</s>))", results, re.DOTALL)
-    step_3_text = step_3_match.group(1).strip() if step_3_match else ''
-
-    return step_1_text, step_2_text, step_3_text
+    return step_1_text, step_2_text
 
 
 if __name__ == '__main__':
+    api = Api()
+    artifact = api.artifact('lindsey98/spamarchieve_ft/checkpoint-vgx0z3n3:v0', type='model')
+    artifact_dir = artifact.download()
+    exit()
 
-    TORCH_DTYPES = {"bf16": torch.bfloat16, "fp16": torch.float16, "fp32": torch.float}
     config = SimpleNamespace(
         dataset="spamarchieve",
         wandb_project='spamarchieve_ft',
-        checkpoint_path='./checkpoints/output_llama2_lora_relation/checkpoint-98fmxipa:v1',
+        checkpoint_path='./checkpoints/output_identity/checkpoint-llama3',
         use_cache=False,
         device_map="auto",
         num_eval_samples=50,  # we only run on the first samples of the eval_dataset
@@ -93,52 +115,64 @@ if __name__ == '__main__':
         max_new_tokens=100,  # how many tokens to generate as a response
         max_seq_length=4096,
     )
-    gen_config = GenerationConfig.from_pretrained('meta-llama/Llama-2-7b-hf',
+    model_id = 'meta-llama/Meta-Llama-3-8B'
+    # model_id = 'meta-llama/Llama-2-7b-hf'
+    gen_config = GenerationConfig.from_pretrained(model_id,
                                                   temperature=config.temperature,
-                                                  max_new_tokens=config.max_new_tokens,)
+                                                  max_new_tokens=config.max_new_tokens,
+                                                  return_full_text=False,
+                                                  early_stopping=True,
+
+                                                  )
 
     api = Api()
-    artifact = api.artifact(f'lindsey98/{config.dataset}_ft/{config.dataset}_gpt_splitted:latest', type='dataset')
+    artifact = api.artifact(f'lindsey98/{config.dataset}_ft/{config.dataset}_gpt_splitted:latest',
+                            type='dataset')
     dataset_dir = artifact.download()
     ds = load_dataset("json", data_dir=dataset_dir)
     train_dataset = ds["train"]
     eval_dataset = ds["test"]
 
-    # artifact = api.artifact(f'lindsey98/spamarchieve_ft/checkpoint-98fmxipa:v1', type='model')
-    # artifact_dir = artifact.download()
-    # exit()
-
     # Load the tokenizer and the model
     tokenizer = AutoTokenizer.from_pretrained(config.checkpoint_path)
     tokenizer.pad_token = tokenizer.eos_token
-    model = AutoPeftModelForCausalLM.from_pretrained(config.checkpoint_path,
-                                                     use_cache=config.use_cache,
-                                                     device_map=config.device_map)
+    model = AutoModelForCausalLM.from_pretrained(config.checkpoint_path,
+                                                 use_cache=config.use_cache,
+                                                 device_map=config.device_map)
     model.eval()
 
-    # '''Compute perplexity'''
-    response_template = "\n### Response:"  # Note: For llama2, the response_template with context and w/o context are encoded differently. https://huggingface.co/docs/trl/en/sft_trainer#using-tokenids-directly-for-responsetemplate
-    response_template_ids = tokenizer.encode(response_template, add_special_tokens=False)[2:]  # ignore the \n part
-    collator = DataCollatorForCompletionOnlyLM(response_template_ids, tokenizer=tokenizer)
+    # completion only
+    if model_id == 'meta-llama/Llama-2-7b-hf':
+        response_template = "\n### Response:" # Note: For llama2, the response_template with context and w/o context are encoded differently. https://huggingface.co/docs/trl/en/sft_trainer#using-tokenids-directly-for-responsetemplate
+        response_template_ids = tokenizer.encode(response_template, add_special_tokens=False)[2:]  # ignore the \n part
+        collator = DataCollatorForCompletionOnlyLM(response_template_ids, tokenizer=tokenizer)
+    else:
+        response_template = "### Response:\n" # annoying
+        response_template_ids = tokenizer.encode(response_template, add_special_tokens=False)
+        collator = DataCollatorForCompletionOnlyLM(response_template, tokenizer=tokenizer)
 
-    trainer = SFTTrainer(
-        model=model,
-        args=TrainingArguments(
-            output_dir='./debug',
-            per_device_eval_batch_size=1,
-            dataloader_drop_last=False
-        ),
-        train_dataset=train_dataset,
-        eval_dataset=eval_dataset,
-        data_collator=collator,
-        packing=False,
-        max_seq_length=config.max_seq_length,
-        formatting_func=partial(prepare_prompt_batch, tokenizer=tokenizer, max_seq_len=config.max_seq_length),
-    )
-
-    eval_loader = trainer.get_eval_dataloader()
-    ppl = compute_perplexity(eval_loader, model)
-    print('Perplexity = ', ppl) # Perplexity = 1.1016572713851929
+    # trainer = SFTTrainer(
+    #     model=model,
+    #     args=TrainingArguments(
+    #         output_dir='./debug',
+    #         per_device_eval_batch_size=1,
+    #         dataloader_drop_last=False
+    #     ),
+    #     train_dataset=train_dataset,
+    #     eval_dataset=eval_dataset,
+    #     data_collator=collator,
+    #     packing=False,
+    #     max_seq_length=config.max_seq_length,
+    #     formatting_func=partial(prepare_prompt_batch, tokenizer=tokenizer, max_seq_len=config.max_seq_length),
+    #     dataset_batch_size=25,
+    # )
+    #
+    # eval_loader = trainer.get_eval_dataloader()
+    # ppl = compute_perplexity(eval_loader, model)
+    # print('Perplexity = ', ppl)
+    # exit()
+    # Llama2 = ?
+    # Llama3 =  1.246347904205322
 
     train_prompts = [prepare_prompt_no_output(row, tokenizer, config.max_seq_length) for row in train_dataset]
     eval_prompts = [prepare_prompt_no_output(row, tokenizer, config.max_seq_length) for row in eval_dataset]
@@ -149,55 +183,30 @@ if __name__ == '__main__':
     train_dataset = [{"prompt": s, "output": t, "example": s + t} for s, t in zip(train_prompts, train_outputs)]
     eval_dataset = [{"prompt": s, "output": t, "example": s + t} for s, t in zip(eval_prompts, eval_outputs)]
 
-    response_template = "\n### Response:" # Note: For llama2, the response_template with context and w/o context are encoded differently. https://huggingface.co/docs/trl/en/sft_trainer#using-tokenids-directly-for-responsetemplate
-    response_template_ids = tokenizer.encode(response_template, add_special_tokens=False)[2:]  # ignore the \n part
-    collator = DataCollatorForCompletionOnlyLM(response_template_ids, tokenizer=tokenizer)
-
     rouge = evaluate.load('rouge') # do pip install rouge_score first
 
     references = []
     predictions = []
     reference_class = []
     predicted_class = []
-    class_map = {'A': 0, 'B': 1, 'Unclear': 2}
 
     for data in tqdm(eval_dataset, leave=False):
         prompt = data['prompt']
         reference = data['output']
-        step1_ref, step2_ref, step3_ref = split_by_step(reference)
-        step23_ref = step2_ref + step3_ref
+        step1_ref, step2_ref = split_by_step(reference)
+        step12_ref = step1_ref + step2_ref
 
-        prediction = _generate(prompt, model, tokenizer, gen_config)['generation']
-        step1_pred, step2_pred, step3_pred = split_by_step(prediction)
-        step23_pred = step2_pred + step3_pred
+        prediction = _generate_identity(prompt, model, tokenizer, gen_config)['generation']
+        step1_pred, step2_pred = split_by_step(prediction)
+        step12_pred = step1_pred + step2_pred
 
-        if 'A' in step1_ref:
-            mapped_value = class_map['A']
-        elif 'B' in step1_ref:
-            mapped_value = class_map['B']
-        else:
-            mapped_value = class_map['Unclear']
-        reference_class.append(mapped_value)
-
-        if 'A' in step1_pred:
-            mapped_value = class_map['A']
-        elif 'B' in step1_pred:
-            mapped_value = class_map['B']
-        else:
-            mapped_value = class_map['Unclear']
-        predicted_class.append(mapped_value)
-
-        references.append(step23_ref)
-        predictions.append(step23_pred)
+        references.append(step12_ref)
+        predictions.append(step12_pred)
 
     rouge_metric = rouge.compute(predictions=predictions, references=references)
     print('Rouge = ', rouge_metric)
-    correct_and_relevant = (np.asarray(reference_class) == np.asarray(predicted_class)) & (np.asarray(reference_class) != 2)
-    total_relevant = np.asarray(reference_class) != 2
-    classification_accuracy = np.sum(correct_and_relevant) / np.sum(total_relevant) #
-    print('Classification accuracy = ', classification_accuracy)
-    # Rouge =  {'rouge1': 0.7330069403527175, 'rouge2': 0.6466189876874545, 'rougeL': 0.7235050858701357, 'rougeLsum': 0.7240731321939433}
-    # Classification accuracy =  0.8690549722050649
+    # Llama2 Rouge = ? # too slow
+    # Llama3 Rouge =  {'rouge1': 0.7442229775073727, 'rouge2': 0.6213905948267631, 'rougeL': 0.716121912882332, 'rougeLsum': 0.7164973301653137}
     exit()
 
 
@@ -226,7 +235,7 @@ if __name__ == '__main__':
 
     for data in pbar:
         t0 = perf_counter()
-        results = _generate(data, model, tokenizer, gen_config)
+        results = _generate_identity(data, model, tokenizer, gen_config)
         results = results['generation']
         print(results)
         total_time = perf_counter() - t0
