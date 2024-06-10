@@ -13,14 +13,12 @@ from torch.utils.data import DataLoader
 from transformers import default_data_collator, AutoModelForCausalLM
 from types import SimpleNamespace
 from transformers import get_cosine_schedule_with_warmup
-from transformers import GenerationConfig
 from tqdm.auto import tqdm
 from pathlib import Path
 from lib.data.utils import prepare_prompt_batch, prepare_prompt, create_prompt_no_answer
 from peft import LoraConfig, get_peft_model
 from transformers import TrainingArguments, LlamaTokenizer
 from trl import SFTTrainer, DataCollatorForCompletionOnlyLM
-from transformers.integrations import WandbCallback
 from datasets import load_dataset
 from functools import partial
 from lib.data.utils import load_jsonl, prepare_prompt_no_output, remove_urls, pad_eos
@@ -36,34 +34,6 @@ def param_count(m):
     print(f"Total params: {params:.2f}M, Trainable: {trainable_params:.2f}M")
     return params, trainable_params
 
-class LLMSampleCB(WandbCallback):
-    def __init__(self, trainer, test_dataset, num_samples=10, max_new_tokens=256, log_model="checkpoint"):
-        super().__init__()
-        self._log_model = log_model
-        self.sample_dataset = test_dataset.select(range(num_samples))
-        self.model, self.tokenizer = trainer.model, trainer.tokenizer
-        self.gen_config = GenerationConfig.from_pretrained(trainer.model.name_or_path,
-                                                           max_new_tokens=max_new_tokens)
-
-    def generate(self, prompt):
-        tokenized_prompt = self.tokenizer(prompt, return_tensors='pt')['input_ids'].cuda()
-        with torch.inference_mode():
-            output = self.model.generate(inputs=tokenized_prompt, generation_config=self.gen_config)
-            generation_ids = output[0][len(tokenized_prompt[0]):]
-        return self.tokenizer.decode(generation_ids, skip_special_tokens=True)
-
-    def samples_table(self, examples):
-        records_table = wandb.Table(columns=["prompt", "generation"] + list(self.gen_config.to_dict().keys()))
-        for example in tqdm(examples, leave=False):
-            prompt = example["text"]
-            generation = self.generate(prompt=prompt)
-            records_table.add_data(prompt, generation, *list(self.gen_config.to_dict().values()))
-        return records_table
-
-    def on_evaluate(self, args, state, control, **kwargs):
-        super().on_evaluate(args, state, control, **kwargs)
-        records_table = self.samples_table(self.sample_dataset)
-        self._wandb.log({"sample_predictions": records_table})
 
 def save_model(model, model_name, models_folder="models", log=False):
     """Save the model to wandb as an artifact
@@ -83,7 +53,6 @@ def save_model(model, model_name, models_folder="models", log=False):
         at = wandb.Artifact(model_name, type="model")
         at.add_dir(file_name)
         wandb.log_artifact(at)
-
 
 
 if __name__ == '__main__':
@@ -190,7 +159,7 @@ if __name__ == '__main__':
 
     '''Train'''
     wandb.init(project=os.getenv("WANDB_PROJECT"), job_type='train', name=model_id)
-    wandb_callback = LLMSampleCB(trainer, test_dataset, num_samples=25, max_new_tokens=100)
+    wandb_callback = DecoderCallback(trainer, test_dataset, num_samples=25, max_new_tokens=100)
     trainer.add_callback(wandb_callback)
     trainer.train()
     wandb.finish()

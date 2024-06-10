@@ -18,10 +18,10 @@ from spacy import displacy
 import json
 from pathlib import Path
 import torch.nn.functional as F
-from lib.utils.preprocessing import tokenize_and_align_labels
-from lib.utils.postprocessing import *
-from lib.utils.evaluation import compute_token_classification_metrics, compute_entity_overlap_metrics
-from lib.utils.trainer import BertTrainer_FocalLoss
+from lib.model_utils.preprocessing import tokenize_and_align_labels
+from lib.model_utils.postprocessing import *
+from lib.model_utils.evaluation import compute_token_classification_metrics, compute_entity_overlap_metrics
+from lib.model_utils.trainer import BertTrainer_FocalLoss
 from functools import partial
 from spacy.tokens import Doc, Span
 

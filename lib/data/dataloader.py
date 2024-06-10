@@ -7,6 +7,8 @@ import base64
 from email.header import decode_header
 from email import message_from_string
 from email.utils import parseaddr
+from email.message import Message
+import binascii
 
 class EmailDataset(Dataset):
     def __init__(self, root_path):
@@ -17,11 +19,57 @@ class EmailDataset(Dataset):
                 if filename.endswith('.eml'):
                     full_path = os.path.join(root, filename)  # Join root with filename
                     file_list.append(full_path)
+                elif filename.endswith('.txt'):
+                    full_path = os.path.join(root, filename)  # Join root with filename
+                    file_list.append(full_path)
 
         self.file_list = file_list
 
     def __len__(self):
         return len(self.file_list)
+
+    def extract_text_content(self, part: Message) -> str:
+        """
+        Recursively extracts text content from an email part,
+        including handling nested multiparts.
+        """
+        text_content = ""
+
+        # Check if the part is a multipart
+        if part.is_multipart():
+            # Recursively extract text from each sub-part
+            for subpart in part.get_payload():
+                text_content += self.extract_text_content(subpart)
+        else:
+            # Process single part (leaf node)
+            content_type = part.get_content_type()
+            content_transfer_encoding = part.get('Content-Transfer-Encoding', '').lower()
+            raw_email_content = part.get_payload(decode=False)  # directly decode the payload
+
+            # Decode content based on transfer encoding
+            try:
+                if content_transfer_encoding == 'base64':
+                    # Add padding if necessary
+                    missing_padding = len(raw_email_content) % 4
+                    if missing_padding:
+                        raw_email_content += '=' * (4 - missing_padding)
+                    decoded_content = base64.b64decode(raw_email_content).decode('utf-8', 'ignore')
+                elif content_transfer_encoding == 'quoted-printable':
+                    decoded_content = quopri.decodestring(raw_email_content).decode('utf-8', 'ignore')
+                else:
+                    decoded_content = raw_email_content
+            except (binascii.Error, ValueError) as e:
+                print(f"Error decoding content: {e}")
+                decoded_content = raw_email_content
+
+            # Convert HTML content to plain text if necessary
+            if 'html' in content_type:
+                soup = BeautifulSoup(decoded_content, 'html.parser')
+                text_content = ' '.join(soup.stripped_strings)
+            elif 'text' in content_type:
+                text_content = decoded_content.strip()
+
+        return text_content
 
     def __getitem__(self, idx):
         email_file_path = self.file_list[idx]
@@ -69,37 +117,24 @@ class EmailDataset(Dataset):
                     subject = email_content.get('subject', '')
 
         # Check if the email message is multipart
-        if email_content.is_multipart():
-            text_content = ""
-            # Iterate over each part of the email
-            for part in email_content.get_payload():
-                content_type = part.get_content_type()
-                content_transfer_encoding = part.get('Content-Transfer-Encoding')
+        text_content = self.extract_text_content(email_content)
 
-                # If part is text/plain or text/html and not an attachment, process it
-                if content_type in ('text/plain', 'text/html'):
-                    raw_email_content = part.get_payload()
+        reply_pattern = re.compile(r"On.*wrote:")
+        forward_pattern = re.compile(r"^-{2,}\s*Forwarded message\s*-+$", re.MULTILINE)
 
-                    if content_transfer_encoding == 'base64':
-                        decoded_content = base64.b64decode(raw_email_content).decode('utf-8', 'ignore')
-                    else:
-                        decoded_content = quopri.decodestring(raw_email_content.encode()).decode('utf-8', 'ignore')
+        # First, attempt to split by the forwarding pattern
+        forward_parts = forward_pattern.split(text_content, 1)
+        if len(forward_parts) > 1:
+            # If there is text before the forwarding header, return it
+            pre_forward_content = forward_parts[0].strip()
+            if pre_forward_content:
+                text_content = pre_forward_content
 
-                    soup = BeautifulSoup(decoded_content, 'html.parser')
-                    text_part = ' '.join(soup.stripped_strings)
-                    text_content += text_part
-        else:
-            raw_email_content = email_content.get_payload()
-            content_transfer_encoding = email_content.get('Content-Transfer-Encoding')
-
-            if content_transfer_encoding == 'base64':
-                decoded_content = base64.b64decode(raw_email_content).decode('utf-8', 'ignore')
-            else:
-                decoded_content = quopri.decodestring(raw_email_content.encode()).decode('utf-8', 'ignore')
-
-            soup = BeautifulSoup(decoded_content, 'html.parser')
-            text_part = ' '.join(soup.stripped_strings)
-            text_content = text_part
+        # If no forwarding header or no content before it, check for reply pattern
+        reply_parts = reply_pattern.split(text_content, 1)
+        if len(reply_parts) > 1:
+            # Return text before the reply pattern
+            text_content = reply_parts[0].strip()
 
         # remove text surrounded by <>, since they are likely be comments that are invisible
         text_content = re.sub(r'<[^>]*>', '', text_content)

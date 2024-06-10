@@ -43,148 +43,6 @@ def remove_specific_special_chars(text):
 
     return text
 
-def get_body_text(text):
-    try:
-        return text.split("Body: ")[1]
-    except IndexError:
-        return ""
-
-'''Extract all images from email body'''
-def get_img_links(html_content):
-    soup = BeautifulSoup(html_content, 'html.parser')
-
-    # Get image links from <img> tags
-    img_links = [img['src'] for img in soup.find_all('img', src=True)]
-
-    # Get image links from <picture> tags
-    picture_links = [source['srcset'] for source in soup.find_all('source', srcset=True)]
-
-    # Get image links from inline styles (background-image)
-    inline_style_links = []
-    for tag in soup.find_all(style=True):
-        style = tag['style']
-        match = re.search("url\(['\"]?(.*?)['\"]?\)", style)
-        if match:
-            inline_style_links.append(match.group(1))
-
-    # Get image links from <object> tags
-    object_links = [obj['data'] for obj in soup.find_all('object', data=True)]
-
-    # Get image links from <embed> tags
-    embed_links = [embed['src'] for embed in soup.find_all('embed', src=True)]
-
-    # Get SVG images
-    svg_links = [str(svg) for svg in soup.find_all('svg')]
-
-    # Get Canvas elements
-    canvas_links = [str(canvas) for canvas in soup.find_all('canvas')]
-
-    # Get Data URIs
-    data_uris = []
-    for tag in soup.find_all(['img', 'source']):
-        src = tag.get('src', '')
-        if src.startswith('data:image'):
-            data_uris.append(src)
-
-    # Combine all links
-    all_links = img_links + picture_links + inline_style_links + object_links + embed_links + svg_links + canvas_links + data_uris
-
-    return all_links
-
-'''Load the image links in a safe way'''
-def load_images(img_links, proxies=None, max_retries=1):
-    img_bytes_list = []
-    for link in img_links:
-        if link.startswith('data:image/'): # Handle Data URIs
-            try:
-                # Extract the base64 encoded part
-                base64_data = link.split(',')[1]
-                img_bytes = BytesIO(base64.b64decode(base64_data))
-                img_bytes_list.append(img_bytes)
-            except Exception as e:
-                pass
-        elif link.startswith('<svg'):
-            # Handle SVGs
-            try:
-                svg_bytes = StringIO(link)  # SVG is XML text, so we use StringIO
-                img_bytes_list.append(svg_bytes)
-            except Exception as e:
-                pass
-        else:
-            retries = 0
-            while retries <= max_retries:
-                try:
-                    response = requests.get(link, proxies=proxies, timeout=5)
-                    if response.status_code == 200:
-                        content_type = response.headers.get('Content-Type', '')
-                        if content_type.startswith('image/'):
-                            img_bytes = BytesIO(response.content)
-                            img_bytes_list.append(img_bytes)
-                            break  # Successfully downloaded, exit the retry loop
-                        else:
-                            break  # Not an image, exit the retry loop
-                    else:
-                        break  # HTTP error, exit the retry loop
-                except (Timeout, ConnectionError) as e:
-                    retries += 1  # Increment the retry counter and try again
-                except Exception as e:
-                    break  # Unknown error, exit the retry loop
-
-    return img_bytes_list
-
-'''Extract all links from email body'''
-def get_links(html_content):
-    soup = BeautifulSoup(html_content, 'lxml')
-    links = []
-
-    # Standard <a> tags
-    for tag in soup.find_all('a', href=True):
-        text = tag.string if tag.string else tag.text
-        url = tag['href']
-        if urllib.parse.urlparse(url).scheme:
-            links.append((text, url))
-
-    # JavaScript links
-    for tag in soup.find_all(onclick=True):
-        onclick = tag['onclick']
-        match = re.search(r"window\.location\.href='(.*?)'|window\.open\('(.*?)'\)", onclick)
-        if match:
-            url = match.group(1) or match.group(2)
-            text = tag.string if tag.string else tag.text
-            if urllib.parse.urlparse(url).scheme:
-                links.append((text, url))
-
-    # Form action links
-    for tag in soup.find_all('form', action=True):
-        url = tag['action']
-        if urllib.parse.urlparse(url).scheme:
-            text = 'Form: ' + (tag.get('name') or tag.get('id') or '')
-            if urllib.parse.urlparse(url).scheme:
-                links.append((text, url))
-
-    # Area map links
-    for tag in soup.find_all('area', href=True):
-        url = tag['href']
-        text = tag.get('alt', 'Area Map')
-        if urllib.parse.urlparse(url).scheme:
-            links.append((text, url))
-
-    # SVG Links
-    for tag in soup.find_all('a', {'xlink:href': True}):
-        url = tag['xlink:href']
-        text = tag.string if tag.string else tag.text
-        if urllib.parse.urlparse(url).scheme:
-            links.append((text, url))
-
-    return links
-
-
-def extract_data(feature, df):
-    column= []
-    for row in df:
-        e = email.message_from_string(row)
-        column.append(e.get(feature))
-    return column
 
 def process_email_parts(email_part, email_content_collection):
     html_tags = ['<table', '<tr', '<td', '<font', '<a', '<html', '<body', '<meta']
@@ -326,16 +184,6 @@ def remove_wildcards(text):
 
     return sanitized_text
 
-def remove_extra_spaces(text):
-    # remove text surrounded by <>, since they are likely be comments that are invisible
-    text_content = re.sub(r'<[^>]*>', '', text)
-    # replace multiple newline characters with a single period
-    text_content = re.sub(r'\n+', '. ', text_content)
-    # replace multiple consecutive periods with a single period
-    text_content = re.sub(r'\.{2,}', '', text_content)
-    # replace multiple spaces with a single space
-    text_content = re.sub(r'\s+', ' ', text_content)
-    return text_content
 
 def process_enron_dataset(csv_path):
     df = pd.read_csv(csv_path)
@@ -420,59 +268,10 @@ def load_jsonl(filename):
             data.append(json.loads(line))
     return data
 
-def remove_urls(text):
-    pattern = r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
-    return re.sub(pattern, '', text)
 
 
-def prepare_prompt_no_output(raw_input, tokenizer, max_seq_len=4096):
-    input = remove_extra_spaces(remove_urls(raw_input['input']))
-    instruction = raw_input['instruction']
-    length_predefined_prompt = len(tokenizer.tokenize(f"### Instruction:\n{instruction}\n\n### Input:\n\n\n### Response:\n"))
 
-    # Tokenize the input and truncate to the max_seq_len
-    tokens = tokenizer.tokenize(input)[:max_seq_len-length_predefined_prompt-50]  # Reserving space for an EOS token, if necessary
-    cleaned_input = tokenizer.convert_tokens_to_string(tokens)  # Convert tokens back to a string
 
-    return f"[INST]### Instruction:\n{instruction}\n\n### Input:\n{cleaned_input}[/INST]\n\n### Response:\n<s>"
 
-def prepare_prompt(raw_input, tokenizer, max_seq_len=4096):
-    input = remove_extra_spaces(remove_urls(raw_input['input']))
-    instruction = raw_input['instruction']
-    response = raw_input['output']
-    length_predefined_prompt = len(tokenizer.tokenize(f"### Instruction:\n{instruction}\n\n### Input:\n\n\n### Response:\n"))
 
-    # Tokenize the input and truncate to the max_seq_len
-    tokens = tokenizer.tokenize(input)[:max_seq_len-length_predefined_prompt-50]  # Reserving space for an EOS token, if necessary
-    cleaned_input = tokenizer.convert_tokens_to_string(tokens)  # Convert tokens back to a string
-
-    return f"[INST]### Instruction:\n{instruction}\n\n### Input:\n{cleaned_input}[/INST]\n\n### Response:\n<s>{response}</s>\n"
-
-def create_prompt_no_answer(row, tokenizer, max_seq_len=4096):
-    return {"text": prepare_prompt_no_output(row, tokenizer, max_seq_len=max_seq_len)}
-
-def prepare_prompt_batch(examples, tokenizer, max_seq_len=500):
-
-    instruction = examples["instruction"][0]  # shared instruciton
-    length_predefined_prompt = len(tokenizer.tokenize(f"### Instruction:\n{instruction}\n\n### Input:\n\n\n### Response:\n"))
-
-    # return output_text
-    output_text = []
-    for i in range(len(examples["instruction"])):
-        input_text = examples["input"][i]
-        response = examples["output"][i]
-
-        input_text = remove_extra_spaces(remove_urls(input_text))  # Assuming 'input' is a key in the row dictionary
-        tokens = tokenizer.tokenize(input_text)[:max_seq_len - length_predefined_prompt - 50]  # Reserving space for an EOS token, if necessary
-        cleaned_input = tokenizer.convert_tokens_to_string(tokens)  # Convert tokens back to a string
-
-        text = f'''[INST]### Instruction:{instruction}\n\n### Input:{cleaned_input}[/INST]\n\n### Response:\n<s>{response}</s>\n'''
-
-        output_text.append(text)
-
-    return output_text
-
-def pad_eos(ds):
-    EOS_TOKEN = "</s>"
-    return [f"{row['output']}{EOS_TOKEN}" for row in ds]
 

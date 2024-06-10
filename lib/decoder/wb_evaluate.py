@@ -17,76 +17,10 @@ import numpy as np
 import re
 import evaluate
 from functools import partial
-from transformers import StoppingCriteria, StoppingCriteriaList
 
 os.environ['http_proxy'] = 'http://127.0.0.1:7890'
 os.environ['https_proxy'] = 'http://127.0.0.1:7890'
 
-class StopAtMultipleTokensCriteria(StoppingCriteria):
-    def __init__(self, tokenizer, stop_sequences):
-        # Encode each sequence to token IDs using the tokenizer
-        self.stop_token_ids_list = [tokenizer.encode(seq, add_special_tokens=False) for seq in stop_sequences]
-
-    def __call__(self, input_ids, scores):
-        input_len = input_ids.shape[1]
-        # Check each set of stop token IDs
-        for stop_token_ids in self.stop_token_ids_list:
-            seq_len = len(stop_token_ids)
-            if input_len >= seq_len:
-                # Compare the last generated tokens against the current stop token IDs set
-                if all(input_ids[0, -seq_len + i] == stop_token_ids[i] for i in range(seq_len)):
-                    return True
-        return False
-
-
-def _generate_identity(prompt, model, tokenizer, gen_config):
-    tokenized_prompt = tokenizer(prompt, return_tensors='pt')['input_ids'].to(model.device)
-    stop_sequences = ['###', '</s>']
-    stopping_criterion = StoppingCriteriaList([StopAtMultipleTokensCriteria(tokenizer, stop_sequences)])
-
-    with torch.inference_mode():
-        t0 = perf_counter()
-        output = model.generate(input_ids=tokenized_prompt,
-                                stopping_criteria=stopping_criterion,
-                                generation_config=gen_config)
-        total_time = perf_counter() - t0
-        generation_ids = output[0][len(tokenized_prompt[0]):]
-        num_gen_tokens = len(generation_ids)
-        generation = tokenizer.decode(generation_ids, skip_special_tokens=True)
-        return dict(generation=generation,
-                    generation_ids=generation_ids.tolist(),
-                    total_time=total_time,
-                    num_gen_tokens=num_gen_tokens)
-
-
-# def evaluate(examples, model, tokenizer, gen_config):
-#     sample_out = _generate(examples[0]["prompt"], model, tokenizer, gen_config)
-#     columns = ["prompt", "label"] + list(sample_out.keys()) + ["temperature", "max_new_tokens"]
-#     data = []
-#     for example in tqdm(examples, leave=False):
-#         prompt, label = example["prompt"], example["output"]
-#         output = _generate(prompt, model, tokenizer, gen_config)
-#         data.append((prompt, label, *list(output.values()), gen_config.temperature, gen_config.max_new_tokens))
-#     return data, columns
-
-# @torch.inference_mode()
-# def compute_perplexity(eval_dataloader, model):
-#     model.eval()
-#     nlls = []
-#
-#     for i, batch in tqdm(enumerate(eval_dataloader)):
-#         if (batch["labels"] == -100).all():
-#             continue  # Skip this batch
-#         batch = {k: v.cuda() for k, v in batch.items()}
-#         with torch.amp.autocast("cuda", dtype=torch.bfloat16):
-#             out = model(**batch)
-#             neg_log_likelihood = out.loss
-#
-#         nlls.append(neg_log_likelihood)
-#
-#     # Log results at the end
-#     ppl = torch.exp(torch.stack(nlls).mean()).item()
-#     return ppl
 
 def split_by_step(results):
     step_1_match = re.search(r"(Step 1:.*?)(?=Step 2)", results, re.DOTALL)
@@ -151,26 +85,26 @@ if __name__ == '__main__':
         response_template_ids = tokenizer.encode(response_template, add_special_tokens=False)
         collator = DataCollatorForCompletionOnlyLM(response_template, tokenizer=tokenizer)
 
-    # trainer = SFTTrainer(
-    #     model=model,
-    #     args=TrainingArguments(
-    #         output_dir='./debug',
-    #         per_device_eval_batch_size=1,
-    #         dataloader_drop_last=False
-    #     ),
-    #     train_dataset=train_dataset,
-    #     eval_dataset=eval_dataset,
-    #     data_collator=collator,
-    #     packing=False,
-    #     max_seq_length=config.max_seq_length,
-    #     formatting_func=partial(prepare_prompt_batch, tokenizer=tokenizer, max_seq_len=config.max_seq_length),
-    #     dataset_batch_size=25,
-    # )
-    #
-    # eval_loader = trainer.get_eval_dataloader()
-    # ppl = compute_perplexity(eval_loader, model)
-    # print('Perplexity = ', ppl)
-    # exit()
+    trainer = SFTTrainer(
+        model=model,
+        args=TrainingArguments(
+            output_dir='./debug',
+            per_device_eval_batch_size=1,
+            dataloader_drop_last=False
+        ),
+        train_dataset=train_dataset,
+        eval_dataset=eval_dataset,
+        data_collator=collator,
+        packing=False,
+        max_seq_length=config.max_seq_length,
+        formatting_func=partial(prepare_prompt_batch, tokenizer=tokenizer, max_seq_len=config.max_seq_length),
+        dataset_batch_size=25,
+    )
+
+    eval_loader = trainer.get_eval_dataloader()
+    ppl = compute_perplexity(eval_loader, model)
+    print('Perplexity = ', ppl)
+    exit()
     # Llama2 = ?
     # Llama3 =  1.246347904205322
 

@@ -1,6 +1,6 @@
 
 from lib.encoder.wb_finetune_bert import ner_clean_predictions, ner_create_spacy_doc
-from lib.utils.postprocessing import visualize_predictions
+from lib.model_utils.postprocessing import visualize_predictions
 from transformers import pipeline
 import spacy
 from spacy import displacy

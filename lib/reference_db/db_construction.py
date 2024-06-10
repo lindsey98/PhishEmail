@@ -1,7 +1,4 @@
-import sqlite3
-import requests
-from lib.reference_db.gsearch import GoogleSearch
-from tldextract import tldextract
+from lib.web_utils.gsearch import GoogleSearch
 from urllib.parse import urlparse
 import pickle
 import json

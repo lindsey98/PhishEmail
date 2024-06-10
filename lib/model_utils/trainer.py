@@ -1,5 +1,5 @@
 from transformers import AutoModelForTokenClassification, TrainingArguments, Trainer
-from lib.utils.losses import FocalLoss
+from lib.model_utils.losses import FocalLoss
 
 class BertTrainer_FocalLoss(Trainer):
     def __init__(self, *args, **kwargs):
