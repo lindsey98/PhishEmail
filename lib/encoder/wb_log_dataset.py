@@ -5,6 +5,7 @@ import nltk
 import os
 import numpy as np
 from sklearn.model_selection import train_test_split
+from lib.data.utils import load_jsonl
 os.environ['http_proxy'] = 'http://127.0.0.1:7890'
 os.environ['https_proxy'] = 'http://127.0.0.1:7890'
 nltk.download('punkt')
@@ -42,7 +43,7 @@ def tokenize_and_map(text, annotations, label_to_id):
         all_indices = find_all_token_indices(tokens, entity_text)
         for start_index, end_index in all_indices:
             # Check if the range already has a tag other than "O"
-            if all(tag == label_to_id["O"] for tag in tags[start_index:end_index]):
+            if all(tag == label_to_id["O"] for tag in tags[start_index:end_index]) or label == "relation":
                 # Label the found entity
                 tags[start_index] = label_to_id["B-" + label]
                 for i in range(start_index + 1, end_index):
@@ -54,16 +55,29 @@ def tokenize_and_map(text, annotations, label_to_id):
     return tokens, tags
 
 
+def process_entries(data):
+    global processed_data, seen_texts
+    for entry in data:
+        text = entry['text']
+        if text in seen_texts:
+            continue  # Skip duplicates
+        seen_texts.add(text)
+
+        annotations = entry['annotations']
+        for annot in annotations:
+            if annot['labels'][0] == 'organization':
+                if annot['text'].startswith('From:'):
+                    annot['text'] = re.sub(r"From:\s*", "", annot['text'])
+        tokens, tags = tokenize_and_map(text, annotations, label_to_id)
+
+        processed_data.append({
+            "id": entry['Id'],
+            "tokens": tokens,
+            "ner_tags": tags,
+            "metadata": entry["Path"]  # Add metadata field
+        })
+
 if __name__ == '__main__':
-
-    # Load the JSON file
-    dataset_1_name = "spam_archive_2023"
-    with open(f'./datasets/{dataset_1_name}_unique_annotation/annotated_all.json', 'r') as json_file:
-        data_1 = json.load(json_file)
-
-    dataset_2_name = "Nazario_2005"
-    with open(f'./datasets/{dataset_2_name}_unique_annotation/annotated_all.json', 'r') as json_file:
-        data_2 = json.load(json_file)
 
     label_list = [
         "O",
@@ -74,42 +88,36 @@ if __name__ == '__main__':
         "B-action",
         "I-action",
     ]
-
-    # Create a mapping from labels to integers
+    #
+    # # Create a mapping from labels to integers
     label_to_id = {label: idx for idx, label in enumerate(label_list)}
     id_to_label = {idx: label for idx, label in enumerate(label_list)}
 
+    # Load the JSON file
+    dataset_1_name = "spam_archive_2023"
+    with open(f'./datasets/{dataset_1_name}_unique_annotation/annotated_all.json', 'r') as json_file:
+        data_1 = json.load(json_file)
+
+    print(f"Length of dataset {dataset_1_name} = {len(data_1)}")
+
+    dataset_2_name = "Nazario_2005"
+    with open(f'./datasets/{dataset_2_name}_unique_annotation/annotated_all.json', 'r') as json_file:
+        data_2 = json.load(json_file)
+    print(f"Length of dataset {dataset_2_name} = {len(data_2)}")
+
+    dataset_3_name = "annotated_datasets_from_paul"
+    with open(f'./datasets/{dataset_3_name}/annotated_all.json', 'r') as json_file:
+        data_3 = json.load(json_file)
+    print(f"Length of dataset {dataset_3_name} = {len(data_3)}")
+
     # Process the data
     processed_data = []
+    seen_texts = set()
+    process_entries(data_3)
+    process_entries(data_1)
+    process_entries(data_2)
 
-    for entry in data_1:
-        text = entry['text']
-        annotations = entry['annotations']
-
-        tokens, tags = tokenize_and_map(text, annotations, label_to_id)
-
-        processed_data.append({
-            "id": entry['Id'],
-            "tokens": tokens,
-            "ner_tags": tags,
-            "metadata": entry["Path"]  # Add metadata field
-
-        })
-
-    for entry in data_2:
-        text = entry['text']
-        annotations = entry['annotations']
-
-        tokens, tags = tokenize_and_map(text, annotations, label_to_id)
-
-        processed_data.append({
-            "id": entry['Id'],
-            "tokens": tokens,
-            "ner_tags": tags,
-            "metadata": entry["Path"]  # Add metadata field
-        })
-
-    # Split the data into training and testing sets
+    # # Split the data into training and testing sets
     train_data, test_data = train_test_split(processed_data, test_size=0.2, random_state=42)
 
     output_dir = f'./datasets/ner_training/'
@@ -125,6 +133,7 @@ if __name__ == '__main__':
     # Save the testing data
     with open(test_file, 'w') as outfile:
         json.dump(test_data, outfile, indent=4)
+
 
 
 
