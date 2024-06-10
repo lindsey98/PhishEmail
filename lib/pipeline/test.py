@@ -115,7 +115,8 @@ if __name__ == '__main__':
     # pst_file.close()
 
     '''Load identity detection model'''
-    identity_checkpoint_path = './checkpoints/output_identity/checkpoint-rgggae5i:v0'
+    # identity_checkpoint_path = './checkpoints/output_identity/checkpoint-llama3'
+    identity_checkpoint_path = './checkpoints/output_identity/checkpoint-llama3-spamenron'
     identity_tokenizer = AutoTokenizer.from_pretrained(identity_checkpoint_path)
     identity_tokenizer.pad_token = identity_tokenizer.eos_token
     identity_model = AutoModelForCausalLM.from_pretrained(identity_checkpoint_path,
@@ -126,7 +127,7 @@ if __name__ == '__main__':
 
     identity_model.eval()
 
-    with open('./lib/prompt/identity_recognition_prompt.json', 'rb') as handle:
+    with open('./lib/llm_utils/identity_recognition_prompt.json', 'rb') as handle:
         identity_prompt = json.load(handle)
     identity_instruction = identity_prompt[0]["content"]
 
@@ -140,13 +141,16 @@ if __name__ == '__main__':
                                                   )
 
     ''''''
-    desc_folder = './datasets/sjtu_phish'
-    # desc_folder = './datasets/nazario-recent'
+    # desc_folder = './datasets/sjtu_phish'
+    desc_folder = './datasets/nazario-recent'
     # desc_folder = './datasets/CSDMC2010/Ham'
     dataset = EmailDataset(desc_folder)
-    csv_file_path = './datasets/sjtu_phish_results.csv'
+    # csv_file_path = './datasets/sjtu_phish_results.csv'
     # csv_file_path = './datasets/nazario_results.csv'
     # csv_file_path = './datasets/CSDMC2010_benign_results.csv'
+    # csv_file_path = './datasets/sjtu_phish_results_orig.csv'
+    csv_file_path = './datasets/nazario_results_spamenron.csv'
+    # csv_file_path = './datasets/CSDMC2010_benign_results_spamenron.csv'
 
     # Check if we're writing to a new file, and write the header if so
     if not os.path.exists(csv_file_path):
@@ -156,7 +160,6 @@ if __name__ == '__main__':
                              'to_names', 'to_addresses',
                              'subject', 'email_body_text',
                              'header',
-                             'capability_pred',
                              'identity_pred',
                              'action_pred',
                              'identity_pred_time'])
@@ -164,8 +167,8 @@ if __name__ == '__main__':
     for it in tqdm(range(len(dataset))):
         if dataset.file_list[it] in [x.split(',')[0] for x in open(csv_file_path).readlines()]:
             continue
-        #
-        # if dataset.file_list[it] not in ['./datasets/CSDMC2010/Ham/TRAIN_03441.eml']:
+
+        # if dataset.file_list[it] not in ['./datasets/nazario-recent/2021/66.eml']:
         #     continue
 
         email_file_path, (sender_name, sender_address), \
@@ -183,23 +186,18 @@ if __name__ == '__main__':
                                            tokenizer=identity_tokenizer,
                                            gen_config=gen_config)
 
-        step_1_match = re.search(r"(Step 1:.*?)(?=Step 2)", identity_results['generation'], re.DOTALL | re.IGNORECASE)
+        step_1_match = re.search(r"((Step 1|S1):.*?)(?=(Step 2|S2):|$)", identity_results['generation'], re.DOTALL | re.IGNORECASE)
         step_1_text = step_1_match.group(1).strip() if step_1_match else None
 
-        step_2_match = re.search(r"(Step 2:.*?)(?=Step 3)", identity_results['generation'], re.DOTALL | re.IGNORECASE)
-        step_2_text = step_2_match.group(1).strip() if step_2_match else None
-
-        step_3_match = re.search(r"Step 3:.*", identity_results['generation'], re.DOTALL | re.IGNORECASE)
-        step_3_text = step_3_match.group().strip() if step_3_match else None
+        # Match either "Step 2" or "S2"
+        step_2_match = re.search(r"(Step 2|S2):.*", identity_results['generation'], re.DOTALL | re.IGNORECASE)
+        step_2_text = step_2_match.group(0).strip() if step_2_match else None
 
         identity_pred_time = identity_results['total_time']
-
-        #
         subject = subject.replace('\n', ' ') if subject else None
         email_body_text = email_body_text.replace('\n', '.')  # Preserving visual indication of newlines
         step_1_text = step_1_text.replace('\n', ' ') if step_1_text else None
         step_2_text = step_2_text.replace('\n', ' ') if step_2_text else None
-        step_3_text = step_3_text.replace('\n', ' ') if step_3_text else None
 
         # Append the new row to the CSV file
         with open(csv_file_path, mode='a', newline='', encoding='utf-8', errors='ignore') as file:
@@ -209,7 +207,6 @@ if __name__ == '__main__':
                              subject, email_body_text, header,
                              step_1_text,
                              step_2_text,
-                             step_3_text,
                              identity_pred_time
                              ])
 
