@@ -1,11 +1,8 @@
 import json
 import re
-from nltk.tokenize import word_tokenize
 import nltk
 import os
-import numpy as np
 from sklearn.model_selection import train_test_split
-from lib.data.utils import load_jsonl
 os.environ['http_proxy'] = 'http://127.0.0.1:7890'
 os.environ['https_proxy'] = 'http://127.0.0.1:7890'
 nltk.download('punkt')
@@ -98,24 +95,26 @@ if __name__ == '__main__':
     with open(f'./datasets/{dataset_1_name}_unique_annotation/annotated_all.json', 'r') as json_file:
         data_1 = json.load(json_file)
 
-    print(f"Length of dataset {dataset_1_name} = {len(data_1)}")
-
     dataset_2_name = "Nazario_2005"
     with open(f'./datasets/{dataset_2_name}_unique_annotation/annotated_all.json', 'r') as json_file:
         data_2 = json.load(json_file)
-    print(f"Length of dataset {dataset_2_name} = {len(data_2)}")
 
     dataset_3_name = "annotated_datasets_from_paul"
     with open(f'./datasets/{dataset_3_name}/annotated_all.json', 'r') as json_file:
         data_3 = json.load(json_file)
-    print(f"Length of dataset {dataset_3_name} = {len(data_3)}")
 
     # Process the data
     processed_data = []
     seen_texts = set()
-    process_entries(data_3)
+    last_length = 0
     process_entries(data_1)
+    print(f"Length of dataset {dataset_1_name} = {len(processed_data) - last_length}")
+    last_length = len(processed_data)
     process_entries(data_2)
+    print(f"Length of dataset {dataset_2_name} = {len(processed_data) - last_length}")
+    last_length = len(processed_data)
+    process_entries(data_3)
+    print(f"Length of dataset {dataset_3_name} = {len(processed_data) - last_length}")
 
     # # Split the data into training and testing sets
     train_data, test_data = train_test_split(processed_data, test_size=0.2, random_state=42)
