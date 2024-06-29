@@ -962,12 +962,6 @@
                 "labels": [
                     "action"
                 ]
-            },
-            {
-                "text": "Please visit https://www.efax.com/ if you have any questions regarding this message or service",
-                "labels": [
-                    "action"
-                ]
             }
         ]
     },
@@ -984,12 +978,6 @@
             },
             {
                 "text": "Click here to view this fax using your PDF reader",
-                "labels": [
-                    "action"
-                ]
-            },
-            {
-                "text": "Please visit https://www.efax.com/ if you have any questions regarding this message or service",
                 "labels": [
                     "action"
                 ]
@@ -7381,12 +7369,6 @@
                 "labels": [
                     "action"
                 ]
-            },
-            {
-                "text": "Please visit https://www.efax.com/ if you have any questions regarding this message or service",
-                "labels": [
-                    "action"
-                ]
             }
         ]
     },
@@ -7930,12 +7912,6 @@
                 "text": "eFax service",
                 "labels": [
                     "identity"
-                ]
-            },
-            {
-                "text": "Please visit\nhttps://www.hellofax.com/ if you have any questions regarding this message or\nservice",
-                "labels": [
-                    "action"
                 ]
             }
         ]
@@ -9066,12 +9042,6 @@
             },
             {
                 "text": "Click here to view this fax using your PDF reader",
-                "labels": [
-                    "action"
-                ]
-            },
-            {
-                "text": "Please visit https://www.efax.com/ if you have any questions regarding this message or service",
                 "labels": [
                     "action"
                 ]
