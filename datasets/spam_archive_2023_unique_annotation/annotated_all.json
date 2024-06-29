@@ -7,13 +7,13 @@
             {
                 "text": "From: ADT Security Systems",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "ADT- Home Security System",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -32,7 +32,7 @@
             {
                 "text": "From: Nettoyage de locaux",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -57,7 +57,7 @@
             {
                 "text": "ADT Security",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -78,7 +78,7 @@
             {
                 "text": "From: Flushing Trick",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -91,13 +91,13 @@
             {
                 "text": "From: Welcome To Hitech Research",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Welcome To Hitech Research",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -110,13 +110,13 @@
             {
                 "text": "From: Affiliate Renewal By Andersen",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Affiliate Renewal By Andersen",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -129,7 +129,7 @@
             {
                 "text": "MiracleSheets_ 35% Off",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -142,13 +142,7 @@
             {
                 "text": "𝐒𝐀𝐌𝐒 𝐂𝐋𝐔𝐁",
                 "labels": [
-                    "organization"
-                ]
-            },
-            {
-                "text": "𝐒𝐡𝐨𝐩𝐩𝐢𝐧𝐠 𝐄𝐱𝐩𝐞𝐫𝐢𝐞𝐧𝐜𝐞",
-                "labels": [
-                    "relation"
+                    "identity"
                 ]
             }
         ]
@@ -161,7 +155,7 @@
             {
                 "text": "From: ServicePlus Free Quote",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -180,7 +174,7 @@
             {
                 "text": "New-Aged Device",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -193,7 +187,7 @@
             {
                 "text": "From: G00GLE-L0TTERY-W1NN1NG",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -205,13 +199,13 @@
             {
                 "text": "GOOGLE EMAIL LOTTERY INTERNATIONAL",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Chief Operating Officer Google International",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -243,19 +237,19 @@
             {
                 "text": "From: Fuel Save Pro",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Fuel Save Pro",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Fuel Saver",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -268,13 +262,13 @@
             {
                 "text": "From: Terminix Pest Control Experts",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Terminix Pest Control Experts",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -287,13 +281,13 @@
             {
                 "text": "From: Fidelity Life Quotes",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Fidelity Life",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -312,13 +306,13 @@
             {
                 "text": "From: ServicePlus Home Warranty",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "ServicePlus Home Warranty",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -337,13 +331,13 @@
             {
                 "text": "From: Terminix Partner",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Terminix",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -374,7 +368,7 @@
             {
                 "text": "Hans Song RM",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -387,13 +381,13 @@
             {
                 "text": "From: Terminix Affiliate",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Terminix Affiliate",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -412,7 +406,7 @@
             {
                 "text": "Hitech Research",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -431,13 +425,13 @@
             {
                 "text": "From: Terminix Pest Control Experts",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Terminix Pest Control Experts",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -450,13 +444,13 @@
             {
                 "text": "From: Nike",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Nike Opinion Requested",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -475,7 +469,7 @@
             {
                 "text": "Shenzhen Filmbase Technology Co., Ltd",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -494,7 +488,7 @@
             {
                 "text": "Emirates Minister of State United Arab Emirates",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -521,19 +515,19 @@
             {
                 "text": "From: ServicePlus.Home Warranty",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "ServicePlus Home Warranty",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "ServicePlus.Home Warranty",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -546,13 +540,13 @@
             {
                 "text": "From: New Brain Blueprint",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Brain Blueprint",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -565,7 +559,7 @@
             {
                 "text": "MeetUkrainianLove",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -590,13 +584,13 @@
             {
                 "text": "From: Splash Wine",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Splash Wine",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -609,7 +603,7 @@
             {
                 "text": "PasswordsGeneratorOnline.com",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -622,7 +616,7 @@
             {
                 "text": "bedrijf: epicure.sk",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -672,13 +666,13 @@
             {
                 "text": "From: Renewal By Andersen Replacements",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Renewal By Andersen Replacements",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -691,19 +685,13 @@
             {
                 "text": "From: Flyer Rewards",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Delta Airways",
                 "labels": [
-                    "organization"
-                ]
-            },
-            {
-                "text": "Delta Airways as your airline of choice",
-                "labels": [
-                    "relation"
+                    "identity"
                 ]
             },
             {
@@ -734,7 +722,7 @@
             {
                 "text": "CNC Machining",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -744,12 +732,6 @@
         "Path": "./datasets/spam_archive/2023/06/1687016379.M303564P1911004.txt",
         "text": "Subject: Content sharing proposition \n From: Charlote Eve \n Recipient address: bruce@untroubled.org \n Body: Hi, This is Charllte Eve from (myseoportals.com) and has a few topics to publish on your domain. Can you please confirm the requirements I need to follow and the pricing of websites to have a quick look.Content sharing proposition Hi, This is Charllte Eve from (myseoportals.com) and has a few topics to publish on your domain. Can you please confirm the requirements I need to follow and the pricing of websites to have a quick look. If you wish to unsubscribe from our newsletter, click here",
         "annotations": [
-            {
-                "text": "Charllte Eve from (myseoportals.com)",
-                "labels": [
-                    "relation"
-                ]
-            },
             {
                 "text": "confirm the requirements I need to follow and the pricing of websites",
                 "labels": [
@@ -766,13 +748,13 @@
             {
                 "text": "From: Terminix Pest Control Experts",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Terminix Pest Control Experts",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -785,7 +767,7 @@
             {
                 "text": "From: HomeLight.com",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -816,12 +798,6 @@
         "text": "Subject: Re: PLEASE READ..DONATE THIS FUNDS TO CHARITY. \n From: JOAN R. GATES (THE CANCER PATIENT) \n Recipient address: bait@untroubled.org \n Body: Reply-To: Ms. Joan R. Gates Email: joangates66752@hotmail.com Greetings to you. I am Ms. Joan Robert Gates, a philantropist for motherless children and orphanage homes. I got your email address from an email directory as the right person. I am a 4th stage cancer of the lungs patient and since my doctor said i have a very short time to live i am donating the funds of my late husband and I to any good charity home and orphanage of your choice and the funds will go to you. The fund amount is $10,000,000 US Dollars and is deposited in a bank which i will later reveal to you in your next reply to me. You should send your details to me so I can go through and I will issue an immediate authorization letter in your name with a copy to the bank where fund is deposited so you can claim these funds on my behalf. Once again the following details is needed. Your Full Name: Your City & Country: Your Phone Number: Your Age: Male/Female I await your urgent reply. Best Regards, Ms. Joan R. Gates Email: joangates66752@hotmail.com",
         "annotations": [
             {
-                "text": "I got your email address from an email directory as the right person.",
-                "labels": [
-                    "relation"
-                ]
-            },
-            {
                 "text": "send your details to me",
                 "labels": [
                     "action"
@@ -837,7 +813,7 @@
             {
                 "text": "Hannah Stages",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -856,7 +832,7 @@
             {
                 "text": "From: Data-Afrique consultancy",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -875,7 +851,7 @@
             {
                 "text": "B & G FASHIONS INTERNATIONAL LIMITED",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -886,13 +862,13 @@
         "text": "Subject: Re: Your Stanley?? 170 piece Mixed ToolSet \n From: Customer Experience \n Recipient address: bruce@untroubled.org \n Body: LOWE' s Customer Satisfaction Survey You have been chosen to receive a brand new STANLEY  170 piece Mixed Tool Set! To get it, simply take this quick survey about your shopping experience at Lowe' s. Your feedback is extremely valuable and this survey will take only a few minutes. Thank you for being a part of this research initiative! This special offer for you is good for 48 hours . Receive your gift by clicking on the link below : > > We look forward to hearing from you today! Warm regards, iServiced - Survey To unsubscribe, click here . 109 E 17th St, Suite 480 Cheyenne, WY 82001",
         "annotations": [
             {
-                "text": "LOWE' s Customer Satisfaction Survey",
+                "text": "LOWE",
                 "labels": [
-                    "relation"
+                    "identity"
                 ]
             },
             {
-                "text": "From: Customer Experience",
+                "text": "Customer",
                 "labels": [
                     "relation"
                 ]
@@ -913,13 +889,13 @@
             {
                 "text": "From: TopRated Wines Splash Wines",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Splash Wine",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -932,13 +908,13 @@
             {
                 "text": "From: Delta Airlines Shopper Feedback",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Delta Airlines",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -957,7 +933,7 @@
             {
                 "text": "ADT Security",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -978,7 +954,7 @@
             {
                 "text": "Southwest Airlines reward",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -991,7 +967,7 @@
             {
                 "text": "ADT Security",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -1020,43 +996,43 @@
             {
                 "text": "From: Amazon.co.jp",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Amazon.co.jp",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Arnazon.com, Inc. or its affiliates.",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Arnazon.com, Inc.",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Arnazon.co.jp",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Arnazon Prime",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Arnazon.com, 410 Terry Avenue N., Seattle, WA 98109-5210",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -1087,13 +1063,13 @@
             {
                 "text": "From: Forgotten-Foods",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Forgotten-Foods",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -1107,7 +1083,7 @@
             {
                 "text": "Goma Democratic Republic of Congo",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -1126,7 +1102,7 @@
             {
                 "text": "Haisheng Glass Machinery Co., Ltd.",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -1139,13 +1115,13 @@
             {
                 "text": "From: ServicePlus",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "ServicePlus",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -1158,7 +1134,7 @@
             {
                 "text": "T-Mobile",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -1189,7 +1165,7 @@
             {
                 "text": "Harris Lead Precision",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -1201,7 +1177,7 @@
             {
                 "text": "CNC Machining",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -1214,7 +1190,7 @@
             {
                 "text": "Costco",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -1227,13 +1203,13 @@
             {
                 "text": "From: Milwaukee M18 Combo Kit",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Milwaukee M18 Combo Kit",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -1268,7 +1244,7 @@
             {
                 "text": "ADT Security",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -1281,7 +1257,7 @@
             {
                 "text": "Guang yuan Technology Electronics Co . ,Ltd",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -1301,13 +1277,13 @@
             {
                 "text": "From: Fidelity Life ECoverage",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Fidelity Life ECoverage",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -1319,7 +1295,7 @@
             {
                 "text": "eCoverage.",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -1332,13 +1308,13 @@
             {
                 "text": "From: CanvasPrints Ad",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "CanvasPrints Ad",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -1351,7 +1327,7 @@
             {
                 "text": "Geo Chem Middle East L.L.C",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -1376,13 +1352,13 @@
             {
                 "text": "From: Terminix Pest Control Advisors",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Terminix Pest Control Advisors",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -1428,13 +1404,13 @@
             {
                 "text": "From: Renewal By Andersen Efficient Windows",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Renewal By Andersen Efficient Windows",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -1447,13 +1423,13 @@
             {
                 "text": "From: Ticket Restaurant",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Ticket Restaurant",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -1485,14 +1461,14 @@
             {
                 "text": "From: SFR Business",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
 
             {
                 "text": "SFR Business, marque de la soci t  SFR. Soci t  Fran aise du Radiot l phone - SFR - 16 rue du G n ral Alain Boissieu - 75015 Paris - SA au capital de 3.423.265.720   RCS Paris 343 059 564 - N  TVA FR 71 343 059 564",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -1517,7 +1493,7 @@
             {
                 "text": "INKA TRADING COMPANY",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -1536,7 +1512,7 @@
             {
                 "text": "Delta Airlines",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -1567,7 +1543,7 @@
             {
                 "text": "Delta Airline",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -1592,13 +1568,13 @@
             {
                 "text": "From: QualifiedSolarSurvey",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "QualifiedSolarSurvey",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -1617,7 +1593,7 @@
             {
                 "text": "EASYNC SERVICES LIMITED",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -1630,13 +1606,13 @@
             {
                 "text": "From: The Walmart Team",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Walmart",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -1656,7 +1632,7 @@
             {
                 "text": "Delta Airlines",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -1675,13 +1651,13 @@
             {
                 "text": "ADT - Home Security",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "ADT Security",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -1694,25 +1670,25 @@
             {
                 "text": "From: Terminix Experts",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Terminix Pest Control Plan",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "The Nix Pest Guarantee",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "The Terminix Intemational Company Limited Partnership",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -1739,7 +1715,7 @@
             {
                 "text": "Ningbo Yishang Electrical Appliance Co., Ltd.",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -1758,25 +1734,25 @@
             {
                 "text": "From: Amazon Web Services",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Amazon Web Services Team",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Amazon Web Services, Inc.",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Amazon.com, Inc.",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -1788,7 +1764,7 @@
             {
                 "text": "2023, Amazon Web Services, Inc. or its affiliates.",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -1801,7 +1777,7 @@
             {
                 "text": "From: D🎁aily Brand W🎁inner",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -1820,7 +1796,7 @@
             {
                 "text": "From: African Tribesmen",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -1833,13 +1809,13 @@
             {
                 "text": "From: Day 1 Labs ClinicalTrials",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Good Lab Clinical Trials",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -1852,13 +1828,13 @@
             {
                 "text": "From: Terminix Pest Control Advisors",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Terminix Pest Control Advisors",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -1878,13 +1854,13 @@
             {
                 "text": "From: Renewal By Andersen Replacement Windows",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Renewal by Andersen",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -1895,15 +1871,9 @@
         "text": "Subject: PERHATIAN \n From: Sistem Administrator \n Recipient address: administrator@ancol.com \n Body: PERHATIAN, Kotak surat Anda telah melebihi batas penyimpanan, yaitu 5 GB seperti yang didefinisikan oleh administrator, yang saat ini berjalan pada 10.9GB, Anda mungkin tidak dapat mengirim atau menerima surat baru sampai Anda kembali memvalidasi email mailbox Anda. Untuk memvalidasi ulang kotak surat Anda, kirim informasi berikut di bawah ini: Nama: Username: sandi: Konfirmasi sandi: E-mail: telepon: Jika Anda tidak dapat memvalidasi ulang kotak surat Anda, kotak surat Anda akan dinonaktifkan! Maaf atas ketidaknyamanan ini. Kode verifikasi:2023@WEBMAIL.ID:ADMIN@ID.091537.WEB.ID.MNBF1097.WEBWEB.ID Surat Dukungan Teknis 2023 terima kasih Sistem Administrator",
         "annotations": [
             {
-                "text": "From: Sistem Administrator",
-                "labels": [
-                    "relation"
-                ]
-            },
-            {
                 "text": "Sistem Administrator",
                 "labels": [
-                    "relation"
+                    "identity"
                 ]
             },
             {
@@ -1935,7 +1905,7 @@
             {
                 "text": "Hitech Research",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -1954,13 +1924,13 @@
             {
                 "text": "From: CVS Reward",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "CVS Reward",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -1979,13 +1949,13 @@
             {
                 "text": "From: Renewal By Andersen Update",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Renewal By Andersen",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -1998,13 +1968,13 @@
             {
                 "text": "From: Terminix Partner",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Terminix Partner",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -2017,7 +1987,7 @@
             {
                 "text": "From: Walgreens Shopper Gift Card Chance",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -2030,13 +2000,13 @@
             {
                 "text": "From: Huusk Knives",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Huusk Knives",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -2049,7 +2019,7 @@
             {
                 "text": "Shenzhen Filmbase Technology Co., Ltd",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -2074,13 +2044,7 @@
             {
                 "text": "Hyflo Pte Ltd48",
                 "labels": [
-                    "organization"
-                ]
-            },
-            {
-                "text": "my colleague's inquiry with your company",
-                "labels": [
-                    "relation"
+                    "identity"
                 ]
             },
             {
@@ -2118,7 +2082,7 @@
             {
                 "text": "From: Renewal By Andersen Replacement Windows",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -2131,7 +2095,7 @@
             {
                 "text": "From: Shocking Documentary",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -2150,13 +2114,13 @@
             {
                 "text": "Cash Survey Customer Service",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Cash Survey",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -2181,7 +2145,7 @@
             {
                 "text": "From: INTERNATIONAL PROMOTIONS/PRIZE AWARD DEPT",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -2206,7 +2170,7 @@
             {
                 "text": "UNITED NATION/IMF",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -2223,15 +2187,15 @@
         "text": "Subject: Atencion: Multa no pagada \n From: Administracion de infracciones \n Recipient address: bruce@untroubled.org \n Body: Multa Pendiente Saludos Cordiales Tienes una multa pendiente Se ha identificado en nuestro sistema una multa de tr fico no pagada dirigida a usted o su veh culo. Para ver la notificaci n Visite: Atenci n: Para ver la notificaci n, abra en un sistema (Windows). Copyright   infraccionesba 2023. Todos los derechos reservados. Versi n V5.1.0.7",
         "annotations": [
             {
-                "text": "From: Administracion de infracciones",
+                "text": "Administracion de infracciones",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "infraccionesba 2023.",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -2282,7 +2246,7 @@
             {
                 "text": "From: Louis Vuitton",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -2295,13 +2259,13 @@
             {
                 "text": "From: Bouygues Telecom Entreprises",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Bouygues Telecom Entreprises",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -2339,7 +2303,7 @@
             {
                 "text": "From: Louis Vuitton",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -2352,7 +2316,7 @@
             {
                 "text": "Countrywide Concealed",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -2384,13 +2348,13 @@
             {
                 "text": "From: Booking.com",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Booking.com",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -2421,19 +2385,19 @@
             {
                 "text": "From: FuelSavePro",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "FuelSavePro",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Fuel Saver",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -2446,7 +2410,7 @@
             {
                 "text": "Xiamen Ji Yuan Stone Co.",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -2490,7 +2454,7 @@
             {
                 "text": "CNC Machining",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -2503,7 +2467,7 @@
             {
                 "text": "United Airlines Shopper Gift Card Chance",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -2522,7 +2486,7 @@
             {
                 "text": "CVS",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -2547,7 +2511,7 @@
             {
                 "text": "From: 360 Degree Coverage",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -2560,7 +2524,7 @@
             {
                 "text": "From: ADT Security",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -2579,7 +2543,7 @@
             {
                 "text": "CNC machining and sheet metal fabrication factory",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -2598,25 +2562,25 @@
             {
                 "text": "From: Dewalt Survey Team!",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Dewalt",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Dewalt Survey Team",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Dewalt products and services",
                 "labels": [
-                    "relation"
+                    "identity"
                 ]
             },
             {
@@ -2665,7 +2629,7 @@
             {
                 "text": "From: Louis Vuitton",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -2678,19 +2642,19 @@
             {
                 "text": "From: Fuel Save Pro Savings",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Fuel Save Pro Savings",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Fuel Saver",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -2711,13 +2675,13 @@
             {
                 "text": "From: Afriex Training Limited",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Afriex Training Limited",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -2742,13 +2706,13 @@
             {
                 "text": "From: The Savings Doctor",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "The Savings Doctor",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -2761,13 +2725,13 @@
             {
                 "text": "from kayou mold manufacturer",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "kayou mould China",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -2780,13 +2744,13 @@
             {
                 "text": "From: UPS Survey Team!",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "UPS",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -2823,13 +2787,13 @@
             {
                 "text": "From: Fidelity Life",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Fidelity Life",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -2861,13 +2825,13 @@
             {
                 "text": "From: Miracle Memorial Day Promo",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Miracle Sheets",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -2880,13 +2844,13 @@
             {
                 "text": "From: CanvasPrints Discount",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "CanvasPrints Discount",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -2899,7 +2863,7 @@
             {
                 "text": "From: Turmeric Refill",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -2918,7 +2882,7 @@
             {
                 "text": "Professional Queue Management System Manufacturer",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -2943,13 +2907,13 @@
             {
                 "text": "From: Terminix Experts",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Terminix Experts",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -2975,7 +2939,7 @@
             {
                 "text": "From: Mail Delivery System",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -3012,7 +2976,7 @@
             {
                 "text": "Delta Airlines",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -3025,13 +2989,13 @@
             {
                 "text": "From: Terminix Experts",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Terminix Experts",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -3058,7 +3022,7 @@
             {
                 "text": "Ginri Power Automation",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -3070,7 +3034,7 @@
             {
                 "text": "Roni Ginri Power Automation CO., LTD.",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -3083,13 +3047,13 @@
             {
                 "text": "From: Big Pharma",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Big Pharma",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -3102,13 +3066,13 @@
             {
                 "text": "From: Exxon Gas service!",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Exxon Gas Survey Team",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -3147,13 +3111,13 @@
             {
                 "text": "From: Uber Eats",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Uber Eats",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -3182,7 +3146,7 @@
             {
                 "text": "ADT Security",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -3195,13 +3159,13 @@
             {
                 "text": "From: Delta Airlines Exclusive Rewards",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Delta Airlines",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -3214,13 +3178,13 @@
             {
                 "text": "From: Lowes Home Improvement Store Info",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "The Lowes Team",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -3245,19 +3209,13 @@
             {
                 "text": "china shipping company",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "if you need more details and inquiry , pls contact with me any time",
                 "labels": [
                     "action"
-                ]
-            },
-            {
-                "text": "bait",
-                "labels": [
-                    "relation"
                 ]
             }
         ]
@@ -3284,13 +3242,13 @@
             {
                 "text": "From: USA TODAY Hispanic Living",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "USA TODAY Hispanic Living",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -3309,13 +3267,13 @@
             {
                 "text": "Win a Electronic's Pallet",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Electronics Pallet",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -3326,7 +3284,7 @@
         "text": "Subject: Participate in our Shell Gift Card Survey. 🎁 \n From: Customer service \n Recipient address: bruce@untroubled.org \n Body: We warmly congratulate you.HELLO BRUCE@UNTROUBLED.ORG we warmly congratulate you! You are one of the chosen ones for SHELL'S COMPETITION - take 2 minutes and take part. DON'T MISS THE CHANCE TO WIN A FREE SHELL FUEL VOUCHER. Simply click on \"CONFIRM\" [https://transcm.info/index.php/campaigns/zc831ee5gdfaf/track-url/sx4847a9jb545/5ab34463e4c2c3281c1cd5621ae367dc983c2683] and secure your prize: Thank you Shell Team To usubscribe, click here [https://transcm.info/index.php/campaigns/zc831ee5gdfaf/track-url/sx4847a9jb545/83d69f52fbb0134f9356485baaa93223d5989bb9]Participate in our Shell Gift Card Survey.   We warmly congratulate you. Hello bruce@untroubled.org we warmly congratulate you! You are one of the chosen ones for Shell's competition - take 2 minutes and take part. Don't miss the chance to win a free Shell fuel voucher. Simply click on \" CONFIRM \" and secure your prize: Thank you Shell Team To usubscribe, click here",
         "annotations": [
             {
-                "text": "From: Customer service",
+                "text": "Customer",
                 "labels": [
                     "relation"
                 ]
@@ -3334,13 +3292,13 @@
             {
                 "text": "Shell's competition",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Shell Team",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -3365,13 +3323,13 @@
             {
                 "text": "From: Hair Regrowth",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Hair Regrowth",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -3384,7 +3342,7 @@
             {
                 "text": "From: Renewal By Andersen",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -3397,19 +3355,19 @@
             {
                 "text": "From: Reviewers Spot OReillys",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "O' reilly",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "O' reilly Auto Parts Survey Team",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -3428,19 +3386,19 @@
             {
                 "text": "TMobile Evaluation Hub",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Tmobile",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "T-Mobile",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -3465,19 +3423,13 @@
             {
                 "text": "From: Valuable Input From ChickfilA Customers",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Chick-fil-A",
                 "labels": [
-                    "organization"
-                ]
-            },
-            {
-                "text": "Chick-fil-A",
-                "labels": [
-                    "relation"
+                    "identity"
                 ]
             },
             {
@@ -3509,19 +3461,19 @@
             {
                 "text": "From: Cert-Conversion",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Global Academy of Financial Management www.GAFM.com",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "The First USA Certification Body to be EU Accredited, ESQ RECOGNIZED, and ISO 21001 Certified",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -3558,19 +3510,19 @@
             {
                 "text": "From: IceHouse",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "IceHouse",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Ice-House Portable AC",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -3583,13 +3535,13 @@
             {
                 "text": "From: Affiliate Renewal By Andersen",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Affiliate Renewal By Andersen",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -3602,13 +3554,13 @@
             {
                 "text": "From: AceHardware",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Ace Hardware",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -3640,7 +3592,7 @@
             {
                 "text": "From: Crypto News",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -3653,13 +3605,13 @@
             {
                 "text": "From: WaImart",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "WaImart Team",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -3669,7 +3621,7 @@
                 ]
             },
             {
-                "text": "valued Walmart customer",
+                "text": "customer",
                 "labels": [
                     "relation"
                 ]
@@ -3684,7 +3636,7 @@
             {
                 "text": "From: lowes Shopping",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -3709,13 +3661,13 @@
             {
                 "text": "From: Southwest Special Rewards",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Southwest",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -3746,7 +3698,7 @@
             {
                 "text": "mold supplier",
                 "labels": [
-                    "relation"
+                    "identity"
                 ]
             },
             {
@@ -3792,7 +3744,7 @@
             {
                 "text": "SuperChare your WIFI Speed",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -3818,13 +3770,13 @@
             {
                 "text": "From: Dyson",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Lowe's Giveaway",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -3856,13 +3808,13 @@
             {
                 "text": "From: Shein $750 Reward!",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Shein",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -3887,7 +3839,7 @@
             {
                 "text": "Costco",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -3906,7 +3858,7 @@
             {
                 "text": "From: Athena",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -3925,13 +3877,13 @@
             {
                 "text": "From: untroubled.org",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Untroubled Restoration Scanned Team Service Announcement",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -3944,13 +3896,13 @@
             {
                 "text": "From: NHR Supports You",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "NHR Supports You",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -3963,19 +3915,19 @@
             {
                 "text": "From: Fuzebug",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Fuzebug",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Fuzebug 2345 Vauxhall Road Union, NJ 07083",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -4007,7 +3959,7 @@
             {
                 "text": "From: Survey Rewards",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -4039,7 +3991,7 @@
             {
                 "text": "From: Shopper Survey",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -4056,9 +4008,9 @@
         "text": "Subject: Good morning : Thank You \n From: Kent Skipper \n Recipient address: bruce@untroubled.org \n Body: Unsubscribe Kent",
         "annotations": [
             {
-                "text": "From: Kent Skipper",
+                "text": "Kent Skipper",
                 "labels": [
-                    "relation"
+                    "identity"
                 ]
             }
         ]
@@ -4071,19 +4023,19 @@
             {
                 "text": "From: Harbor Freight Observations",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Harbor Freight",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Harbor Freight Team",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -4096,13 +4048,13 @@
             {
                 "text": "From: Fidelity Life Insurance",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Fidelity Life Insurance",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -4127,19 +4079,19 @@
             {
                 "text": "From: The Home Depot Assessment Squad",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "The Home Depot",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "The Home Depot Survey Team",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -4165,13 +4117,13 @@
             {
                 "text": "From: Huusk Japan",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Huusk Japan",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -4190,13 +4142,13 @@
             {
                 "text": "untroubled.org",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Team at untroubled.org",
                 "labels": [
-                    "relation"
+                    "identity"
                 ]
             },
             {
@@ -4215,19 +4167,19 @@
             {
                 "text": "From: ADT Security",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "ADT - Home Security",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "ADT- Home Protection",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -4240,7 +4192,7 @@
             {
                 "text": "From: United",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -4252,19 +4204,19 @@
             {
                 "text": "United Club",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "United Airlines",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "The United States",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -4277,7 +4229,7 @@
             {
                 "text": "Electric fireplace manufacturer",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -4311,7 +4263,7 @@
             {
                 "text": "From: MacBook Air Survey",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -4354,7 +4306,7 @@
             {
                 "text": "From: april.sy.cargo.svc",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -4372,7 +4324,7 @@
             {
                 "text": "Shenzhen SY Cargo Service Co.,Ltd (China)",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -4392,13 +4344,13 @@
             {
                 "text": "Ace Hardware Survey Team",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Ace Hardware",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -4422,7 +4374,7 @@
             {
                 "text": "Ace Hardware Team",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -4447,7 +4399,7 @@
         "text": "Subject: CAN I TRUST YOU ? \n From:  \n Recipient address: bruce@untroubled.org \n Body: My Dear Beloved Friend, Greetings, Please let this not sound strange to you because I am not asking you for money, for my only surviving lawyer who would have done this, died early last year. I prayed and got your email address from your country's guest book and I wish to visit once more if God willing in his infinite mercies grant me. In function of your good profile, I want to solicit your assistance in the discharge of my Will. I am mrs. Maria Paxton, from London and am aged 73 years suffering from endometrial cancer. Please, I want you to help me create a charitable project with the money that I inherited from my deceased husband who died in a motor accident. I was brought up from a motherless baby's home and was married to my late husband for twenty nine years without a child. My friends have plundered so much of my wealth since my illness and I cannot live with the agony of entrusting this huge responsibility to any of them anymore, so I sold all my inherited belongings and deposited all the sum of 11,000,000.00 GBP (Eleven Million Pounds) with my bank. All I need is an honest person who will use at least %60 of the funds as I would instruct, then the rest %40 will go to you for helping me accomplish this mission because donating this money to charity is the only legacy I can leave behind after my death. No money is required from you to carry on with this project because it is my heart desire to make a generous gift to you to work for a charity in your country. I don't mind if you are a Christian or Muslim or Hindu or Buddhist rather my only paramount concern here is whether I can trust you because this generation is filled up with greedy and fraudulent people all over the world. I will give you more details as soon as I hear from you. Looking forward to your urgent response. Kind regards. Mrs.Maria Paxton",
         "annotations": [
             {
-                "text": "My Dear Beloved Friend",
+                "text": "Friend",
                 "labels": [
                     "relation"
                 ]
@@ -4462,13 +4414,13 @@
             {
                 "text": "From: Liv Pure",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Liv Pure",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -4481,13 +4433,13 @@
             {
                 "text": "Renewal by Andersen Windows",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Renewal By Andersen Savings",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -4500,7 +4452,7 @@
             {
                 "text": "From: Target Survey Team",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -4512,7 +4464,7 @@
             {
                 "text": "Target Survey",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -4543,19 +4495,19 @@
             {
                 "text": "From: Intesa SanPaolo",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "INTESA SanPaolo",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "2020, Intesa Ltd.",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -4586,7 +4538,7 @@
             {
                 "text": "From: POLICIA NACIONAL",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -4606,19 +4558,19 @@
             {
                 "text": "From: Samsung S23 survey!",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Samsung S23 Ultra",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Samsung",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -4636,7 +4588,7 @@
             {
                 "text": "Thank you for choosing Samsung",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -4649,7 +4601,7 @@
             {
                 "text": "China POPP group",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -4661,7 +4613,7 @@
             {
                 "text": "WENZHOU HONGJIE ELECTRICAL CO.,LTD",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -4680,13 +4632,13 @@
             {
                 "text": "From: Shopping At SEPHORA Inside Kohls",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "The SEPHORA Team",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -4705,13 +4657,13 @@
             {
                 "text": "From: SplashWines.com",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Splash Wine",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -4724,13 +4676,13 @@
             {
                 "text": "𝐓-𝐌𝐨𝐛𝐢𝐥𝐞",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "T-Mobile",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -4755,7 +4707,7 @@
             {
                 "text": "From: Delta Airlines",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -4774,7 +4726,7 @@
             {
                 "text": "From: Mailbox",
                 "labels": [
-                    "relation"
+                    "identity"
                 ]
             },
             {
@@ -4799,13 +4751,13 @@
             {
                 "text": "VentMed Medical",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Hunan VentMed Medical Technology Co., Ltd.",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -4837,7 +4789,7 @@
             {
                 "text": "From: Amazon.co.jp",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -4850,7 +4802,7 @@
             {
                 "text": "the Walmart Survey",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -4876,13 +4828,13 @@
             {
                 "text": "From: Miracle Lash",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Miracle Lash",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -4895,13 +4847,13 @@
             {
                 "text": "PROMO 1CCTV",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Mesaj din partea magazinului www.1cctv.ro",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -4914,13 +4866,13 @@
             {
                 "text": "From: UPS",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "UPS",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -4939,17 +4891,17 @@
             {
                 "text": "From: Starbucks Coffee Marketplace",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Starbucks",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
-                "text": "Our Valued Customers",
+                "text": "Customers",
                 "labels": [
                     "relation"
                 ]
@@ -4970,19 +4922,19 @@
             {
                 "text": "From: Splash Wine",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Splash Wine",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Splash Wine | 1191 E Iron Eagle Dr. , Suite #101 - Eagle, ID 83616",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -5001,13 +4953,13 @@
             {
                 "text": "From: World-Best-Pillow",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "World-Best-Pillow",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -5020,13 +4972,13 @@
             {
                 "text": "From: ADT Security",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "ADT Security",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -5039,19 +4991,19 @@
             {
                 "text": "From: Hover support",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Hover support",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Hover is a service of Tucows",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -5064,7 +5016,7 @@
             {
                 "text": "From: Win Samsung Neo QLED TV",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -5089,13 +5041,13 @@
             {
                 "text": "Dive Into The UPS Feedback Hub",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "UPS",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -5126,19 +5078,19 @@
             {
                 "text": "ADMIN.",
                 "labels": [
-                    "relation"
+                    "identity"
                 ]
             },
             {
                 "text": "Untroubled Administrator Service",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "From: Untroubled",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -5163,19 +5115,19 @@
             {
                 "text": "Tupi Tea",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Tupi Tea | 4700 Millenia Blvd Ste 175 | Orlando, FL 32839",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Ivy League",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -5188,7 +5140,7 @@
             {
                 "text": "From: At Home Teeth Whitening",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -5209,13 +5161,7 @@
             {
                 "text": "VacuumGoPro",
                 "labels": [
-                    "organization"
-                ]
-            },
-            {
-                "text": "newsletter",
-                "labels": [
-                    "relation"
+                    "identity"
                 ]
             }
         ]
@@ -5228,19 +5174,19 @@
             {
                 "text": "From: Starbucks Caf",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Starbucks Survey Team",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Starbucks",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -5265,13 +5211,13 @@
             {
                 "text": "Afriex Training",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Afriex training Limited",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -5302,13 +5248,13 @@
             {
                 "text": "From: AceHardware",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Ace Hardware Labor Day Rewards",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -5327,17 +5273,17 @@
             {
                 "text": "From: CVS Exclusive Invites",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "CVS Exclusive Invites",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
-                "text": "Exclusive Savings for Our Esteemed Customers",
+                "text": "Customers",
                 "labels": [
                     "relation"
                 ]
@@ -5358,7 +5304,7 @@
             {
                 "text": "From: \"Knee Restoration\"",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -5384,7 +5330,7 @@
             {
                 "text": "From: april.sy.cargo.svc",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -5396,7 +5342,7 @@
             {
                 "text": "April from ShenZhen SY cargo service co.,ltd.(China)",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -5422,7 +5368,7 @@
             {
                 "text": "From: InboxPays survey",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -5446,7 +5392,7 @@
             {
                 "text": "InboxPays",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -5459,7 +5405,7 @@
             {
                 "text": "From: ServicePlus Home Warranty",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -5471,7 +5417,7 @@
             {
                 "text": "ServicePlus Home Warranty",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -5484,13 +5430,13 @@
             {
                 "text": "From: Walgreens Notification!",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Walgreens",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -5515,13 +5461,13 @@
             {
                 "text": "From: Ray Ban",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Ray Ban Sunglasses",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -5534,13 +5480,13 @@
             {
                 "text": "From: Terminix Pest Control Experts",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Terminix Pest Control Experts",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -5553,7 +5499,7 @@
             {
                 "text": "Ace Hardware",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -5572,19 +5518,19 @@
             {
                 "text": "From: InDepth Analysis Of Your Delta Flight",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Delta",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Delta Survey Team",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -5623,13 +5569,13 @@
             {
                 "text": "From: CoolEdge",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "CoolEdge device",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -5674,13 +5620,13 @@
             {
                 "text": "From: Louis Vuitton",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Louis Vuitton",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -5693,17 +5639,17 @@
             {
                 "text": "Unwrap The Gift Of Savings From American Airlines",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "American Airlines",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
-                "text": "Our Esteemed Users",
+                "text": "Users",
                 "labels": [
                     "relation"
                 ]
@@ -5724,7 +5670,7 @@
             {
                 "text": "Kayou Mould",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -5737,13 +5683,13 @@
             {
                 "text": "Fuel Save Pro Ads",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Fuel Saver",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -5756,7 +5702,7 @@
             {
                 "text": "Worse Fungus",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -5782,13 +5728,13 @@
             {
                 "text": "Costco",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "From: CostcoStanIeyCup",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -5819,19 +5765,19 @@
             {
                 "text": "The Pet Care",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "The PetCare",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "The Pet Care Agency",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -5844,13 +5790,13 @@
             {
                 "text": "From: HomeDepot",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Home Depot",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -5869,7 +5815,7 @@
             {
                 "text": "Renewal By Andersen Affiliate",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -5889,13 +5835,13 @@
             {
                 "text": "From: Bath and Body Rewars!",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "UpLevelRewards",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -5907,7 +5853,7 @@
             {
                 "text": "UpLevel Rewards, 99 Wall Street #4330 | New York, NY 10005",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -5926,7 +5872,7 @@
             {
                 "text": "Sales Executive Global Sales Dept. | Fu Products Co.,ltd",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -5939,7 +5885,7 @@
             {
                 "text": "From: WordPress Team",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -5970,19 +5916,19 @@
             {
                 "text": "From: Kroger Customer Care",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Kroger",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Kroger Survey Team",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -6007,25 +5953,25 @@
             {
                 "text": "BurgerKing",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Burger King",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "BK restaurant",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Burger King Corporation",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -6056,13 +6002,13 @@
             {
                 "text": "From: Williams Sonoma Survey",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Williams Sonoma Survey",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -6088,7 +6034,7 @@
             {
                 "text": "China BIG Technology (Group) Co., LTD",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -6107,13 +6053,13 @@
             {
                 "text": "From: Healthy Prostate",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Healthy Prostate",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -6126,7 +6072,7 @@
             {
                 "text": "Kroger Shopper Feedback",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -6147,13 +6093,13 @@
             {
                 "text": "From: UPS",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "UPS",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -6178,7 +6124,7 @@
             {
                 "text": "From: Shell Gift Card",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -6190,13 +6136,13 @@
             {
                 "text": "Shell Gift Card",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Shell",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -6208,7 +6154,7 @@
             {
                 "text": "Shell",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -6221,13 +6167,13 @@
             {
                 "text": "From: KOHL'S Confirmation",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "KOHL'S Confirmation",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -6240,7 +6186,7 @@
             {
                 "text": "From: Shipping Pending!",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -6252,19 +6198,19 @@
             {
                 "text": "UPS Customer Service Team",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "UPS",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "UPS package",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -6304,13 +6250,13 @@
             {
                 "text": "From: ADT Security",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "ADT deal",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -6323,13 +6269,13 @@
             {
                 "text": "From: World-Best-Pillow",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "World-Best-Pillow",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -6342,7 +6288,7 @@
             {
                 "text": "From: Untroubled.org",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -6367,7 +6313,7 @@
             {
                 "text": "Fedex service",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -6386,13 +6332,13 @@
             {
                 "text": "From: Sleep Connection",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "SleepConnection",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -6410,7 +6356,7 @@
             {
                 "text": "Sleep Connection Inc.",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -6423,7 +6369,7 @@
             {
                 "text": "From: Brain Blueprint",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -6435,7 +6381,7 @@
             {
                 "text": "Brain Blueprint",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -6448,7 +6394,7 @@
             {
                 "text": "From: Vending machines",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -6461,13 +6407,13 @@
             {
                 "text": "Shenzhen Filmbase Technology Co.",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Filmbase",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -6498,7 +6444,7 @@
             {
                 "text": "From: 𝐖𝐚𝐥𝐦𝐚𝐫𝐭 𝐑𝐞𝐰𝐚𝐫𝐝𝐬",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -6511,13 +6457,13 @@
             {
                 "text": "From: Terminix Offer",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Powerful Pest & Termite Solutions",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -6530,13 +6476,13 @@
             {
                 "text": "From: Network Renewal By Andersen",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Network Renewal By Andersen",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -6557,7 +6503,7 @@
             {
                 "text": "ThermometerStore",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -6583,7 +6529,7 @@
             {
                 "text": "CNC Machining",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -6602,19 +6548,19 @@
             {
                 "text": "From: Terminix Pest Control Advisors",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Terminix Pest Control Advisors",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Terminix",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -6627,7 +6573,7 @@
             {
                 "text": "From: Lowes",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -6677,7 +6623,7 @@
             {
                 "text": "Stanley Grade",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -6696,13 +6642,13 @@
             {
                 "text": "From: aeoncard",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "AEON CARD",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -6721,7 +6667,7 @@
             {
                 "text": "From: Astral International",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -6733,7 +6679,7 @@
             {
                 "text": "ASTRAL INTERNATIONAL (P) LIMITED",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -6758,11 +6704,11 @@
             {
                 "text": "From: IServiced Rewards",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
-                "text": "JetBlue Customer",
+                "text": "Customer",
                 "labels": [
                     "relation"
                 ]
@@ -6796,7 +6742,7 @@
             {
                 "text": "Compressa Miracle Socks",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -6809,13 +6755,13 @@
             {
                 "text": "Chteau de Versailles",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Palace of Versailles",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -6839,7 +6785,7 @@
             {
                 "text": "Etablissement Public du Ch teau, du Mus e et du Domaine National de Versailles",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -6852,7 +6798,7 @@
             {
                 "text": "Blue Spruce",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -6865,13 +6811,13 @@
             {
                 "text": "From: SilentSnore",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "SilentSnore",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -6884,19 +6830,19 @@
             {
                 "text": "From: Unlock Todays Exclusive Walgreens Deal",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Walgreens",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "The Walgreens Survey",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -6915,7 +6861,7 @@
             {
                 "text": "MiracleMemorial Day Sale",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -6928,13 +6874,13 @@
             {
                 "text": "From: ServicePlus Home Warranty",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "ServicePlus Home Warranty",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -6947,7 +6893,7 @@
             {
                 "text": "SingleUkrainianBeauty",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -6984,7 +6930,7 @@
             {
                 "text": "From: Starbucks",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -6996,7 +6942,7 @@
             {
                 "text": "Starbucks, play a vital role in shaping the contemporary coffee culture",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -7009,13 +6955,7 @@
             {
                 "text": "Injury CIaim Review",
                 "labels": [
-                    "organization"
-                ]
-            },
-            {
-                "text": "Injury Claims",
-                "labels": [
-                    "relation"
+                    "identity"
                 ]
             },
             {
@@ -7034,19 +6974,19 @@
             {
                 "text": "From: Choice Home Warranty 247 Service",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Choice Home Warranty",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Choice Home Warranty plans",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -7059,7 +6999,7 @@
             {
                 "text": "China Registry (Head Office)",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -7077,7 +7017,7 @@
             {
                 "text": "Hongyuan Ltd",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -7090,17 +7030,17 @@
             {
                 "text": "BadCreditLoan",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Bad Credit Loans",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
-                "text": "Hello user",
+                "text": "user",
                 "labels": [
                     "relation"
                 ]
@@ -7121,13 +7061,13 @@
             {
                 "text": "From: Terminix Offer",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Terminix Offer",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -7140,13 +7080,13 @@
             {
                 "text": "From: RenewalbyAndersen",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "RenewalbyAndersen",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -7159,13 +7099,13 @@
             {
                 "text": "From: ServicePlus Home Warranty",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "ServicePlus Home Warranty",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -7178,13 +7118,13 @@
             {
                 "text": "From: HomeDepot",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Home Depot",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -7201,12 +7141,6 @@
         "text": "Subject: `Positive Reply \n From: Nabil. al \n Recipient address: mr.hassannabilal@gmail.com, bruce@untroubled.org \n Body: *`I Am looking for a possible partnership with a business or individual in your country so that I can make some investments there due to the prolonged civil war in my country, now the earthquake in Syria. I wish to relocate my investment capital to your country, any viable investment idea you suggest to me will be considered.* *Kindly, reply for us to discuss this further. Regards* *Al.Nabil, 69 years old*`I Am looking for a possible partnership with a business or individual in your country so that I can make some investments there due to the prolonged civil war in my country, now the earthquake in Syria. I wish to relocate my investment capital to your country, any viable investment idea you suggest to me will be considered. Kindly, reply for us to discuss this further. Regards Al.Nabil, 69 years old",
         "annotations": [
             {
-                "text": "Nabil. al",
-                "labels": [
-                    "relation"
-                ]
-            },
-            {
                 "text": "looking for a possible partnership with a business or individual in your country",
                 "labels": [
                     "relation"
@@ -7222,7 +7156,7 @@
             {
                 "text": "From: Lose Weight",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -7235,7 +7169,7 @@
             {
                 "text": "untroubled.org",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -7248,13 +7182,13 @@
             {
                 "text": "From: Amazon Business",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "AMAZON BUSINESS",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -7267,13 +7201,13 @@
             {
                 "text": "From: Roundcube Webmail",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Roundcube Webmail",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -7292,13 +7226,13 @@
             {
                 "text": "Assessment Center By OReillys",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "O'Reilly",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -7332,11 +7266,11 @@
             {
                 "text": "VIP CASINOLIST",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
-                "text": "owner of VIPCASINOLIST.COM",
+                "text": "owner",
                 "labels": [
                     "relation"
                 ]
@@ -7344,7 +7278,7 @@
             {
                 "text": "VIPCASINOLIST.COM vipcasinolist@gmail.com",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -7357,13 +7291,13 @@
             {
                 "text": "From: SamsClub",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Sam's Club",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -7376,7 +7310,7 @@
             {
                 "text": "From: WeTransfer",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -7395,7 +7329,7 @@
             {
                 "text": "From: HomeDepotShops",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -7414,13 +7348,13 @@
             {
                 "text": "From: international monetary fund",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "International Monetary Fund (IMF)",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -7439,25 +7373,25 @@
             {
                 "text": "TDS",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Passphrase.net",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Passphrase",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Passphrase Online",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -7476,13 +7410,13 @@
             {
                 "text": "From: DICK'S",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "YETI Backpack Cooler",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -7513,19 +7447,19 @@
             {
                 "text": "Your GoTo Source For Southwest Flight Details",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Southwest Airlines",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Southwest",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -7543,7 +7477,7 @@
             {
                 "text": "Southwest Airlines Co. with headquarters in Dallas",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -7556,19 +7490,19 @@
             {
                 "text": "Federal Ministry of Agriculture and Natural Resources",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Federal Ministry of Agriculture (F.M.A)",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Federal capital territory Office. complex block A, area 11 P.M.B.135 Garki Abuja.Fct",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -7599,19 +7533,19 @@
             {
                 "text": "China CiTic Bank Fund portfolio dept, Asia Pacific",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "China CiTic Bank",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Bank Of America",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -7636,13 +7570,13 @@
             {
                 "text": "From: Uber",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Uber Technologies Inc.",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -7655,13 +7589,13 @@
             {
                 "text": "From: Uber",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Uber Technologies Inc.",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -7696,13 +7630,13 @@
             {
                 "text": "VERIZON",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "The Verizon",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -7727,25 +7661,19 @@
             {
                 "text": "From: United Airlines Special Reward",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "United Airlines",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "United Airlines Survey",
                 "labels": [
-                    "organization"
-                ]
-            },
-            {
-                "text": "thank you for choosing United Airlines",
-                "labels": [
-                    "relation"
+                    "identity"
                 ]
             },
             {
@@ -7764,13 +7692,13 @@
             {
                 "text": "FamiPay",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Famima Digital One Co., Ltd.",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -7783,7 +7711,7 @@
             {
                 "text": "Muama Ryoko",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -7796,7 +7724,7 @@
             {
                 "text": "Personal Branding & Networking",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -7815,13 +7743,13 @@
             {
                 "text": "From: MеtaMаsk",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "MеtaMаsk",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -7834,13 +7762,13 @@
             {
                 "text": "Shopmiraclebrand.co Partner Ad",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Miracle Sheets",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -7853,13 +7781,13 @@
             {
                 "text": "From: PrintOclock par LeadsLeader",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "PrintOclock",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
@@ -7878,13 +7806,13 @@
             {
                 "text": "From: The BarxBuddy Team",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "The BarxBuddy Team",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -7897,13 +7825,13 @@
             {
                 "text": "Get Life Quotes ECoverage",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Copyright eCoverage",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -7916,25 +7844,25 @@
             {
                 "text": "From: Lifetime Warranty DefenseGutters.com",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Lifetime Warranty DefenseGutters.com",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "Defense Gutters",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             },
             {
                 "text": "defense gutter",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
@@ -7947,7 +7875,7 @@
             {
                 "text": "From: CanvasPrints Ad",
                 "labels": [
-                    "organization"
+                    "identity"
                 ]
             }
         ]
