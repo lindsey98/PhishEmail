@@ -91,8 +91,8 @@ if __name__ == '__main__':
     dataset_dir = f'./datasets/ner_training/'
     label_list = [
         "O",
-        "B-organization",
-        "I-organization",
+        "B-identity",
+        "I-identity",
         "B-relation",
         "I-relation",
         "B-action",

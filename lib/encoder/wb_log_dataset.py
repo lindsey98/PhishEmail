@@ -60,7 +60,7 @@ def process_entries(data):
             continue  # Skip duplicates
         seen_texts.add(text)
 
-        annotations = entry['annotations']
+        annotations = entry.get('annotations', [])
         for annot in annotations:
             if annot['labels'][0] == 'organization':
                 if annot['text'].startswith('From:'):
@@ -78,8 +78,8 @@ if __name__ == '__main__':
 
     label_list = [
         "O",
-        "B-organization",
-        "I-organization",
+        "B-identity",
+        "I-identity",
         "B-relation",
         "I-relation",
         "B-action",
@@ -103,6 +103,10 @@ if __name__ == '__main__':
     with open(f'./datasets/{dataset_3_name}/annotated_all.json', 'r') as json_file:
         data_3 = json.load(json_file)
 
+    dataset_4_name = "spam_archive_2023"
+    with open(f'./datasets/{dataset_4_name}_unique_annotation/annotated_jiafan.json', 'r') as json_file:
+        data_4 = json.load(json_file)
+
     # Process the data
     processed_data = []
     seen_texts = set()
@@ -115,6 +119,8 @@ if __name__ == '__main__':
     last_length = len(processed_data)
     process_entries(data_3)
     print(f"Length of dataset {dataset_3_name} = {len(processed_data) - last_length}")
+    process_entries(data_4)
+    print(f"Length of dataset {dataset_4_name} = {len(processed_data) - last_length}")
 
     # # Split the data into training and testing sets
     train_data, test_data = train_test_split(processed_data, test_size=0.2, random_state=42)
