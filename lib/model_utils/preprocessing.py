@@ -17,6 +17,18 @@ def remove_urls(text):
     pattern = r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
     return re.sub(pattern, '', text)
 
+def prepare_prompt_no_output_unstucture(raw_input,
+                                        instruction,
+                                        tokenizer,
+                                        max_seq_len=4096):
+    input = remove_extra_spaces(remove_urls(raw_input))
+    length_predefined_prompt = len(tokenizer.tokenize(f"### Instruction:\n{instruction}\n\n### Input:\n\n\n### Response:\n"))
+
+    # Tokenize the input and truncate to the max_seq_len
+    tokens = tokenizer.tokenize(input)[:max_seq_len-length_predefined_prompt-50]  # Reserving space for an EOS token, if necessary
+    cleaned_input = tokenizer.convert_tokens_to_string(tokens)  # Convert tokens back to a string
+
+    return f"### Instruction:\n{instruction}\n\n### Input:\n{cleaned_input}\n\n### Response:\n"
 
 def prepare_prompt_no_output(raw_input, tokenizer, max_seq_len=4096):
     input = remove_extra_spaces(remove_urls(raw_input['input']))

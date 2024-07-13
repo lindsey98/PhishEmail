@@ -10,20 +10,20 @@ import os
 from pathlib import Path
 
 if __name__ == '__main__':
-    classifier = pipeline("ner", model="./checkpoints/output_ner/checkpoint-819")
+    classifier = pipeline("ner", model="./checkpoints/output_ner/checkpoint-1755")
     nlp = spacy.blank("en")
     entity_colors = {"organization": "#ADD8E6",  # Light Blue
                      "action": "#FFA07A",  # Light Salmon
                      "relation": "#98FB98"}  # Pale Green
 
-    dataset_name = "nazario-recent"
+    dataset_name = "GPT_Dataset_V2"
     dataset = EmailDataset(f"./datasets/{dataset_name}")
     print(f'Length of dataset {len(dataset)}')
 
     output_dir = Path(f"./datasets/ner_visualization_{dataset_name}")
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    for it in tqdm(range(50)):
+    for it in tqdm(range(len(dataset))):
         email_file_path, (sender_name, sender_address), (to_names, to_addresses), subject, email_body_text, headers = dataset[it]
         parsed_email = f'Subject: {subject}. From: {sender_name}. Body: {email_body_text}'
 
@@ -43,6 +43,6 @@ if __name__ == '__main__':
         email_file_path_basename = email_file_path_obj.stem  # 不包括扩展名的文件名
 
         html_file_path = output_dir / f"{email_file_path_2nd_level_basename}_{email_file_path_basename}.html"
-        with html_file_path.open("w", encoding="utf-8") as file:
+        with open(html_file_path, "w", encoding="utf-8") as file:
             file.write(html)
 

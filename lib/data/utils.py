@@ -18,7 +18,20 @@ import json
 import socket
 import re
 
+def remove_urls(text):
+    pattern = r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
+    return re.sub(pattern, '', text)
 
+def remove_extra_spaces(text):
+    # remove text surrounded by <>, since they are likely be comments that are invisible
+    text_content = re.sub(r'<[^>]*>', '', text)
+    # replace multiple newline characters with a single \n
+    text_content = re.sub(r'\n+', '\n', text_content)
+    # replace multiple consecutive periods with a single period
+    text_content = re.sub(r'\.{2,}', '', text_content)
+    # replace multiple spaces with a single space
+    text_content = re.sub(r'\s+', ' ', text_content)
+    return text_content
 
 def remove_specific_special_chars(text):
     text = text.replace('\xa0', ' ')

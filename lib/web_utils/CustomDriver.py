@@ -48,7 +48,7 @@ class CustomWebDriver(webdriver.Chrome):
         chrome_caps['acceptInsecureCerts'] = True
 
         super().__init__(
-			             ChromeDriverManager().install(),
+			             "./datasets/chromedriver",
                          chrome_options=chrome_options,
                          desired_capabilities=chrome_caps)
 
