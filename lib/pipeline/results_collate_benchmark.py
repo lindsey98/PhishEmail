@@ -84,7 +84,7 @@ def results_calculation(df_cleaned,
         sender_domain = sender_address.split('@')[-1] # sender email domain
         to_address_domains = [x.split('@')[-1] for x in row['to_addresses'].split(',')] # recipient email domain
 
-        sender_organization = eval(row['sender_organization'])
+        sender_organization = eval(row['sender_identity'])
         sender_organization = set(filter_duplicates(sender_organization))
         sender_relation = eval(row['sender_relation'])
         required_action = eval(row['required_action'])
@@ -180,7 +180,7 @@ if __name__ == '__main__':
 
     internal_relation_list = [x.strip() for x in open('./datasets/internal_relations.txt').readlines()]
 
-    reported, no_prediction_list = results_calculation(df_cleaned, check_action=True, knowledge_base_expansion=False)
+    reported, no_prediction_list = results_calculation(df_cleaned, check_action=True, knowledge_base_expansion=True)
 
     # if os.path.exists(f'./datasets/fns_{dataset_name}'):
     #     shutil.rmtree(f'./datasets/fns_{dataset_name}')
