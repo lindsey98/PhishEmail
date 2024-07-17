@@ -47,8 +47,8 @@ def tokenize_and_map(text, annotations, label_to_id):
                     tags[i] = label_to_id["I-" + label]
 
         if len(all_indices) == 0:
-            raise
-
+            # raise
+            continue
     return tokens, tags
 
 
@@ -74,6 +74,9 @@ def process_entries(data):
             "metadata": entry["Path"]  # Add metadata field
         })
 
+
+
+
 if __name__ == '__main__':
 
     label_list = [
@@ -92,20 +95,24 @@ if __name__ == '__main__':
 
     # Load the JSON file
     dataset_1_name = "spam_archive_2023"
-    with open(f'./datasets/{dataset_1_name}_unique_annotation/annotated_all.json', 'r') as json_file:
+    with open(f'./datasets/{dataset_1_name}_unique_annotation/annotated_all_augmented_50.json', 'r') as json_file:
         data_1 = json.load(json_file)
 
     dataset_2_name = "Nazario_2005"
-    with open(f'./datasets/{dataset_2_name}_unique_annotation/annotated_all.json', 'r') as json_file:
+    with open(f'./datasets/{dataset_2_name}_unique_annotation/annotated_all_augmented_50.json', 'r') as json_file:
         data_2 = json.load(json_file)
 
     dataset_3_name = "annotated_datasets_from_paul"
-    with open(f'./datasets/{dataset_3_name}/annotated_all.json', 'r') as json_file:
+    with open(f'./datasets/{dataset_3_name}/annotated_all_augmented_50.json', 'r') as json_file:
         data_3 = json.load(json_file)
 
     dataset_4_name = "spam_archive_2023"
-    with open(f'./datasets/{dataset_4_name}_unique_annotation/annotated_jiafan.json', 'r') as json_file:
+    with open(f'./datasets/{dataset_4_name}_unique_annotation/annotated_jiafan_augmented_50.json', 'r') as json_file:
         data_4 = json.load(json_file)
+
+    dataset_5_name = "augmented_internal_emails"
+    with open(f'./datasets/{dataset_5_name}/annotate_all.json', 'r') as json_file:
+        data_5 = json.load(json_file)
 
     # Process the data
     processed_data = []
@@ -121,6 +128,8 @@ if __name__ == '__main__':
     print(f"Length of dataset {dataset_3_name} = {len(processed_data) - last_length}")
     process_entries(data_4)
     print(f"Length of dataset {dataset_4_name} = {len(processed_data) - last_length}")
+    process_entries(data_5)
+    print(f"Length of dataset {dataset_5_name} = {len(processed_data) - last_length}")
 
     # # Split the data into training and testing sets
     train_data, test_data = train_test_split(processed_data, test_size=0.2, random_state=42)

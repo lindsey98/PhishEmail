@@ -139,6 +139,7 @@ if __name__ == '__main__':
         per_device_eval_batch_size=2,
         num_train_epochs=10,
         weight_decay=0.01,
+        seed=42,
         evaluation_strategy="epoch",
         save_strategy="epoch",
         logging_strategy="steps",
@@ -157,8 +158,8 @@ if __name__ == '__main__':
     )
 
     wandb.init(project=os.getenv("WANDB_PROJECT"), job_type='train', name=model_id)
-    wandb_callback = NERCallback(trainer, test_dataset, num_samples=30)
-    trainer.add_callback(wandb_callback)
+    # wandb_callback = NERCallback(trainer, test_dataset, num_samples=30)
+    # trainer.add_callback(wandb_callback)
     trainer.train()
     wandb.finish()
 
@@ -196,32 +197,32 @@ if __name__ == '__main__':
     #     relation       0.70      0.79      0.74       135
 
     '''Inference'''
-    nlp = spacy.blank("en")
-    plots = []
-    entity_colors = {
-        "organization": "#7B68EE",  # Medium Slate Blue for predicted organizations
-        "action": "#CD5C5C",  # Indian Red for predicted actions
-        "relation": "#32CD32",  # Lime Green for predicted relations
-    }
-    all_preds = []
-    all_true_labels = []
-    classifier = pipeline("ner", model="./checkpoints/output_ner/checkpoint-1776")
-    vis_dir = "./datasets/ner_visualization"
-    os.makedirs(vis_dir, exist_ok=True)
-
-    for it in tqdm(range(len(test_dataset))):
-        text = ' '.join(test_dataset[it]['tokens'])
-        output = classifier(text)
-        # Prediction
-        cleaned_outputs = ner_clean_predictions(output, text)
-        pred_doc = ner_create_spacy_doc(cleaned_outputs, nlp)
-
-        # Ground-truth
-        ground_truth = ner_clean_ground_truth(test_dataset[it]['tokens'], test_dataset[it]['ner_tags'], id_to_label)
-        gt_doc = ner_create_spacy_doc(ground_truth, nlp)
-
-        html = visualize_predictions_and_ground_truth(pred_doc, gt_doc,
-                                                      metadata=test_dataset[it]['metadata'],
-                                                      options={"colors": entity_colors})
-        with open(f'{vis_dir}/{it}.html', 'w', encoding='utf-8') as f:
-            f.write(html)
+    # nlp = spacy.blank("en")
+    # plots = []
+    # entity_colors = {
+    #     "organization": "#7B68EE",  # Medium Slate Blue for predicted organizations
+    #     "action": "#CD5C5C",  # Indian Red for predicted actions
+    #     "relation": "#32CD32",  # Lime Green for predicted relations
+    # }
+    # all_preds = []
+    # all_true_labels = []
+    # classifier = pipeline("ner", model="./checkpoints/output_ner/checkpoint-1776")
+    # vis_dir = "./datasets/ner_visualization"
+    # os.makedirs(vis_dir, exist_ok=True)
+    #
+    # for it in tqdm(range(len(test_dataset))):
+    #     text = ' '.join(test_dataset[it]['tokens'])
+    #     output = classifier(text)
+    #     # Prediction
+    #     cleaned_outputs = ner_clean_predictions(output, text)
+    #     pred_doc = ner_create_spacy_doc(cleaned_outputs, nlp)
+    #
+    #     # Ground-truth
+    #     ground_truth = ner_clean_ground_truth(test_dataset[it]['tokens'], test_dataset[it]['ner_tags'], id_to_label)
+    #     gt_doc = ner_create_spacy_doc(ground_truth, nlp)
+    #
+    #     html = visualize_predictions_and_ground_truth(pred_doc, gt_doc,
+    #                                                   metadata=test_dataset[it]['metadata'],
+    #                                                   options={"colors": entity_colors})
+    #     with open(f'{vis_dir}/{it}.html', 'w', encoding='utf-8') as f:
+    #         f.write(html)
