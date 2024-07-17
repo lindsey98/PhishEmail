@@ -54,6 +54,7 @@ class NERCallback(WandbCallback):
                          "relation": "#98FB98"}  # Pale Green
 
         for example in tqdm(self.sample_dataset, leave=False):
+
             text = ' '.join(example['tokens'])
             tokens = self.tokenizer([text], return_tensors='pt',
                                     truncation=True, padding=True,
@@ -65,9 +66,11 @@ class NERCallback(WandbCallback):
             with torch.inference_mode():
                 outputs = self.model(**inputs)  # Assume model is on the appropriate device
 
-            output = ner_prediction_postprocess(self.model, self.tokenizer, outputs, tokens["input_ids"], tokens["offset_mapping"])
-            cleaned_output = ner_clean_predictions(output, text)
-            doc = ner_create_spacy_doc(cleaned_output, nlp)
+            tokenized_email = self.tokenizer.convert_ids_to_tokens(tokens["input_ids"])
+            tokenized_email_str = self.tokenizer.convert_tokens_to_string(tokenized_email)
+
+            entities = ner_prediction_postprocess(self.model, self.tokenizer, outputs, tokens["input_ids"], tokens["offset_mapping"])
+            doc = ner_create_spacy_doc(tokenized_email_str, entities, nlp)
             # Apply entity colors
             html = spacy.displacy.render(doc, style="ent", options={"colors": entity_colors})
             plots.append([wandb.Html(html)])

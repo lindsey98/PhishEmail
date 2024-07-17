@@ -14,7 +14,11 @@ import difflib
 import shutil
 from transformers import pipeline
 import spacy
-from lib.model_utils.postprocessing import visualize_predictions, ner_clean_predictions, ner_create_spacy_doc
+from lib.model_utils.postprocessing import visualize_predictions, ner_create_spacy_doc, CustomNERPipeline, visualize_token_predictions
+from transformers import TokenClassificationPipeline, AutoTokenizer, AutoModelForTokenClassification
+import random
+from spacy import displacy
+
 os.environ['http_proxy'] = 'http://127.0.0.1:7890'
 os.environ['https_proxy'] = 'http://127.0.0.1:7890'
 os.environ['OPENAI_API_KEY'] = open('./datasets/openai_key.txt').read()
@@ -22,7 +26,7 @@ os.environ['OPENAI_API_KEY'] = open('./datasets/openai_key.txt').read()
 def filter_duplicates(strings, threshold=0.6):
     filtered = []
     for string in strings:
-        string = string.split(". ")[0] # a minor fix
+        string = string.split(". ")[0].split("From:")[-1] # a minor fix
         if len(string) == 0:
             continue
         # Check similarity with already filtered strings
@@ -73,10 +77,14 @@ def results_calculation(df_cleaned,
     no_pred_ct = 0
     reported = []
     no_prediction_list = []
+    failed_list = set()
 
     for it, row in tqdm(df_cleaned.iterrows()):
 
-        # if it <= 2019:
+        # if it <= 1922:
+        #     continue
+
+        # if row['email_file_path'] != './datasets/nazario-recent/2023/4.eml':
         #     continue
 
         email_file_path = row['email_file_path']
@@ -100,8 +108,10 @@ def results_calculation(df_cleaned,
         # No prediction on sender organization or relation
         if len(sender_organization_and_relation) == 0:
             no_pred_ct += 1
-            no_prediction_list.append(row)
+            failed_list.add(email_file_path)
             continue
+
+        failed_list.add(email_file_path)
 
         for potential_organization in sender_organization:
             closest_match_in_map = find_closest_match(potential_organization, list(brand_domain_map.keys()), cutoff=0.8)
@@ -125,10 +135,11 @@ def results_calculation(df_cleaned,
                         json.dump(brand_domain_map, file, indent=4)
 
             if official_emails:
-                if (sender_domain not in official_emails):
+                if (sender_domain not in official_emails) or ('@' not in sender_address):
                     if required_action:  # has action
                         reported_ct += 1
                         reported.append(row)
+                        failed_list.remove(email_file_path)
                 break
 
         if official_emails:
@@ -137,17 +148,18 @@ def results_calculation(df_cleaned,
         # If there is no valid organization predicted, try to see whether the relation is internal
         for relation in sender_organization_and_relation:
             if any([internal_relation.lower() in relation.lower() for internal_relation in internal_relation_list]): # internal
-                if sender_domain not in to_address_domains:
+                if (sender_domain not in to_address_domains) or ('@' not in sender_address):
                     if required_action:  # has action
                         reported_ct += 1
                         reported.append(row)
+                        failed_list.remove(email_file_path)
                         break
 
     print(f'Total = {len(df_cleaned)}')
     print(f'Reported = {reported_ct}, % = {reported_ct/len(df_cleaned)}')
     print(f'Failed due to no prediction = {no_pred_ct}, % = {no_pred_ct/len(df_cleaned)}')
 
-    return reported, no_prediction_list
+    return reported, failed_list
 
 if __name__ == '__main__':
 
@@ -180,14 +192,26 @@ if __name__ == '__main__':
 
     internal_relation_list = [x.strip() for x in open('./datasets/internal_relations.txt').readlines()]
 
-    reported, no_prediction_list = results_calculation(df_cleaned, check_action=True, knowledge_base_expansion=True)
+    # reported, failed_list = results_calculation(df_cleaned,
+    #                                            check_action=False,
+    #                                            knowledge_base_expansion=True)
 
-    # if os.path.exists(f'./datasets/fns_{dataset_name}'):
-    #     shutil.rmtree(f'./datasets/fns_{dataset_name}')
-    # os.makedirs(f'./datasets/fns_{dataset_name}', exist_ok=True)
+    if os.path.exists(f'./datasets/fns_{dataset_name}'):
+        shutil.rmtree(f'./datasets/fns_{dataset_name}')
+    os.makedirs(f'./datasets/fns_{dataset_name}', exist_ok=True)
+
+    model_path = "./checkpoints/output_ner/checkpoint-1776"
+    tokenizer = AutoTokenizer.from_pretrained(model_path)
+    model = AutoModelForTokenClassification.from_pretrained(model_path)
+    classifier = pipeline("ner", model=model_path, aggregation_strategy="simple")
+    debug_pipeline = CustomNERPipeline(model=model, tokenizer=tokenizer)
+
     #
-    # classifier = pipeline("ner", model="./checkpoints/output_ner/checkpoint-1755")
-    # for it, row in enumerate(no_prediction_list):
+    # random.seed(1234)
+    # selected_100 = random.sample(range(len(failed_list)), 100)
+    # for it in tqdm(selected_100):
+    #     email_file = list(failed_list)[it]
+    #     row = df.loc[df['email_file_path'] == email_file].iloc[0, :].to_dict()
     #     email_file_path = row['email_file_path']
     #     parsed_email = f"Subject: {row['subject']}. From: {row['sender_name']}. Body: {row['email_body_text']}"
     #
@@ -205,6 +229,40 @@ if __name__ == '__main__':
     #     with open(html_file_path, "w", encoding="utf-8") as file:
     #         file.write(html)
 
+
+    '''Token-wise visualization'''
+    email_file = "./datasets/nazario-recent/2020/68.eml"
+    row = df.loc[df['email_file_path'] == email_file].iloc[0, :].to_dict()
+    email_file_path = row['email_file_path']
+    parsed_email = f"Subject: {row['subject']}. From: {row['sender_name']}. Body: {row['email_body_text']}"
+
+    # Tokenize the parsed email
+    tokens = tokenizer(parsed_email, return_offsets_mapping=True, truncation=True)
+    tokenized_email = tokenizer.convert_ids_to_tokens(tokens["input_ids"])
+    tokenized_email_str = tokenizer.convert_tokens_to_string(tokenized_email)
+
+    entities = classifier(tokenized_email_str)
+    nlp = spacy.blank("en")
+    pred_doc = ner_create_spacy_doc(tokenized_email_str, entities, nlp)
+    pred_html = displacy.render(pred_doc, style="ent", page=True, options={"colors": {"organization": "#ADD8E6", "action": "#FFA07A", "relation": "#98FB98"}})
+    html_template = f"""
+    <h2>NER Entity Predictions</h2>
+    <div style="display: flex; justify-content: space-around; position: relative;">
+        <div style="width: 100%; border: 1px solid black;">
+            {pred_html}
+        </div>
+        <div style="position: absolute; top: 0; right: 0; background-color: #fff; padding: 5px; border: 1px solid black;">
+            <strong>Metadata:</strong> {email_file_path}
+        </div>
+    </div>
+    """
+
+    debug_output = debug_pipeline(parsed_email)
+    html_template += visualize_token_predictions(debug_output)
+    # Save the HTML content to a file
+    output_html_path = "./debug.html"
+    with open(output_html_path, "w", encoding="utf-8") as f:
+        f.write(html_template)
     # reported_df = pd.DataFrame(no_prediction_list)
     # reported_df.to_csv('no_pred_emails.csv', index=False)
 
