@@ -1,0 +1,17 @@
+admin
+employee
+staff
+colleague
+e-mail
+email
+mail
+faculty
+manager
+student
+human resource
+ HR
+Finance
+ IT
+Payroll
+helpdesk
+support team
