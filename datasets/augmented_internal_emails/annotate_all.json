@@ -1,0 +1,766 @@
+[
+  {
+    "text": "Subject: Invitation: Company Picnic\nFrom: Event Team\nTo: jose@monkey.org\nBody:\nHi Jose,\n\nYou are invited to our annual company picnic next month. Please RSVP here: [RSVP Link](#)\n\nLooking forward to seeing you,",
+    "Id": 14418,
+    "label": [
+      {
+        "start": 42,
+        "end": 52,
+        "text": "Event Team",
+        "labels": [
+          "identity"
+        ]
+      },
+      {
+        "start": 108,
+        "end": 126,
+        "text": "our annual company",
+        "labels": [
+          "identity"
+        ]
+      },
+      {
+        "start": 146,
+        "end": 178,
+        "text": "Please RSVP here: [RSVP Link](#)",
+        "labels": [
+          "action"
+        ]
+      }
+    ],
+    "Path": "./datasets/augmented_internal_emails/9.eml",
+    "annotator": 1,
+    "annotation_id": 610,
+    "created_at": "2024-07-17T07:28:33.702994Z",
+    "updated_at": "2024-07-17T07:28:33.703027Z",
+    "lead_time": 23.675
+  },
+  {
+    "text": "Subject: Budget Review Meeting\nFrom: Finance Department\nTo: jose@monkey.org\nBody:\nDear Jose,\n\nWe need to review the budget for the upcoming quarter. Please find a suitable time to discuss.\n\nSchedule Budget Review\n\nBest,\nFinance Department",
+    "Id": 14419,
+    "label": [
+      {
+        "start": 37,
+        "end": 55,
+        "text": "Finance Department",
+        "labels": [
+          "identity"
+        ]
+      },
+      {
+        "start": 220,
+        "end": 238,
+        "text": "Finance Department",
+        "labels": [
+          "identity"
+        ]
+      },
+      {
+        "start": 149,
+        "end": 212,
+        "text": "Please find a suitable time to discuss.\\n\\nSchedule Budget Review",
+        "labels": [
+          "action"
+        ]
+      }
+    ],
+    "Path": "./datasets/augmented_internal_emails/19.eml",
+    "annotator": 1,
+    "annotation_id": 611,
+    "created_at": "2024-07-17T07:29:20.893717Z",
+    "updated_at": "2024-07-17T07:29:20.893741Z",
+    "lead_time": 45.888
+  },
+  {
+    "text": "Subject: Feedback Request\nFrom: survey\nTo: jose@monkey.org\nBody:\nHi Jose,\n\nWe would love to hear your thoughts on the recent training session. Please fill out this survey: [Survey Link](#)\n\nThanks,",
+    "Id": 14420,
+    "label": [
+      {
+        "start": 143,
+        "end": 188,
+        "text": "Please fill out this survey: [Survey Link](#)",
+        "labels": [
+          "action"
+        ]
+      }
+    ],
+    "Path": "./datasets/augmented_internal_emails/5.eml",
+    "annotator": 1,
+    "annotation_id": 612,
+    "created_at": "2024-07-17T07:29:41.942482Z",
+    "updated_at": "2024-07-17T07:29:41.942506Z",
+    "lead_time": 19.416
+  },
+  {
+    "text": "Subject: Email Bounce Notification\nFrom: noreply\nTo: jose@monkey.org\nBody:\nHi Jose,\n\nAn email you sent to jose@monkey.org could not be delivered. Please verify the email address and try again.\n\nRegards,\nMail Server",
+    "Id": 14421,
+    "label": [
+      {
+        "start": 203,
+        "end": 214,
+        "text": "Mail Server",
+        "labels": [
+          "identity"
+        ]
+      },
+      {
+        "start": 146,
+        "end": 192,
+        "text": "Please verify the email address and try again.",
+        "labels": [
+          "action"
+        ]
+      }
+    ],
+    "Path": "./datasets/augmented_internal_emails/15.eml",
+    "annotator": 1,
+    "annotation_id": 613,
+    "created_at": "2024-07-17T07:29:55.918525Z",
+    "updated_at": "2024-07-17T07:29:55.918544Z",
+    "lead_time": 11.903
+  },
+  {
+    "text": "Subject: Account Activity Summary\nFrom: noreply\nTo: jose@monkey.org\nBody:\nHi Jose,\n\nHere is your account activity summary for the past week. Log in to review details.\n\nRegards,\nMail Server",
+    "Id": 14422,
+    "label": [
+      {
+        "start": 177,
+        "end": 188,
+        "text": "Mail Server",
+        "labels": [
+          "identity"
+        ]
+      },
+      {
+        "start": 141,
+        "end": 166,
+        "text": "Log in to review details.",
+        "labels": [
+          "action"
+        ]
+      }
+    ],
+    "Path": "./datasets/augmented_internal_emails/14.eml",
+    "annotator": 1,
+    "annotation_id": 614,
+    "created_at": "2024-07-17T07:30:18.820502Z",
+    "updated_at": "2024-07-17T07:30:18.820525Z",
+    "lead_time": 20.25
+  },
+  {
+    "text": "Subject: Office Renovation Notice\nFrom: information\nTo: jose@monkey.org\nBody:\nHi All,\n\nPlease note that office renovations will commence next Monday. Expect some disruptions and plan your work accordingly.\n\nRegards",
+    "Id": 14423,
+    "label": [
+      {
+        "start": 9,
+        "end": 15,
+        "text": "Office",
+        "labels": [
+          "identity"
+        ]
+      },
+      {
+        "start": 104,
+        "end": 123,
+        "text": "office renovations ",
+        "labels": [
+          "identity"
+        ]
+      }
+    ],
+    "Path": "./datasets/augmented_internal_emails/4.eml",
+    "annotator": 1,
+    "annotation_id": 615,
+    "created_at": "2024-07-17T07:30:39.571690Z",
+    "updated_at": "2024-07-17T07:30:39.571713Z",
+    "lead_time": 19.715
+  },
+  {
+    "text": "Subject: Collaboration on New Product Launch\nFrom: Product Development\nTo: jose@monkey.org\nBody:\nHi Jose,\n\nWe're excited about the new product launch and would love your input on the initial draft of the promotional materials. Can we set up a meeting?\n\nSchedule Meeting\n\nThanks,\nProduct Development Team\n\n",
+    "Id": 14424,
+    "label": [
+      {
+        "start": 51,
+        "end": 70,
+        "text": "Product Development",
+        "labels": [
+          "identity"
+        ]
+      },
+      {
+        "start": 279,
+        "end": 303,
+        "text": "Product Development Team",
+        "labels": [
+          "identity"
+        ]
+      },
+      {
+        "start": 9,
+        "end": 22,
+        "text": "Collaboration",
+        "labels": [
+          "identity"
+        ]
+      },
+      {
+        "start": 227,
+        "end": 269,
+        "text": "Can we set up a meeting?\\n\\nSchedule Meeting",
+        "labels": [
+          "action"
+        ]
+      }
+    ],
+    "Path": "./datasets/augmented_internal_emails/18.eml",
+    "annotator": 1,
+    "annotation_id": 616,
+    "created_at": "2024-07-17T07:31:05.891608Z",
+    "updated_at": "2024-07-17T07:31:05.891630Z",
+    "lead_time": 25.25
+  },
+  {
+    "text": "Subject: Update: Email Account Policies\nFrom: Email Services\nTo: jose@monkey.org\nBody:\nDear Jose,\n\nWe have updated our email policies. Please review the changes using the link below.\n\nReview Changes\n\nThank you for staying informed.\n\nBest,\nEmail Services",
+    "Id": 14425,
+    "label": [
+      {
+        "start": 46,
+        "end": 60,
+        "text": "Email Services",
+        "labels": [
+          "identity"
+        ]
+      },
+      {
+        "start": 239,
+        "end": 253,
+        "text": "Email Services",
+        "labels": [
+          "identity"
+        ]
+      },
+      {
+        "start": 135,
+        "end": 198,
+        "text": "Please review the changes using the link below.\\n\\nReview Changes",
+        "labels": [
+          "action"
+        ]
+      }
+    ],
+    "Path": "./datasets/augmented_internal_emails/8.eml",
+    "annotator": 1,
+    "annotation_id": 617,
+    "created_at": "2024-07-17T07:31:18.630553Z",
+    "updated_at": "2024-07-17T07:31:18.630575Z",
+    "lead_time": 11.544
+  },
+  {
+    "text": "Subject: Account Verification Required\nFrom: Account Services\nTo: jose@monkey.org\nBody:\nDear Jose,\n\nWe noticed that your email account details need verification. Please click the link below to confirm your account details to avoid any disruption in service.\n\n[Verify Now](#)\n\nYour prompt action is required to maintain uninterrupted access to your account.\n\nRegards,\nAccount Services Team\n",
+    "Id": 14426,
+    "label": [
+      {
+        "start": 9,
+        "end": 38,
+        "text": "Account Verification Required",
+        "labels": [
+          "action"
+        ]
+      },
+      {
+        "start": 45,
+        "end": 61,
+        "text": "Account Services",
+        "labels": [
+          "identity"
+        ]
+      },
+      {
+        "start": 367,
+        "end": 388,
+        "text": "Account Services Team",
+        "labels": [
+          "identity"
+        ]
+      },
+      {
+        "start": 162,
+        "end": 274,
+        "text": "Please click the link below to confirm your account details to avoid any disruption in service.\\n\\n[Verify Now](#)",
+        "labels": [
+          "action"
+        ]
+      },
+      {
+        "start": 276,
+        "end": 356,
+        "text": "Your prompt action is required to maintain uninterrupted access to your account.",
+        "labels": [
+          "action"
+        ]
+      }
+    ],
+    "Path": "./datasets/augmented_internal_emails/3.eml",
+    "annotator": 1,
+    "annotation_id": 618,
+    "created_at": "2024-07-17T07:31:37.633049Z",
+    "updated_at": "2024-07-17T07:31:42.307661Z",
+    "lead_time": 22.297
+  },
+  {
+    "text": "Subject: Email Quarantine Notification\nFrom: noreply\nTo: jose@monkey.org\nBody:\nHi Jose,\n\nSome emails have been quarantined due to potential security threats. Review them here: [Quarantine Link](#)\n\nRegards,\nMail Server",
+    "Id": 14427,
+    "label": [
+      {
+        "start": 207,
+        "end": 218,
+        "text": "Mail Server",
+        "labels": [
+          "identity"
+        ]
+      },
+      {
+        "start": 158,
+        "end": 196,
+        "text": "Review them here: [Quarantine Link](#)",
+        "labels": [
+          "action"
+        ]
+      }
+    ],
+    "Path": "./datasets/augmented_internal_emails/13.eml",
+    "annotator": 1,
+    "annotation_id": 619,
+    "created_at": "2024-07-17T07:31:57.268970Z",
+    "updated_at": "2024-07-17T07:31:57.269005Z",
+    "lead_time": 12.829
+  },
+  {
+    "text": "Subject: New Device Login Alert\nFrom: noreply\nTo: jose@monkey.org\nBody:\nHi Jose,\n\nA new device has logged into your account. If this was not you, please change your password immediately.\n\nRegards,\nMail Server",
+    "Id": 14428,
+    "label": [
+      {
+        "start": 197,
+        "end": 208,
+        "text": "Mail Server",
+        "labels": [
+          "identity"
+        ]
+      },
+      {
+        "start": 125,
+        "end": 186,
+        "text": "If this was not you, please change your password immediately.",
+        "labels": [
+          "action"
+        ]
+      }
+    ],
+    "Path": "./datasets/augmented_internal_emails/12.eml",
+    "annotator": 1,
+    "annotation_id": 620,
+    "created_at": "2024-07-17T07:32:12.697890Z",
+    "updated_at": "2024-07-17T07:32:12.697910Z",
+    "lead_time": 14.174
+  },
+  {
+    "text": "Subject: Scheduled Maintenance Notice\nFrom: System Administrator\nTo: jose@monkey.org\nBody:\nDear Jose,\n\nPlease be advised that there will be a scheduled maintenance on our email servers this weekend. The maintenance window is set as follows:\n\nDate: 23rd-24th July\nTime: 12:00 AM - 4:00 AM\n\nDuring this time, you may experience intermittent access to your email account. We apologize for any inconvenience this may cause and appreciate your understanding.\n\nIf you have any questions or concerns, please do not hesitate to contact our support team.\n\nThank you,\nSystem Administrator\n",
+    "Id": 14429,
+    "label": [
+      {
+        "start": 44,
+        "end": 64,
+        "text": "System Administrator",
+        "labels": [
+          "identity"
+        ]
+      },
+      {
+        "start": 558,
+        "end": 578,
+        "text": "System Administrator",
+        "labels": [
+          "identity"
+        ]
+      },
+      {
+        "start": 167,
+        "end": 184,
+        "text": "our email servers",
+        "labels": [
+          "identity"
+        ]
+      },
+      {
+        "start": 455,
+        "end": 545,
+        "text": "If you have any questions or concerns, please do not hesitate to contact our support team.",
+        "labels": [
+          "action"
+        ]
+      }
+    ],
+    "Path": "./datasets/augmented_internal_emails/2.eml",
+    "annotator": 1,
+    "annotation_id": 621,
+    "created_at": "2024-07-17T07:32:40.398973Z",
+    "updated_at": "2024-07-17T07:32:40.398995Z",
+    "lead_time": 25.105
+  },
+  {
+    "text": "Subject: Mailbox Full Warning\nFrom: no-reply\nTo: jose@monkey.org\nBody:\nHi Jose,\n\nYour mailbox is 95% full. Please delete unnecessary emails or request additional storage.\n\nRegards,\nMail Server\n",
+    "Id": 14430,
+    "label": [
+      {
+        "start": 181,
+        "end": 192,
+        "text": "Mail Server",
+        "labels": [
+          "identity"
+        ]
+      },
+      {
+        "start": 107,
+        "end": 170,
+        "text": "Please delete unnecessary emails or request additional storage.",
+        "labels": [
+          "action"
+        ]
+      }
+    ],
+    "Path": "./datasets/augmented_internal_emails/11.eml",
+    "annotator": 1,
+    "annotation_id": 622,
+    "created_at": "2024-07-17T07:32:53.323849Z",
+    "updated_at": "2024-07-17T07:32:53.323874Z",
+    "lead_time": 10.693
+  },
+  {
+    "text": "Subject: Important Security Update Required\nFrom: IT Department\nTo: jose@monkey.org\nBody:\nDear User,\n\nWe have detected unusual activity in your email account. To secure your account, please click the link below to verify your identity and update your password immediately.\n\n[Verify Your Account](#)\n\nFailure to act promptly may result in a temporary suspension of your account for security reasons.\n\nThank you for your attention to this important matter.\n\nBest Regards,\nIT Department\n",
+    "Id": 14431,
+    "label": [
+      {
+        "start": 50,
+        "end": 63,
+        "text": "IT Department",
+        "labels": [
+          "identity"
+        ]
+      },
+      {
+        "start": 470,
+        "end": 483,
+        "text": "IT Department",
+        "labels": [
+          "identity"
+        ]
+      },
+      {
+        "start": 159,
+        "end": 272,
+        "text": "To secure your account, please click the link below to verify your identity and update your password immediately.",
+        "labels": [
+          "action"
+        ]
+      },
+      {
+        "start": 274,
+        "end": 298,
+        "text": "[Verify Your Account](#)",
+        "labels": [
+          "action"
+        ]
+      },
+      {
+        "start": 9,
+        "end": 43,
+        "text": "Important Security Update Required",
+        "labels": [
+          "action"
+        ]
+      }
+    ],
+    "Path": "./datasets/augmented_internal_emails/1.eml",
+    "annotator": 1,
+    "annotation_id": 623,
+    "created_at": "2024-07-17T07:33:08.422503Z",
+    "updated_at": "2024-07-17T07:33:13.671624Z",
+    "lead_time": 16.68
+  },
+  {
+    "text": "Subject: Payroll Information Update Required\nFrom: HR Payroll Team\nTo: jose@monkey.org\nBody:\nDear Jose,\n\nWe need you to update your payroll information to ensure timely processing of your salary. Please update your details using the link below.\n\nUpdate Payroll Information\n\nThank you for your cooperation.\n\nBest,\nHR Payroll Team",
+    "Id": 14432,
+    "label": [
+      {
+        "start": 9,
+        "end": 44,
+        "text": "Payroll Information Update Required",
+        "labels": [
+          "action"
+        ]
+      },
+      {
+        "start": 51,
+        "end": 66,
+        "text": "HR Payroll Team",
+        "labels": [
+          "identity"
+        ]
+      },
+      {
+        "start": 313,
+        "end": 328,
+        "text": "HR Payroll Team",
+        "labels": [
+          "identity"
+        ]
+      },
+      {
+        "start": 169,
+        "end": 194,
+        "text": "processing of your salary",
+        "labels": [
+          "identity"
+        ]
+      },
+      {
+        "start": 196,
+        "end": 272,
+        "text": "Please update your details using the link below.\\n\\nUpdate Payroll Information\\n",
+        "labels": [
+          "action"
+        ]
+      }
+    ],
+    "Path": "./datasets/augmented_internal_emails/10.eml",
+    "annotator": 1,
+    "annotation_id": 624,
+    "created_at": "2024-07-17T07:33:31.125628Z",
+    "updated_at": "2024-07-17T07:33:31.125647Z",
+    "lead_time": 16.672
+  },
+  {
+    "text": "Subject: Monthly Financial Report\nFrom: Finance Department\nTo: jose@monkey.org\nBody:\nDear Jose,\n\nThe monthly financial report is ready for your review. Please provide your feedback.\n\nReview Report\n\nThank you,\nFinance Department",
+    "Id": 14433,
+    "label": [
+      {
+        "start": 40,
+        "end": 58,
+        "text": "Finance Department",
+        "labels": [
+          "identity"
+        ]
+      },
+      {
+        "start": 209,
+        "end": 227,
+        "text": "Finance Department",
+        "labels": [
+          "identity"
+        ]
+      },
+      {
+        "start": 152,
+        "end": 196,
+        "text": "Please provide your feedback.\\n\\nReview Report",
+        "labels": [
+          "action"
+        ]
+      }
+    ],
+    "Path": "./datasets/augmented_internal_emails/21.eml",
+    "annotator": 1,
+    "annotation_id": 625,
+    "created_at": "2024-07-17T07:33:44.429705Z",
+    "updated_at": "2024-07-17T07:33:44.429729Z",
+    "lead_time": 11.95
+  },
+  {
+    "text": "Subject: Request for Feedback\nFrom: HR Team\nTo: jose@monkey.org\nBody:\nDear Jose,\n\nWe value your feedback on our recent training program. Please provide your feedback using the link below.\n\nProvide Feedback\n\nThank you for your input.\n\nBest,\nHR Team",
+    "Id": 14434,
+    "label": [
+      {
+        "start": 9,
+        "end": 29,
+        "text": "Request for Feedback",
+        "labels": [
+          "action"
+        ]
+      },
+      {
+        "start": 36,
+        "end": 43,
+        "text": "HR Team",
+        "labels": [
+          "identity"
+        ]
+      },
+      {
+        "start": 240,
+        "end": 247,
+        "text": "HR Team",
+        "labels": [
+          "identity"
+        ]
+      },
+      {
+        "start": 137,
+        "end": 205,
+        "text": "Please provide your feedback using the link below.\\n\\nProvide Feedback",
+        "labels": [
+          "action"
+        ]
+      }
+    ],
+    "Path": "./datasets/augmented_internal_emails/17.eml",
+    "annotator": 1,
+    "annotation_id": 626,
+    "created_at": "2024-07-17T07:33:56.110419Z",
+    "updated_at": "2024-07-17T07:33:56.110445Z",
+    "lead_time": 10.419
+  },
+  {
+    "text": "Subject: Notification: Email Quota Exceeded\nFrom: Mail Admin\nTo: jose@monkey.org\nBody:\nDear Jose,\n\nYour email storage has exceeded the limit. Please manage your storage by archiving or deleting unnecessary emails using the link below.\n\nManage Storage\n\nThank you for your cooperation.\n\nBest,\nMail Admin",
+    "Id": 14435,
+    "label": [
+      {
+        "start": 50,
+        "end": 60,
+        "text": "Mail Admin",
+        "labels": [
+          "identity"
+        ]
+      },
+      {
+        "start": 291,
+        "end": 301,
+        "text": "Mail Admin",
+        "labels": [
+          "identity"
+        ]
+      },
+      {
+        "start": 142,
+        "end": 250,
+        "text": "Please manage your storage by archiving or deleting unnecessary emails using the link below.\\n\\nManage Storage",
+        "labels": [
+          "action"
+        ]
+      }
+    ],
+    "Path": "./datasets/augmented_internal_emails/7.eml",
+    "annotator": 1,
+    "annotation_id": 627,
+    "created_at": "2024-07-17T07:34:05.591135Z",
+    "updated_at": "2024-07-17T07:34:05.591158Z",
+    "lead_time": 8.613
+  },
+  {
+    "text": "Subject: New Health Guidelines\nFrom: Health\nTo: jose@monkey.org\nBody:\nHi Team,\n\nPlease find attached the new health guidelines for our office. Make sure to review and adhere to them.\n\nStay safe,",
+    "Id": 14436,
+    "label": [
+      {
+        "start": 73,
+        "end": 77,
+        "text": "Team",
+        "labels": [
+          "identity"
+        ]
+      },
+      {
+        "start": 131,
+        "end": 141,
+        "text": "our office",
+        "labels": [
+          "identity"
+        ]
+      },
+      {
+        "start": 143,
+        "end": 182,
+        "text": "Make sure to review and adhere to them.",
+        "labels": [
+          "action"
+        ]
+      }
+    ],
+    "Path": "./datasets/augmented_internal_emails/6.eml",
+    "annotator": 1,
+    "annotation_id": 628,
+    "created_at": "2024-07-17T07:34:16.733101Z",
+    "updated_at": "2024-07-17T07:34:16.733122Z",
+    "lead_time": 10.047
+  },
+  {
+    "text": "Subject: Meeting Rescheduled\nFrom: Meeting Coordinator\nTo: jose@monkey.org\nBody:\nDear Jose,\n\nThe meeting scheduled for tomorrow has been rescheduled. Please check the new time using the link below.\n\nView New Schedule\n\nThank you for your understanding.\n\nBest,\nMeeting Coordinator",
+    "Id": 14437,
+    "label": [
+      {
+        "start": 259,
+        "end": 278,
+        "text": "Meeting Coordinator",
+        "labels": [
+          "identity"
+        ]
+      },
+      {
+        "start": 35,
+        "end": 54,
+        "text": "Meeting Coordinator",
+        "labels": [
+          "identity"
+        ]
+      },
+      {
+        "start": 150,
+        "end": 216,
+        "text": "Please check the new time using the link below.\\n\\nView New Schedule",
+        "labels": [
+          "action"
+        ]
+      }
+    ],
+    "Path": "./datasets/augmented_internal_emails/16.eml",
+    "annotator": 1,
+    "annotation_id": 629,
+    "created_at": "2024-07-17T07:34:28.959314Z",
+    "updated_at": "2024-07-17T07:34:28.959334Z",
+    "lead_time": 10.991
+  },
+  {
+    "text": "Subject: Annual Performance Review Schedule\nFrom: HR Department\nTo: jose@monkey.org\nBody:\nDear Jose,\n\nIt's time for your annual performance review. Please select a convenient time slot for the meeting.\n\nSchedule Review\n\nBest,\nHR Department",
+    "Id": 14438,
+    "label": [
+      {
+        "start": 50,
+        "end": 63,
+        "text": "HR Department",
+        "labels": [
+          "identity"
+        ]
+      },
+      {
+        "start": 226,
+        "end": 239,
+        "text": "HR Department",
+        "labels": [
+          "identity"
+        ]
+      },
+      {
+        "start": 148,
+        "end": 218,
+        "text": "Please select a convenient time slot for the meeting.\\n\\nSchedule Review",
+        "labels": [
+          "action"
+        ]
+      }
+    ],
+    "Path": "./datasets/augmented_internal_emails/20.eml",
+    "annotator": 1,
+    "annotation_id": 630,
+    "created_at": "2024-07-17T07:34:37.294916Z",
+    "updated_at": "2024-07-17T07:34:37.294936Z",
+    "lead_time": 7.311
+  }
+]
