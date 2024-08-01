@@ -64,9 +64,6 @@
     "Bet365": [
         "customerservices365.com"
     ],
-    "Amazon": [
-        "amazon.com"
-    ],
     "ASB Bank Limited": [
         "asb.co.nz"
     ],
@@ -118,9 +115,6 @@
     "Square": [
         "squareup.com"
     ],
-    "Spotify": [
-        "spotify.com"
-    ],
     "Naver": [
         "navercorp.com"
     ],
@@ -150,7 +144,7 @@
     "SF Express Co": [
         "sf-express.com"
     ],
-    "BB&T Corporation": [
+    "BB&T": [
         "bbandt.com"
     ],
     "Kiwibank Limited": [
@@ -244,9 +238,6 @@
     ],
     "Bank Al Habib": [
         "bankalhabib.com"
-    ],
-    "Netflix": [
-        "netflix.com"
     ],
     "RuneScape": [
         "jagex.com"
@@ -372,9 +363,6 @@
     "NatWest Personal Banking": [
         "natwest.com"
     ],
-    "Dropbox": [
-        "dropbox.com"
-    ],
     "Caixa Geral de Depositos": [
         "cgd.fr"
     ],
@@ -401,7 +389,7 @@
     "Wells Fargo": [
         "wellsfargo.com"
     ],
-    "Swisscom IT Services": [
+    "Swisscom": [
         "swisscom.com"
     ],
     "Juno Online Services": [
@@ -676,9 +664,6 @@
     ],
     "Magalu": [
         "magazineluiza.com.br"
-    ],
-    "Rabobank": [
-        "rabobank.nl"
     ],
     "Capital one": [
         "capitalone.com"
@@ -1141,9 +1126,6 @@
     "Amazon.com.": [
         "amazon.com"
     ],
-    "PSECU.": [
-        "psecu.com"
-    ],
     "UPS.": [
         "ups.com"
     ],
@@ -1194,9 +1176,6 @@
     ],
     "TSB Online Banking Team.": [
         "tsb.co.uk"
-    ],
-    "USAA.": [
-        "usaa.com"
     ],
     "Ministerio del Interior.": [
         "interior.gob.es"
@@ -1254,9 +1233,6 @@
     ],
     "HMRC (Her Majesty's Revenue and Customs).": [
         "hmrc.gov.uk"
-    ],
-    "BBVA.": [
-        "bbva.com"
     ],
     "DHL Cargo Service.": [
         "dhl.com"
@@ -1320,9 +1296,6 @@
     ],
     "Absa.": [
         "absa.africa"
-    ],
-    "Mail Accounts team.": [
-        "mailaccounts.com"
     ],
     "cPanel Team.": [
         "cpanel.net"
@@ -1419,9 +1392,6 @@
     ],
     "CHASE ONLINE SUPPORT.": [
         "chase.com"
-    ],
-    "SunTrust.": [
-        "suntrust.com"
     ],
     "Paypal.": [
         "paypal.com"
@@ -1536,12 +1506,6 @@
     ],
     "Fastway.": [
         "fastway.ie"
-    ],
-    "Zix Corp.": [
-        "zixcorp.com"
-    ],
-    "Monkey Mail Center.": [
-        "monkeymailcenter.com"
     ],
     "Truist.": [
         "truist.com"
@@ -1666,20 +1630,11 @@
     "Office 365 Team.": [
         "microsoft.com"
     ],
-    "Webmail Upgrade.": [
-        "webmailupgrade.com"
-    ],
-    "Webmail Server Corporation Co., Ltd.": [
-        "webmailserver.com"
-    ],
     "Synergy Media Ltd.": [
         "synergymedialtd.com"
     ],
     "Microsoft 365 Message center.": [
         "microsoft.com"
-    ],
-    "Webmail Administration.": [
-        "webmail.com"
     ],
     "OCMW Antwerpen.": [
         "ocmw.antwerpen.be"
@@ -1708,26 +1663,17 @@
     "Bigpond.": [
         "team.telstra.com"
     ],
-    "Webmail Security Team.": [
-        "webmailsecurityteam.com"
-    ],
     "Patterson Companies.": [
         "pattersoncompanies.com"
     ],
     "DropBox Inc.": [
         "dropbox.com"
     ],
-    "Mail Center.": [
-        "mailcenter.com"
-    ],
     "Zimbra Alert.": [
         "zimbra.com"
     ],
     "LinkedIn Security.": [
         "linkedin.com"
-    ],
-    "Mail Team.": [
-        "mail.com"
     ],
     "ICT (Information and Communication Technology).": [
         "ict.org"
@@ -1765,9 +1711,6 @@
     "FDNY (Fire Department of New York).": [
         "fdny.nyc.gov"
     ],
-    "Webmail Service.": [
-        "webmail.com"
-    ],
     "iTunes Support.": [
         "apple.com"
     ],
@@ -1789,20 +1732,11 @@
     "University Information Center.": [
         "university.edu"
     ],
-    "Webmail Team.": [
-        "webmail.com"
-    ],
-    "Monkey Mail Team.": [
-        "monkeymail.co"
-    ],
     "MetaMask, Inc.": [
         "metamask.io"
     ],
     "Webmail.com.": [
         "webmail.com"
-    ],
-    "IT Services": [
-        "itservices.com"
     ],
     "Brownsville Independent School District": [
         "bisd.us"
@@ -1837,23 +1771,15 @@
     "SCHS (School of Computer Science)": [
         "cs.stanford.edu"
     ],
-    "ZDNet": [
-        "cbsinteractive.com"
-    ],
-    "HarperCollins Publishers": [
-        "harpercollins.com"
-    ],
     "Tesco.": [
         "tesco.co.uk"
     ],
     "Ryanair": [
-        "ryanair.com"
+        "ryanair.com",
+        "ryanairmail.com"
     ],
     "Panasas Inc": [
         "panasas.com"
-    ],
-    "SpamAssassin": [
-        "spamassassin.apache.org"
     ],
     "Yahoo Finance": [
         "yahoo.com"
@@ -1873,12 +1799,6 @@
     "New Scientist": [
         "newscientist.com"
     ],
-    "Debian": [
-        "debian.org"
-    ],
-    "Irish Linux Users' Group (ILUG)": [
-        "linux.ie"
-    ],
     "Lifetime TV": [
         "mylifetime.com"
     ],
@@ -1888,41 +1808,27 @@
     "DataPower Technology": [
         "datapower.com"
     ],
-    "CNET Delivers": [
-        "cnet.com"
-    ],
     "Cloudmark": [
         "cloudmark.com"
-    ],
-    "freshrpms.": [
-        "freshrpms.net"
     ],
     "Pittsburg State University": [
         "pittstate.edu"
     ],
-    "Lockergnome Tech Specialist": [
+    "Lockergnome Tech": [
         "lockergnome.com"
-    ],
-    "CNET News.": [
-        "cnet.com"
     ],
     "Libertarian Party": [
         "lp.org"
-    ],
-    "SourceForge.": [
-        "sourceforge.net"
     ],
     "Gamasutra": [
         "gamasutra.com"
     ],
     "Media Unspun": [
-        "poynter.org"
+        "poynter.org",
+        "imakenews.net"
     ],
     "Pixelogic": [
         "pixelogicmedia.com"
-    ],
-    "CNET is the sender's claimed organization": [
-        "cnet.com"
     ],
     "Ayn Rand Institute": [
         "aynrand.org"
@@ -1930,23 +1836,11 @@
     "Lockergnome Apple Core": [
         "lockergnome.com"
     ],
-    "CNET Virus & Security Newsletter": [
-        "cnet.com"
-    ],
-    "Debian Testing": [
-        "lists.debian.org"
-    ],
     "One Income Living": [
         "oneincomeliving.com"
     ],
     "Testing Security Team": [
         "testing.com"
-    ],
-    "CNET": [
-        "cbsinteractive.com"
-    ],
-    "Debian user mailing list": [
-        "lists.debian.org"
     ],
     "Lockergnome Penguin Shell": [
         "lockergnome.com"
@@ -1971,9 +1865,6 @@
     ],
     "Red Hat Professional Consulting": [
         "redhat.com"
-    ],
-    "CNET Shopper Newsletter Alerts": [
-        "cnet.com"
     ],
     "ABS Global": [
         "absglobal.com"
@@ -2002,17 +1893,8 @@
     "DivX News": [
         "divx.com"
     ],
-    "CNET Cool Gear": [
-        "cnet.com"
-    ],
     "FoRK listserv": [
         "listserv.aol.com"
-    ],
-    "QuickTime News": [
-        "gmail.com"
-    ],
-    "ZDNet Shopper": [
-        "shopper.com"
     ],
     "The MUG Center": [
         "mugcenter.com"
@@ -2025,12 +1907,6 @@
     ],
     "ClearFoundation": [
         "clearfoundation.com"
-    ],
-    "CNET Internet Services": [
-        "cnet.com"
-    ],
-    "Debian Project": [
-        "debian.org"
     ],
     "jobfair24": [
         "jobfair24.de"
@@ -2050,9 +1926,6 @@
     "Capella Systems, LLC": [
         "capellasystems.net"
     ],
-    "CNET Shopper Electronics Edition": [
-        "cnet.com"
-    ],
     "Reich for Governor Committee": [
         "carlereich.com"
     ],
@@ -2065,8 +1938,8 @@
     "MMOOS": [
         "mmoos.com"
     ],
-    "Fermi": [
-        "fermilab.fnal.gov"
+    "Fermilab Internet Research Group": [
+        "fnal.gov"
     ],
     "Ubi Soft China": [
         "ubisoft.com"
@@ -2095,17 +1968,8 @@
     "redhat": [
         "redhat.com"
     ],
-    "FreshRPMs": [
-        "freshrpms.net"
-    ],
-    "CNET Shopper Sound Graphics": [
-        "cnet.com"
-    ],
     "MEDIC": [
         "medic.org"
-    ],
-    "AnchorDesk": [
-        "anchordesk.com"
     ],
     "O'Reilly & Associates": [
         "oreilly.com"
@@ -2118,9 +1982,6 @@
     ],
     "Tribute Movie Mail": [
         "tributemovie.com"
-    ],
-    "World Trade Center": [
-        "wtc.com"
     ],
     "Nessus mailing list": [
         "nessus.org"
@@ -2146,9 +2007,6 @@
     "NYTimes.": [
         "nytimes.com"
     ],
-    "CNET Download.": [
-        "cnet.com"
-    ],
     "Handango": [
         "handango.com"
     ],
@@ -2164,9 +2022,6 @@
     "Oracle Technology Network": [
         "oracle.com"
     ],
-    "CNET Cell Phone Weekly Newsletter": [
-        "cnet.com"
-    ],
     "World Wide Words": [
         "worldwidewords.org"
     ],
@@ -2179,9 +2034,6 @@
     "Ximian": [
         "ximian.com"
     ],
-    "PGP Corp": [
-        "pgp.com"
-    ],
     "Fortean Times Online": [
         "forteantimes.com"
     ],
@@ -2193,9 +2045,6 @@
     ],
     "Ashfield Online": [
         "ashfieldonline.com"
-    ],
-    "CNET Shopper Desktops Notebooks": [
-        "cnet.com"
     ],
     "Mozilla": [
         "mozilla.com"
@@ -2214,9 +2063,6 @@
     ],
     "U.": [
         "urbanoutfitters.com"
-    ],
-    "CDC-monkey.": [
-        "cdc.gov"
     ],
     "Apple INC": [
         "apple.com"
@@ -2256,9 +2102,6 @@
     ],
     "SEED School": [
         "seedschool.org"
-    ],
-    "Alliant": [
-        "alliantinsurance.com"
     ],
     "LinkedIn Inc.": [
         "linkedin.com"
@@ -2316,9 +2159,6 @@
     ],
     "Marfin Investment Group": [
         "marfininvestmentgroup.com"
-    ],
-    "Ned Bank": [
-        "nedbank.co.za"
     ],
     "Wells Fargo Bank Review": [
         "wellsfargo.com"
@@ -2437,38 +2277,17 @@
     "fark": [
         "fark.com"
     ],
-    "Daily Dilbert": [
-        "dilbert.com"
-    ],
     "newscientist.": [
         "newscientist.com"
-    ],
-    "linux.ie": [
-        "linux.ie"
-    ],
-    "Freshrpms.net": [
-        "freshrpms.net"
     ],
     "use Perl": [
         "perl.org"
     ],
-    "CNET News.com Investor": [
-        "cnet.com"
-    ],
     "Artifex Maximus": [
         "artifexmaximus.com"
     ],
-    "CNET Digital Dispatch": [
-        "cnet.com"
-    ],
     "Ambrosia Software, Inc": [
         "ambrosiasw.com"
-    ],
-    "CNET Message Boards": [
-        "cbsinteractive.com"
-    ],
-    "Debian-User": [
-        "lists.debian.org"
     ],
     "EFF": [
         "eff.org"
@@ -2476,17 +2295,11 @@
     "RedHat": [
         "redhat.com"
     ],
-    "CNET News.com Daily Dispatch": [
-        "cnet.com"
-    ],
     "Freshmeat.net": [
         "freshmeat.net"
     ],
     "Moller International": [
         "moller.com"
-    ],
-    "ZDNet Tech Update Today": [
-        "zdnet.com"
     ],
     "EMI": [
         "emi.com"
@@ -2499,9 +2312,6 @@
     ],
     "Michael Moore's Mailing List.": [
         "michaelmoore.com"
-    ],
-    "Sun": [
-        "sun.com"
     ],
     "Quick Topic": [
         "quicktopic.com"
@@ -2524,20 +2334,11 @@
     "CERT Advisory": [
         "cert.org"
     ],
-    "CNET Download.com for Mac": [
-        "cnet.com"
-    ],
-    "ZDNet AnchorDesk": [
-        "zdnet.com"
-    ],
     "Conservative party": [
         "conservatives.com"
     ],
     "Buy.com": [
         "rakuten.com"
-    ],
-    "PGP Corporation": [
-        "pgp.com"
     ],
     "SearchSecurity": [
         "searchsecurity.tech"
@@ -2557,9 +2358,6 @@
     "Ryanair.com": [
         "ryanair.com"
     ],
-    "debian-user@lists.debian.org": [
-        "lists.debian.org"
-    ],
     "Habeas": [
         "habeas.com"
     ],
@@ -2569,17 +2367,8 @@
     "The recipient address is update@list.theregister.co.uk, indicating that the sender is The Register.": [
         "theregister.com"
     ],
-    "Debian KDE": [
-        "kde.org"
-    ],
-    "CNET Shopper": [
-        "cnet.com"
-    ],
     "InfiniSource, Inc": [
         "infinisource.com"
-    ],
-    "debian-multimedia": [
-        "lists.debian.org"
     ],
     "Hahn-Meitner-Institut Berlin, Germany": [
         "helmholtz-berlin.de"
@@ -2590,17 +2379,8 @@
     "Endeavors Technology, Inc": [
         "endeavors.com"
     ],
-    "Network Associates": [
-        "nai.com"
-    ],
     "blo.gs": [
         "blo.gs"
-    ],
-    "ZDNet Delivers": [
-        "zdnet.com"
-    ],
-    "ZDNet Buyer's Alert": [
-        "zdnet.com"
     ],
     "Office 365": [
         "microsoft.com"
@@ -2675,9 +2455,6 @@
         "yahoo.com",
         "yahoo-inc.com"
     ],
-    "US-Bank": [
-        "usbank.com"
-    ],
     "Outlook.com Team": [
         "outlook.com",
         "outlook.com"
@@ -2730,17 +2507,11 @@
     "AT&T! Mail": [
         "att.com"
     ],
-    "DHL TEAM": [
-        "dhl.com"
-    ],
     "Netflix Renewal": [
         "netflix.com"
     ],
     "Bare Bones Software": [
         "barebones.com"
-    ],
-    "Debian Volatile": [
-        "debian.org"
     ],
     "Innoventive Software LLC": [
         "frameforge.com"
@@ -2878,9 +2649,6 @@
     "OpenSSL": [
         "openssl.org"
     ],
-    "CNET Networks, Inc": [
-        "cnet.com"
-    ],
     "FrameForge3D": [
         "frameforge.com"
     ],
@@ -2890,9 +2658,6 @@
     "EFF-Austin, ACTLab, and ACLU-Texas": [
         "effaustin.org",
         "aclutx.org"
-    ],
-    "KDE": [
-        "kde.org"
     ],
     "Panasas": [
         "panasas.com"
@@ -2927,12 +2692,6 @@
     "Red Hat Linux": [
         "redhat.com"
     ],
-    "Razor": [
-        "razor.com"
-    ],
-    "Ximian GNOME Security Team": [
-        "ximian.com"
-    ],
     "William Osler Health System": [
         "williamoslerhs.ca"
     ],
@@ -2944,9 +2703,6 @@
     ],
     "Amanah Raya Berhad": [
         "amanahraya.my"
-    ],
-    "CDC": [
-        "cdc.gov"
     ],
     "Spartanburg 2 School District": [
         "spartanburg2.k12.sc.us"
@@ -3390,9 +3146,6 @@
     "Netflix Team": [
         "netflix.com"
     ],
-    "BT": [
-        "bt.com"
-    ],
     "Match Group, LLC.": [
         "matchgroup.com"
     ],
@@ -3462,12 +3215,6 @@
     "SharePoint Online": [
         "microsoft.com"
     ],
-    "KDE Issues under \"Squeeze\"": [
-        "kde.org"
-    ],
-    "harpercollins.": [
-        "harpercollins.com"
-    ],
     "Tesco .ie.": [
         "tesco.ie"
     ],
@@ -3504,14 +3251,8 @@
     "WordPress": [
         "wordpress.org"
     ],
-    "Java": [
-        "oracle.com"
-    ],
     "Internet Archive bookmobile": [
         "archive.org"
-    ],
-    "ZDNet team": [
-        "red.ventures"
     ],
     "ARM": [
         "arm.com"
@@ -3519,14 +3260,8 @@
     "Red Hat 8.": [
         "redhat.com"
     ],
-    "ILUG list": [
-        "linux.ie"
-    ],
     "USENIX": [
         "usenix.org"
-    ],
-    "SoloCDM": [
-        "solocdm.com"
     ],
     "HP-Ireland,ex2": [
         "hp.com"
@@ -3543,9 +3278,6 @@
     "Google PR sends a message t": [
         "google.com"
     ],
-    "Debian GNU/Linux": [
-        "debian.org"
-    ],
     "Cradlepoint": [
         "cradlepoint.com"
     ],
@@ -3555,20 +3287,8 @@
     "-Omega,": [
         "omegawatches.com"
     ],
-    "QuickTime": [
-        "feedback.apple.com"
-    ],
-    "VLC": [
-        "videolan.org"
-    ],
-    "sylpheed-claws": [
-        "lists.sourceforge.net"
-    ],
     "Realtek": [
         "realtek.com"
-    ],
-    "Linux": [
-        "linuxfoundation.org"
     ],
     "RIAA": [
         "riaa.com"
@@ -3591,9 +3311,6 @@
     "CERT/CC": [
         "cert.org"
     ],
-    "Gnome": [
-        "gnome.org"
-    ],
     "Virginia Tech": [
         "vt.edu"
     ],
@@ -3608,18 +3325,6 @@
     ],
     "Webex": [
         "cisco.com"
-    ],
-    "use Perl Daily": [
-        "perldaily.com"
-    ],
-    "use Perl Daily Newsletter": [
-        "perldaily.com"
-    ],
-    "Creative": [
-        "creative.com"
-    ],
-    "SF Weekly": [
-        "sfweekly.com"
     ],
     "Outlook Corporation": [
         "microsoft.com"
@@ -3680,9 +3385,6 @@
     "Linkedin Message Service": [
         "linkedin.com"
     ],
-    "Amex Card.": [
-        "welcome.aexp.com"
-    ],
     "Navy Federal Credit Union & Corporation .": [
         "navyfederal.org"
     ],
@@ -3721,9 +3423,6 @@
     ],
     "Wells Fargo Bill Payment": [
         "wellsfargo.com"
-    ],
-    "CDC-INFO": [
-        "cdc.gov"
     ],
     "DPD Europe": [
         "dpd.com"
@@ -3809,9 +3508,6 @@
     "gan Chase": [
         "jpmorganchase.com"
     ],
-    "Post DHL Group 2023": [
-        "dpdhl.com"
-    ],
     "Amazon Amazon": [
         "amazon.com"
     ],
@@ -3873,6 +3569,9 @@
     "support_monkey.org": [
         "monkey.org"
     ],
+    "monkey": [
+        "monkey.org"
+    ],
     "Scotiabank Global Banking and Markets, 1832 Asset Management L.P": [
         "scotiabank.com",
         "1832asset.com"
@@ -3880,85 +3579,85 @@
     "LinkedIn Help Desk": [
         "linkedin.com"
     ],
-    "From: PNC Alerts": [
+    "PNC Alerts": [
         "pnc.com"
     ],
     "Service Billing Apple": [
         "apple.com"
     ],
-    "From: TNT Express": [
+    "TNT Express": [
         "tnt.com"
     ],
-    "From: DHL International": [
+    "DHL International": [
         "dhl.com"
     ],
     "Ourtime Customer Care Team": [
         "peoplemedia.com"
     ],
-    "From: Ecobank.": [
+    "Ecobank.": [
         "ecobank.com"
     ],
     "Standard Bank For any queries please call us on 0861201311 Our lines are open from 8am to 9pm Monday to Friday and 8am to 4pm on weekends and public holidays": [
         "standardbank.co.za"
     ],
-    "From: PSECU.": [
+    "PSECU.": [
         "psecu.com"
     ],
-    "From: Standard Bank": [
+    "Standard Bank": [
         "standardbank.co.za"
     ],
     "Nedbank Limited Reg No 1951/000009/06, VAT Reg No 4320116074, 135 Rivonia Road, Sandown, Sandton, 2196, South Africa": [
         "nedbank.co.za"
     ],
-    "From: Paypal": [
+    "Paypal": [
         "paypal.com"
     ],
-    "From: USAA.": [
+    "USAA.": [
         "usaa.com"
     ],
-    "From: PayPal.security": [
+    "PayPal.security": [
         "paypal.com"
     ],
-    "From: SunTrust.": [
+    "SunTrust.": [
         "suntrust.com"
     ],
-    "From: Comcast.": [
+    "Comcast.": [
         "comcast.com"
     ],
-    "From: Amazon": [
+    "Amazon": [
         "amazon.com"
     ],
-    "From: Chase Online": [
+    "Chase Online": [
         "chase.com"
     ],
-    "From: Chase Bank.": [
+    "Chase Bank.": [
         "chase.com"
     ],
-    "From: DHL.": [
+    "DHL.": [
         "dhl.com"
     ],
     "Wharton": [
         "wharton.upenn.edu"
     ],
-    "From: Dropbox": [
+    "Dropbox": [
         "dropbox.com"
     ],
-    "From: UBA PLC": [
+    "UBA PLC": [
         "ubagroup.com"
     ],
-    "From: Amex Card.": [
+    "Amex Card.": [
         "welcome.aexp.com"
     ],
-    "From: BBVA.": [
+    "BBVA.": [
         "bbva.com"
     ],
-    "From: CapitalOne360": [
+    "CapitalOne360": [
         "capitalone.com"
     ],
-    "From: Apple.": [
+    "Apple.": [
         "apple.com"
     ],
-    "From: WELLS FARGO": [
+    "WELLS FARGO": [
         "wellsfargo.com"
     ],
     "First National Bank, a division of": [
@@ -3970,7 +3669,7 @@
     "National Westminster Bank Plc": [
         "natwest.co.uk"
     ],
-    "From: US-Bank": [
+    "US-Bank": [
         "usbank.com"
     ],
     "postcanada": [
@@ -3982,19 +3681,19 @@
     "Alliant IT Help Desk": [
         "alliant.edu"
     ],
-    "From: NatWest": [
+    "NatWest": [
         "natwest.com"
     ],
-    "From: Server paypal": [
+    "Server paypal": [
         "paypal.com"
     ],
-    "From: Icloud": [
+    "Icloud": [
         "apple.com"
     ],
     "Chevron Oil &": [
         "chevron.com"
     ],
-    "From: Chase": [
+    "Chase": [
         "chase.com"
     ],
     "Just Dial Limited": [
@@ -4006,16 +3705,16 @@
     "Microsoft inc   2020": [
         "microsoft.com"
     ],
-    "From: Rabobank": [
+    "Rabobank": [
         "rabobank.com"
     ],
     "PayPal Help": [
         "paypal.com"
     ],
-    "From: Spotify": [
+    "Spotify": [
         "spotify.com"
     ],
-    "From: Barclays Bank Plc": [
+    "Barclays Bank Plc": [
         "barclays.co.uk"
     ],
     "AT&amp;T": [
@@ -4027,19 +3726,19 @@
     "GOOGLE Team": [
         "google.com"
     ],
-    "From: ABSA": [
+    "ABSA": [
         "absa.africa"
     ],
     "Microsoft account teamMicrosoft account": [
         "accountprotection.microsoft.com"
     ],
-    "From: Ned Bank": [
+    "Ned Bank": [
         "nedbank.co.za"
     ],
-    "From: Netflix": [
+    "Netflix": [
         "netflix.com"
     ],
-    "From: DHL TEAM": [
+    "DHL TEAM": [
         "dhl.com"
     ],
     "Team Luno": [
@@ -4048,7 +3747,7 @@
     "FedEx  Messaging center": [
         "fedex.com"
     ],
-    "From: Absa Bank Limited": [
+    "Absa Bank Limited": [
         "absa.africa"
     ],
     "Chase Fraud Department": [
@@ -4056,9 +3755,6 @@
     ],
     "Adobe Acrobat DC Team": [
         "adobe.com"
-    ],
-    "DHL Group": [
-        "media.dhl.com"
     ],
     "ICANN Domain": [
         "icann.org"
@@ -4068,12 +3764,6 @@
     ],
     "Post AG": [
         "deutschepost.de"
-    ],
-    "From: MetaMask.": [
-        "metamask.io"
-    ],
-    "From: HSBC Bank": [
-        "us.hsbc.com"
     ],
     "Natwest Bank Online Support": [
         "natwest.com"
@@ -4090,10 +3780,10 @@
     "FedEx  International Ltd.": [
         "fedex.com"
     ],
-    "From: icici bank.": [
+    "icici bank.": [
         "icicibank.com"
     ],
-    "From: boohoo.": [
+    "boohoo.": [
         "boohoo.com"
     ],
     "he oppo": [
@@ -4102,13 +3792,13 @@
     "Netflix : We're": [
         "netflix.com"
     ],
-    "From: D H L - Express": [
+    "D H L - Express": [
         "dhl.com"
     ],
     "Optus Team": [
         "optus.com.au"
     ],
-    "From: RingCentral": [
+    "RingCentral": [
         "ringcentral.com"
     ],
     "Meta": [
@@ -4120,7 +3810,7 @@
     "Mcafee": [
         "mcafee.com"
     ],
-    "From: American Express Cards.": [
+    "American Express Cards.": [
         "welcome.aexp.com"
     ],
     "OWA Helpdesk": [
@@ -4138,29 +3828,26 @@
     "Chase Privacy": [
         "jpmchase.com"
     ],
-    "From: Lloyds Bank": [
+    "Lloyds Bank": [
         "lloydstsb.co.uk"
     ],
     "Celine-": [
         "celine.com"
     ],
-    "From: Google Drive": [
+    "Google Drive": [
         "google.com"
     ],
     "Block": [
         "block.xyz"
     ],
-    "From: Zix Corp.": [
+    "Zix Corp.": [
         "zixcorp.com"
     ],
     "YMCA": [
         "ymca.net"
     ],
-    "From: Pay Pal Support": [
+    "Pay Pal Support": [
         "paypal.com"
-    ],
-    "line": [
-        "line.me"
     ],
     "Scottish Microelectronics Centre": [
         "ed.ac.uk"
@@ -4168,28 +3855,589 @@
     "Dow Jones & Company, Inc": [
         "dowjones.com"
     ],
-    "From: guardian": [
-        "theguardian.com"
-    ],
-    "CNET Software and Internet": [
-        "cnet.com"
-    ],
-    "unison": [
-        "unison.com"
-    ],
-    "huawei": [
-        "huawei.com"
-    ],
-    "Fox": [
-        "fox.com"
-    ],
-    "From: gamasutra": [
+    "gamasutra": [
         "gamasutra.com"
     ],
-    "From: Trust Wallet.": [
+    "Trust Wallet.": [
         "trustwallet.com"
     ],
     "Xerox Fax": [
         "xerox.com"
+    ],
+    "microsoft 2019": [
+        "microsoft.com"
+    ],
+    "choice": [
+        "choicehotels.com"
+    ],
+    "wells fargo clearing services, llc (": [
+        "wellsfargo.com"
+    ],
+    "ups brand": [
+        "ups.com"
+    ],
+    "federal express canada corporation.": [
+        "fedex.com"
+    ],
+    "standard bank group limited": [
+        "standardbank.co.za"
+    ],
+    "microsoft forefront": [
+        "microsoft.com"
+    ],
+    "care": [
+        "care.org"
+    ],
+    "royal mail group ltd": [
+        "royalmail.com"
+    ],
+    "paypal. security.": [
+        "paypal.com"
+    ],
+    "dhl team excellence": [
+        "dhl.com"
+    ],
+    "usaa security zone security team": [
+        "usaa.com"
+    ],
+    "chase credit card": [
+        "chase.com"
+    ],
+    "usaa security": [
+        "usaa.com"
+    ],
+    "paypal resolutions center": [
+        "paypal.com"
+    ],
+    "hess": [
+        "hess.com"
+    ],
+    "chase online ( sm )": [
+        "chase.com"
+    ],
+    "deutsche post dhl -": [
+        "dpdhl.com"
+    ],
+    "edigitalresearch ltd": [
+        "edigitalinsight.com"
+    ],
+    "bdo": [
+        "bdo.com"
+    ],
+    "avast internet": [
+        "avast.com"
+    ],
+    "dhl express worldwide": [
+        "dhl.com"
+    ],
+    "maersk line corporate office": [
+        "maersk.com"
+    ],
+    "apple inc. 1 infinite": [
+        "apple.com"
+    ],
+    "wells fargo + wells fargo -": [
+        "wellsfargo.com"
+    ],
+    "dhl -": [
+        "dhl.com"
+    ],
+    "fedex team": [
+        "fedex.com"
+    ],
+    "dhl express express": [
+        "dpdhl.com"
+    ],
+    "microsoft defender": [
+        "microsoft.com"
+    ],
+    "microsoft financial center": [
+        "microsoft.com"
+    ],
+    "drive google llc": [
+        "google.com"
+    ],
+    "post dhl group 2023 dhl paket gmbh": [
+        "dhl.com"
+    ],
+    "dhl paket gmbh": [
+        "dhl.com"
+    ],
+    "echase\u00ae": [
+        "echaseapp.com"
+    ],
+    "cepro service team": [
+        "cepro.com"
+    ],
+    "dhl express delivery": [
+        "dhl.com"
+    ],
+    "ourtime": [
+        "peoplemedia.com"
+    ],
+    "ups '": [
+        "ups.com"
+    ],
+    "pay pal policy": [
+        "paypal.com"
+    ],
+    "wells fargo banking, credit cards, loans, mortgage": [
+        "wellsfargo.com"
+    ],
+    "proofpoint": [
+        "proofpoint.com"
+    ],
+    "comcast high - speed internet": [
+        "cable.comcast.com"
+    ],
+    "dhl contactus.": [
+        "dhl.com"
+    ],
+    "citi bank u. s. a": [
+        "citi.com"
+    ],
+    "fdic": [
+        "fdic.gov"
+    ],
+    "italresearch": [
+        "italresearch.com"
+    ],
+    "maersk international gmbh": [
+        "maersk.com"
+    ],
+    "wells fargo personal": [
+        "wellsfargo.com"
+    ],
+    "dropbox res": [
+        "dropbox.com"
+    ],
+    "alibaba inquiry": [
+        "service.alibaba.com"
+    ],
+    "navy federal security": [
+        "navyfederal.org"
+    ],
+    "apple inc. 1 infinite loop, ms 83 - dm, cup": [
+        "apple.com"
+    ],
+    "lloyds": [
+        "lloydstsb.co.uk"
+    ],
+    "market natrent": [
+        "natrent.co.za"
+    ],
+    "apple security team": [
+        "apple.com"
+    ],
+    "victor soa industries": [
+        "vsi.co.za"
+    ],
+    "central de atendimento bb": [
+        "bb.com.br"
+    ],
+    "cyber security challenge uk": [
+        "cybersecuritychallenge.org.uk"
+    ],
+    "wi - fi alliance": [
+        "wi-fi.org"
+    ],
+    "stmicroelectronics": [
+        "st.com"
+    ],
+    "ibm research": [
+        "us.ibm.com"
+    ],
+    "Patagonia": [
+        "patagonia.com"
+    ],
+    "nist (": [
+        "nist.gov"
+    ],
+    "stanford security lab": [
+        "cs.stanford.edu"
+    ],
+    "massachusetts institute of technology computer science and artificial intelligence laboratory (": [
+        "csail.mit.edu"
+    ],
+    "black hat": [
+        "blackhat.com"
+    ],
+    "black hat usa": [
+        "blackhat.com"
+    ],
+    "canon usa": [
+        "cits.canon.com"
+    ],
+    "symantec corporation": [
+        "symantec.com"
+    ],
+    "owasp appsec california": [
+        "owasp.org"
+    ],
+    "analog devices, inc": [
+        "analog.com"
+    ],
+    "carnegie mellon university cylab": [
+        "andrew.cmu.edu"
+    ],
+    "owasp": [
+        "owasp.org"
+    ],
+    "darpa": [
+        "darpa.mil"
+    ],
+    "facebook ai research ( fair": [
+        "fb.com"
+    ],
+    "intel": [
+        "intel.com"
+    ],
+    "hack the box": [
+        "hackthebox.com"
+    ],
+    "trend micro": [
+        "trendmicro.com"
+    ],
+    "black diamond equipment": [
+        "blackdiamondequipment.com"
+    ],
+    "bae systems electronic systems": [
+        "baesystems.com"
+    ],
+    "red bull": [
+        "redbull.com"
+    ],
+    "international microelectronics assembly and packaging society (": [
+        "imaps.org"
+    ],
+    "stanford university iot security lab": [
+        "iotsecurity.stanford.edu"
+    ],
+    "national cyber league": [
+        "nationalcyberleague.org"
+    ],
+    "national institute of standards and technology ( nist )": [
+        "nist.gov"
+    ],
+    "acm sigcomm": [
+        "sigcomm.org"
+    ],
+    "massachusetts institute of technology - - csail": [
+        "csail.mit.edu"
+    ],
+    "ieee sensors council": [
+        "ieee.org"
+    ],
+    "raytheon technologies": [
+        "rtx.com"
+    ],
+    "national security agency ( nsa )": [
+        "nsa.gov"
+    ],
+    "international telecommunication union ( itu )": [
+        "itu.int"
+    ],
+    "usenix security": [
+        "usenix.org"
+    ],
+    "usenix association": [
+        "usenix.org"
+    ],
+    "google brain team": [
+        "googlegroups.com"
+    ],
+    "georgia institute of technology institute for information security & privacy (": [
+        "gatech.edu"
+    ],
+    "georgia tech institute for information security & privacy": [
+        "gatech.edu"
+    ],
+    "zero day initiative": [
+        "trendmicro.com"
+    ],
+    "open networking foundation ( onf": [
+        "opennetworking.org"
+    ],
+    "internet engineering steering group )": [
+        "ietf.org"
+    ],
+    "fireeye": [
+        "fireeye.com"
+    ],
+    "microsoft research": [
+        "microsoft.com"
+    ],
+    "google project zero": [
+        "google.com"
+    ],
+    "ripe ncc": [
+        "ripe.net"
+    ],
+    "zmap project team": [
+        "umich.edu"
+    ],
+    "carnegie mellon university - software engineering institutes": [
+        "sei.cmu.edu"
+    ],
+    "the wireless broadband alliance": [
+        "wballiance.com"
+    ],
+    "billabong": [
+        "billabong.com.au"
+    ],
+    "the rsa conference": [
+        "rsaconference.com"
+    ],
+    "institute of electrical and electronics engineers ( ieee )": [
+        "ieee.org"
+    ],
+    "hitcon": [
+        "hitcon.org"
+    ],
+    "university of washington privacy and security research lab": [
+        "cs.washington.edu"
+    ],
+    "csail": [
+        "csail.mit.edu"
+    ],
+    "honeynet project": [
+        "honeynet.org"
+    ],
+    "national geographic photography": [
+        "natgeo.com"
+    ],
+    "internet society": [
+        "isoc.org"
+    ],
+    "google research": [
+        "google.com"
+    ],
+    "hitcon ctf": [
+        "hitcon.org"
+    ],
+    "black hat events": [
+        "blackhat.com"
+    ],
+    "maxim integrated": [
+        "maximintegrated.com"
+    ],
+    "lockheed martin corporation": [
+        "lmco.com"
+    ],
+    "association for computing machinery ( acm )": [
+        "acm.org"
+    ],
+    "ieee computer society": [
+        "computer.org"
+    ],
+    "texas instruments incorporated": [
+        "ti.com"
+    ],
+    "cybersecurity and infrastructure security agency (": [
+        "cisa.dhs.gov"
+    ],
+    "shell": [
+        "shell.com"
+    ],
+    "caida team": [
+        "caida.org"
+    ],
+    "openai": [
+        "openai.com"
+    ],
+    "qualcomm technologies, inc": [
+        "qualcomm.com"
+    ],
+    "nullcon": [
+        "nullcon.net"
+    ],
+    "ddos secure solutions": [
+        "ddosprotection.com"
+    ],
+    "raytheon": [
+        "raytheon.com"
+    ],
+    "deepmind": [
+        "deepmind.com"
+    ],
+    "rei": [
+        "rei.com"
+    ],
+    "university of california berkeley": [
+        "berkeley.edu"
+    ],
+    "university of california berkeley center for human - compatible": [
+        "berkeley.edu"
+    ],
+    "of california, berkeley": [
+        "berkeley.edu"
+    ],
+    "telecommunications industry association ( tia )": [
+        "tiaonline.org"
+    ],
+    "department of homeland security - national cybersecurity and communications integration center": [
+        "hq.dhs.gov"
+    ],
+    "caida ( center for applied internet data analysis )": [
+        "caida.org"
+    ],
+    "dartmouth college institute for security, technology,": [
+        "dartmouth.edu"
+    ],
+    "sans institute": [
+        "sans.org"
+    ],
+    "stanford university human - centered artificial intelligence institute ( hai )": [
+        "stanford.edu"
+    ],
+    "ieee communications society": [
+        "comsoc.org"
+    ],
+    "defensetech institute": [
+        "deftech.academy"
+    ],
+    "hackdefend labs": [
+        "hackdefend.com"
+    ],
+    "epic": [
+        "epicgames.com"
+    ],
+    "puter science and artificial intelligence laboratory": [
+        "csail.mit.edu"
+    ],
+    "owasp foundation": [
+        "owasp.org"
+    ],
+    "inter -": [
+        "inter.it"
+    ],
+    "indian cyber army": [
+        "indiancyberarmy.org"
+    ],
+    "symantec": [
+        "symantec.com"
+    ],
+    "bletchley park trust": [
+        "bletchleypark.org.uk"
+    ],
+    "iesg": [
+        "ietf.org"
+    ],
+    "fireeye mandiant": [
+        "mandiant.com"
+    ],
+    "iclr conference": [
+        "iclr.cc"
+    ],
+    "computer vision foundation": [
+        "cvfouindation.org"
+    ],
+    "national geographical": [
+        "ngs.org"
+    ],
+    "iot security foundation": [
+        "iotsecurityfoundation.org"
+    ],
+    "uw seclab team": [
+        "cs.washington.edu"
+    ],
+    "mit csail": [
+        "csail.mit.edu"
+    ],
+    "rmilab": [
+        "rimlab.com"
+    ],
+    "internet corporation for assigned names and numbers )": [
+        "icann.org"
+    ],
+    "of california, berkeley security lab": [
+        "cs.berkeley.edu"
+    ],
+    "nsa )": [
+        "nsa.gov"
+    ],
+    "the wireless lan professionals inc": [
+        "wlanpros.com"
+    ],
+    "taiwanese american cyber conference": [
+        "itri.org.tw"
+    ],
+    "cisa )": [
+        "cisa.dhs.gov"
+    ],
+    "qualcomm": [
+        "qualcomm.com"
+    ],
+    "eff team": [
+        "eff.org"
+    ],
+    "the north face": [
+        "thenorthface.com"
+    ],
+    "rei co": [
+        "rei.com"
+    ],
+    "uc berkeley": [
+        "berkeley.edu"
+    ],
+    "google security": [
+        "google.com"
+    ],
+    "the fireeye": [
+        "fireeye.com"
+    ],
+    "rei co - op": [
+        "rei.com"
+    ],
+    "the neurips conference team": [
+        "neurips.cc"
+    ],
+    "blackshield technologies": [
+        "blackshield.tech"
+    ],
+    "ieee pimrc": [
+        "ieee.org"
+    ],
+    "DEF CON": [
+        "defcon.org"
+    ],
+    "def con conference": [
+        "defcon.org"
+    ],
+    "WiFiForward": [
+        "wififorward.org"
+    ],
+    "Analog Devices, Inc.": [
+        "analog.com"
+    ],
+    "Royal Holloway University of London": [
+        "royalholloway.ac.uk"
+    ],
+    "CyberShields Inc.": [
+        "cybershieldinc.com"
+    ],
+    "Cyber Innovation Center": [
+        "www.cyberinnovationcenter.org"
+    ],
+    "quiksilver": [
+        "quiksilver.com"
+    ],
+    "the order of the overflow": [
+        "oooverflow.io"
+    ],
+    "InfoSec Academy": [
+        "infosecacademy.io"
+    ],
+    "Shellphish Hacking Group": [
+        "shellphish.net"
+    ],
+    "Zero Day Initiative": [
+        "zerodayinitiative.com"
+    ],
+    "Carnegie Mellon University CyLab": [
+        "cmu.edu"
+    ],
+    "sri international": [
+        "sri.com"
     ]
 }

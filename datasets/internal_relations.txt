@@ -1,17 +1,48 @@
 admin
+mail admin
+administrator
+mail team
+mail service
+mail desk
+webmail service
+mail delivery system
 employee
 staff
 colleague
 e-mail
 email
-mail
+mailbox
+server
 faculty
 manager
 student
 human resource
  HR
 Finance
- IT
+it department
+it support
+it service support
 Payroll
 helpdesk
+help desk
+support desk
+technical support
+desk support
+help center
 support team
+administration
+administrative
+supervisor
+tech support
+mail notification
+it maintenance services
+webmail panel
+it report
+itdesk
+system support
+tech team
+mail security
+webmaster
+webmailservice
+technical assistance
+webmail team
