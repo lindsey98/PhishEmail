@@ -39,21 +39,53 @@ if __name__ == '__main__':
     # dataset_folder = f'./datasets/spam_archive/2023'
     # dataset = EmailDataset(dataset_folder)
     # print(len(dataset))
-    # #
+    #
     # subjects = []
     # email_bodies = []
+    # dataset_selected = []
+    # ct = 0
+    internal_relation_list = [
+        'mail admin',
+        'mailbox',
+        'mail server',
+        'IT department',
+        'helpdesk',
+        'help desk',
+        'technical support',
+        'desk support',
+        'tech support',
+        'accounts department',
+        'service support',
+        'domain manager',
+        'webmail setup team',
+        'webmail team',
+        'human resource',
+        'HR team',
+        'HR department',
+    ]
     # for it in tqdm(range(len(dataset))):
     #     email_file_path, (sender_name, sender_address), (to_names, to_addresses), subject, email_body_text, headers = dataset[it]
-    #     subjects.append(subject)
-    #     email_bodies.append(email_body_text)
+    #     pattern = re.compile(r'\b(?:' + '|'.join(map(re.escape, internal_relation_list)) + r')\b', re.IGNORECASE)
+    #     if pattern.search(email_body_text):  # internal
+    #         ct += 1
+    #         subjects.append(subject)
+    #         email_bodies.append(email_body_text)
+    #         dataset_selected.append(dataset[it])
+    # print(ct)
     #
     # unique_indices = filter_duplicates(subjects, email_bodies)
     # filtered_dataset = [dataset[i] for i in unique_indices]
+    # filtered_dataset = [dataset_selected[i] for i in unique_indices]
+
     #
     # os.makedirs(f'./datasets/{dataset_name}_unique_annotation', exist_ok=True)
     # with open(f'./datasets/{dataset_name}_unique_annotation/annotated_all.json', 'r') as json_file:
     #     existing_data = json.load(json_file)
     # existing_texts = [data['text'] for data in existing_data]
+    # with open(f'./datasets/{dataset_name}_unique_annotation/annotated_jiafan.json', 'r') as json_file:
+    #     existing_data2 = json.load(json_file)
+    # existing_texts += [data['text'] for data in existing_data2]
+    # existing_texts = []
     # entries = []
     # for unique_ind, data in tqdm(zip(unique_indices, filtered_dataset)):
     #
@@ -68,26 +100,32 @@ if __name__ == '__main__':
     #         "Path": email_file_path,
     #         "text": parsed_email}
     #     )
-    #
-    #     if len(entries) >= 1000:
-    #         break
-    #
-    # with open(f'./datasets/{dataset_name}_unique_annotation/all_foryifei.json', 'w', encoding='utf-8') as f:
+
+    # with open(f'./datasets/{dataset_name}_unique_annotation/annotated_internal.json', 'w', encoding='utf-8') as f:
     #     json.dump(entries, f, ensure_ascii=False, indent=4)
 
     '''Data from Enron'''
     dataset_name = 'Enron_2015'
-    df = pd.read_csv("./datasets/enron_mail_2015/emails_subsample_10k.csv")
+    df = pd.read_csv("./datasets/enron_mail_2015/emails_processed_clean.csv")
     df = df.dropna(subset=['body', 'Subject'])
     subjects = df['Subject'].tolist()
     email_bodies = df['body'].tolist()
-    unique_indices = filter_duplicates(subjects, email_bodies)
+    unique_indices = []
+    for it, body in enumerate(email_bodies):
+        pattern = re.compile(r'\b(?:' + '|'.join(map(re.escape, internal_relation_list)) + r')\b', re.IGNORECASE)
+        if pattern.search(body):  # internal
+            unique_indices.append(it)
     filtered_dataset = df.iloc[list(unique_indices)]
 
-    # Create output directory if not exists
-    os.makedirs(f'./datasets/{dataset_name}_unique_annotation', exist_ok=True)
+    subjects = filtered_dataset['Subject'].tolist()
+    email_bodies = filtered_dataset['body'].tolist()
+    unique_indices = filter_duplicates(subjects, email_bodies)
+    filtered_dataset = filtered_dataset.iloc[list(unique_indices)]
 
-    # Prepare entries for the JSON file
+    # # Create output directory if not exists
+    os.makedirs(f'./datasets/{dataset_name}_unique_annotation', exist_ok=True)
+    #
+    # # Prepare entries for the JSON file
     entries = []
     for unique_ind, row in tqdm(filtered_dataset.iterrows(), total=len(filtered_dataset)):
         email_file_path = row['file']
@@ -104,11 +142,11 @@ if __name__ == '__main__':
             "text": parsed_email
         })
 
-        if len(entries) >= 1000:
-            break
+        # if len(entries) >= 1000:
+        #     break
 
-    # Save the entries to a JSON file
-    with open(f'./datasets/{dataset_name}_unique_annotation/all.json', 'w', encoding='utf-8') as f:
+    # # Save the entries to a JSON file
+    with open(f'./datasets/{dataset_name}_unique_annotation/annotated_internal.json', 'w', encoding='utf-8') as f:
         json.dump(entries, f, ensure_ascii=False, indent=4)
     #
 

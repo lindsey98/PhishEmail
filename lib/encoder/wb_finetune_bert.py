@@ -1,6 +1,8 @@
 
 import json
 import os
+import shutil
+
 import datasets
 from transformers import AutoTokenizer
 os.environ['http_proxy'] = 'http://127.0.0.1:7890'
@@ -88,7 +90,8 @@ if __name__ == '__main__':
     model_id = "google-bert/bert-large-uncased"
     dataset = 'NER'
 
-    dataset_dir = f'./datasets/ner_training/'
+    # dataset_dir = f'./datasets/ner_training/'
+    dataset_dir = f'./datasets/ner_training_augmented/'
     label_list = [
         "O",
         "B-identity",
@@ -131,13 +134,14 @@ if __name__ == '__main__':
     os.environ["WANDB_PROJECT"] = f"{dataset}_bert"  # name your W&B project
     training_args = TrainingArguments(
         report_to="wandb",  # this tells the Trainer to log the metrics to W&B
-        output_dir="./checkpoints/output_ner",
+        # output_dir="./checkpoints/output_ner",
+        output_dir="./checkpoints/output_ner_augmented",
         learning_rate=2e-5,
         lr_scheduler_type="cosine",
         warmup_ratio=0.1,
         per_device_train_batch_size=2,
         per_device_eval_batch_size=2,
-        num_train_epochs=10,
+        num_train_epochs=7,
         weight_decay=0.01,
         seed=42,
         evaluation_strategy="epoch",
@@ -206,20 +210,23 @@ if __name__ == '__main__':
     # }
     # all_preds = []
     # all_true_labels = []
-    # classifier = pipeline("ner", model="./checkpoints/output_ner/checkpoint-1776")
+    # classifier = pipeline("ner", model="./checkpoints/output_ner/checkpoint-1344", aggregation_strategy="simple")
+    #
     # vis_dir = "./datasets/ner_visualization"
-    # os.makedirs(vis_dir, exist_ok=True)
+    # if os.path.exists(vis_dir):
+    #     shutil.rmtree(vis_dir)
+    # os.makedirs(vis_dir)
     #
     # for it in tqdm(range(len(test_dataset))):
     #     text = ' '.join(test_dataset[it]['tokens'])
-    #     output = classifier(text)
+    #     entities = classifier(text)
+    #
     #     # Prediction
-    #     cleaned_outputs = ner_clean_predictions(output, text)
-    #     pred_doc = ner_create_spacy_doc(cleaned_outputs, nlp)
+    #     pred_doc = ner_create_spacy_doc(text, entities, nlp)
     #
     #     # Ground-truth
     #     ground_truth = ner_clean_ground_truth(test_dataset[it]['tokens'], test_dataset[it]['ner_tags'], id_to_label)
-    #     gt_doc = ner_create_spacy_doc(ground_truth, nlp)
+    #     gt_doc = ner_create_spacy_doc(ground_truth["text"], ground_truth["ents"], nlp)
     #
     #     html = visualize_predictions_and_ground_truth(pred_doc, gt_doc,
     #                                                   metadata=test_dataset[it]['metadata'],

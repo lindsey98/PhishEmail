@@ -61,8 +61,10 @@ def process_entries(data):
         seen_texts.add(text)
 
         annotations = entry.get('annotations', [])
+        if len(annotations) == 0:
+            continue
         for annot in annotations:
-            if annot['labels'][0] == 'organization':
+            if annot['labels'][0] == 'identity':
                 if annot['text'].startswith('From:'):
                     annot['text'] = re.sub(r"From:\s*", "", annot['text'])
         tokens, tags = tokenize_and_map(text, annotations, label_to_id)
@@ -71,7 +73,7 @@ def process_entries(data):
             "id": entry['Id'],
             "tokens": tokens,
             "ner_tags": tags,
-            "metadata": entry["Path"]  # Add metadata field
+            "metadata": entry.get("Path", "")  # Add metadata field
         })
 
 
@@ -114,6 +116,12 @@ if __name__ == '__main__':
     with open(f'./datasets/{dataset_5_name}/annotate_all.json', 'r') as json_file:
         data_5 = json.load(json_file)
 
+    with open(f'./datasets/{dataset_1_name}_unique_annotation/annotated_internal.json', 'r') as json_file:
+        data_6 = json.load(json_file)
+
+    with open(f'./datasets/Enron_2015_unique_annotation/annotated_internal.json', 'r') as json_file:
+        data_7 = json.load(json_file)
+
     # Process the data
     processed_data = []
     seen_texts = set()
@@ -126,15 +134,25 @@ if __name__ == '__main__':
     last_length = len(processed_data)
     process_entries(data_3)
     print(f"Length of dataset {dataset_3_name} = {len(processed_data) - last_length}")
+    last_length = len(processed_data)
     process_entries(data_4)
     print(f"Length of dataset {dataset_4_name} = {len(processed_data) - last_length}")
+    last_length = len(processed_data)
     process_entries(data_5)
     print(f"Length of dataset {dataset_5_name} = {len(processed_data) - last_length}")
+
+    last_length = len(processed_data)
+    process_entries(data_6)
+    print(f"Length of dataset Internal spamassassin = {len(processed_data) - last_length}")
+    last_length = len(processed_data)
+    process_entries(data_7)
+    print(f"Length of dataset Internal Enron = {len(processed_data) - last_length}")
 
     # # Split the data into training and testing sets
     train_data, test_data = train_test_split(processed_data, test_size=0.2, random_state=42)
 
-    output_dir = f'./datasets/ner_training/'
+    # output_dir = f'./datasets/ner_training/'
+    output_dir = f'./datasets/ner_training_augmented/'
     os.makedirs(output_dir, exist_ok=True)
     train_file = output_dir + 'train.json'
     test_file = output_dir + 'test.json'

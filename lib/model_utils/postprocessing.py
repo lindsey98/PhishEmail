@@ -139,7 +139,7 @@ def ner_clean_predictions(predictions, text):
                 entities.append({
                     "start": current_entity['start'],
                     "end": current_entity['end'],
-                    "label": current_label
+                    "entity_group": current_label
                 })
             current_entity = {"start": item['start'], "end": item['end']}
             current_label = item['entity'][2:]
@@ -150,7 +150,7 @@ def ner_clean_predictions(predictions, text):
                 entities.append({
                     "start": current_entity['start'],
                     "end": current_entity['end'],
-                    "label": current_label
+                    "entity_group": current_label
                 })
             current_entity = None
             current_label = None
@@ -159,7 +159,7 @@ def ner_clean_predictions(predictions, text):
         entities.append({
             "start": current_entity['start'],
             "end": current_entity['end'],
-            "label": current_label
+            "entity_group": current_label
         })
 
     # Handle multi-line text
@@ -182,7 +182,7 @@ def ner_clean_ground_truth(tokens, ner_tags, id_to_label):
                 entities.append({
                     "start": current_entity['start'],
                     "end": current_entity['end'],
-                    "label": current_label
+                    "entity_group": current_label
                 })
             current_entity = {"start": start_char, "end": end_char}
             current_label = id_to_label[tag_id][2:]
@@ -193,7 +193,7 @@ def ner_clean_ground_truth(tokens, ner_tags, id_to_label):
                 entities.append({
                     "start": current_entity['start'],
                     "end": current_entity['end'],
-                    "label": current_label
+                    "entity_group": current_label
                 })
             current_entity = None
             current_label = None
@@ -204,7 +204,7 @@ def ner_clean_ground_truth(tokens, ner_tags, id_to_label):
         entities.append({
             "start": current_entity['start'],
             "end": current_entity['end'],
-            "label": current_label
+            "entity_group": current_label
         })
 
     # Handle multi-line text
@@ -228,6 +228,7 @@ def ner_create_spacy_doc(raw_text, entities, nlp):
 def visualize_predictions(pred_doc, metadata="", options=None):
     pred_html = displacy.render(pred_doc, style="ent", page=True, options=options)
     rendered_html = f"""
+        <h2>NER Entity Predictions</h2>
         <div style="display: flex; justify-content: space-around; position: relative;">
             <div style="width: 100%; border: 1px solid black;">
                 <h3>Predicted</h3>
