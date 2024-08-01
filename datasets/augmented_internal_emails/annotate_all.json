@@ -1,12 +1,12 @@
 [
   {
-    "text": "Subject: Invitation: Company Picnic\nFrom: Event Team\nTo: jose@monkey.org\nBody:\nHi Jose,\n\nYou are invited to our annual company picnic next month. Please RSVP here: [RSVP Link](#)\n\nLooking forward to seeing you,",
+    "text": "Subject: Immediate Attention: Email Quota Full. From: mailbox helpdesk. Body: Dear Jose, Your email quota is almost full. To avoid any disruptions, please **increase your email storage** by following the link below. Your prompt action is required to maintain access to your emails powered by mail service",
     "Id": 14418,
-    "label": [
+    "annotations": [
       {
         "start": 42,
         "end": 52,
-        "text": "Event Team",
+        "text": "mail service",
         "labels": [
           "identity"
         ]
@@ -14,7 +14,7 @@
       {
         "start": 108,
         "end": 126,
-        "text": "our annual company",
+        "text": "mailbox helpdesk",
         "labels": [
           "identity"
         ]
@@ -22,7 +22,7 @@
       {
         "start": 146,
         "end": 178,
-        "text": "Please RSVP here: [RSVP Link](#)",
+        "text": "To avoid any disruptions, please **increase your email storage** by following the link below",
         "labels": [
           "action"
         ]
@@ -36,9 +36,9 @@
     "lead_time": 23.675
   },
   {
-    "text": "Subject: Budget Review Meeting\nFrom: Finance Department\nTo: jose@monkey.org\nBody:\nDear Jose,\n\nWe need to review the budget for the upcoming quarter. Please find a suitable time to discuss.\n\nSchedule Budget Review\n\nBest,\nFinance Department",
+    "text": "Subject: Budget Review Meeting. From: Finance Department. Body:\nDear Jose,\n\nWe need to review the budget for the upcoming quarter. Please find a suitable time to discuss.\n\nSchedule Budget Review\n\nBest,\nFinance Department",
     "Id": 14419,
-    "label": [
+    "annotations": [
       {
         "start": 37,
         "end": 55,
@@ -72,9 +72,17 @@
     "lead_time": 45.888
   },
   {
-    "text": "Subject: Feedback Request\nFrom: survey\nTo: jose@monkey.org\nBody:\nHi Jose,\n\nWe would love to hear your thoughts on the recent training session. Please fill out this survey: [Survey Link](#)\n\nThanks,",
+    "text": "Subject: Feedback Request. From: administrator. Body:\nHi Jose,\n\nWe would love to hear your thoughts on the recent training session. Please fill out this survey: [Survey Link](#)\n\nThanks, ",
     "Id": 14420,
-    "label": [
+    "annotations": [
+      {
+        "start": 203,
+        "end": 214,
+        "text": "administrator",
+        "labels": [
+          "identity"
+        ]
+      },
       {
         "start": 143,
         "end": 188,
@@ -92,9 +100,17 @@
     "lead_time": 19.416
   },
   {
-    "text": "Subject: Email Bounce Notification\nFrom: noreply\nTo: jose@monkey.org\nBody:\nHi Jose,\n\nAn email you sent to jose@monkey.org could not be delivered. Please verify the email address and try again.\n\nRegards,\nMail Server",
+    "text": "Subject: Email Bounce Notification. From: email admin. Body:\nHi Jose,\n\nAn email you sent to jose@monkey.org could not be delivered. Please verify the email address and try again.\n\nRegards,\nMail Server",
     "Id": 14421,
-    "label": [
+    "annotations": [
+      {
+        "start": 203,
+        "end": 214,
+        "text": "email admin",
+        "labels": [
+          "identity"
+        ]
+      },
       {
         "start": 203,
         "end": 214,
@@ -120,9 +136,17 @@
     "lead_time": 11.903
   },
   {
-    "text": "Subject: Account Activity Summary\nFrom: noreply\nTo: jose@monkey.org\nBody:\nHi Jose,\n\nHere is your account activity summary for the past week. Log in to review details.\n\nRegards,\nMail Server",
+    "text": "Subject: Account Activity Summary. From: account service. Body:\nHi Jose,\n\nHere is your account activity summary for the past week. Log in to review details.\n\nRegards,\nMail Server",
     "Id": 14422,
-    "label": [
+    "annotations": [
+      {
+        "start": 177,
+        "end": 188,
+        "text": "account service",
+        "labels": [
+          "identity"
+        ]
+      },
       {
         "start": 177,
         "end": 188,
@@ -148,9 +172,25 @@
     "lead_time": 20.25
   },
   {
-    "text": "Subject: Office Renovation Notice\nFrom: information\nTo: jose@monkey.org\nBody:\nHi All,\n\nPlease note that office renovations will commence next Monday. Expect some disruptions and plan your work accordingly.\n\nRegards",
+    "text": "Subject: Office Renovation Notice for all Staff. From: information. Body:\nHi All,\n\nPlease note that office renovations will commence next Monday. Expect some disruptions and plan your work accordingly.\n\nThanks, help center.",
     "Id": 14423,
-    "label": [
+    "annotations": [
+      {
+        "start": 9,
+        "end": 15,
+        "text": "help center",
+        "labels": [
+          "identity"
+        ]
+      },
+      {
+        "start": 9,
+        "end": 15,
+        "text": "staff",
+        "labels": [
+          "relation"
+        ]
+      },
       {
         "start": 9,
         "end": 15,
@@ -176,9 +216,9 @@
     "lead_time": 19.715
   },
   {
-    "text": "Subject: Collaboration on New Product Launch\nFrom: Product Development\nTo: jose@monkey.org\nBody:\nHi Jose,\n\nWe're excited about the new product launch and would love your input on the initial draft of the promotional materials. Can we set up a meeting?\n\nSchedule Meeting\n\nThanks,\nProduct Development Team\n\n",
+    "text": "Subject: Collaboration on New Product Launch. From: Product Development. Body:\nHi Jose,\n\nWe're excited about the new product launch and would love your input on the initial draft of the promotional materials. Can we set up a meeting?\n\nSchedule Meeting\n\nThanks,\nProduct Development Team\n\n",
     "Id": 14424,
-    "label": [
+    "annotations": [
       {
         "start": 51,
         "end": 70,
@@ -220,9 +260,9 @@
     "lead_time": 25.25
   },
   {
-    "text": "Subject: Update: Email Account Policies\nFrom: Email Services\nTo: jose@monkey.org\nBody:\nDear Jose,\n\nWe have updated our email policies. Please review the changes using the link below.\n\nReview Changes\n\nThank you for staying informed.\n\nBest,\nEmail Services",
+    "text": "Subject: Update: Email Account Policies. From: Email Services. Body:\nDear Jose,\n\nWe have updated our email policies. Please review the changes using the link below.\n\nReview Changes\n\nThank you for staying informed.\n\nBest,\nEmail Services",
     "Id": 14425,
-    "label": [
+    "annotations": [
       {
         "start": 46,
         "end": 60,
@@ -256,9 +296,25 @@
     "lead_time": 11.544
   },
   {
-    "text": "Subject: Account Verification Required\nFrom: Account Services\nTo: jose@monkey.org\nBody:\nDear Jose,\n\nWe noticed that your email account details need verification. Please click the link below to confirm your account details to avoid any disruption in service.\n\n[Verify Now](#)\n\nYour prompt action is required to maintain uninterrupted access to your account.\n\nRegards,\nAccount Services Team\n",
+    "text": "Subject: Your mailbox notification: Account Verification Required. From: email administrator. Body:\nDear Jose,\n\nWe noticed that your email account details need verification. Please click the link below to confirm your account details to avoid any disruption in service.\n\n[Verify Now](#)\n\nYour prompt action is required to maintain uninterrupted access to your account.\n\nRegards,\nAccount Services Team\n",
     "Id": 14426,
-    "label": [
+    "annotations": [
+      {
+        "start": 367,
+        "end": 388,
+        "text": "your mailbox",
+        "labels": [
+          "identity"
+        ]
+      },
+      {
+        "start": 367,
+        "end": 388,
+        "text": "email administrator",
+        "labels": [
+          "identity"
+        ]
+      },
       {
         "start": 9,
         "end": 38,
@@ -308,13 +364,29 @@
     "lead_time": 22.297
   },
   {
-    "text": "Subject: Email Quarantine Notification\nFrom: noreply\nTo: jose@monkey.org\nBody:\nHi Jose,\n\nSome emails have been quarantined due to potential security threats. Review them here: [Quarantine Link](#)\n\nRegards,\nMail Server",
+    "text": "Subject: system email access. From: system admin. Body:\nHi Jose,\n\nSome emails have been quarantined due to potential security threats. Review them here: [Quarantine Link](#)\n\nRegards,\nwebmail helpdesk",
     "Id": 14427,
-    "label": [
+    "annotations": [
       {
         "start": 207,
         "end": 218,
-        "text": "Mail Server",
+        "text": "system admin",
+        "labels": [
+          "identity"
+        ]
+      },
+      {
+        "start": 207,
+        "end": 218,
+        "text": "system email",
+        "labels": [
+          "identity"
+        ]
+      },
+      {
+        "start": 207,
+        "end": 218,
+        "text": "webmail helpdesk",
         "labels": [
           "identity"
         ]
@@ -336,13 +408,21 @@
     "lead_time": 12.829
   },
   {
-    "text": "Subject: New Device Login Alert\nFrom: noreply\nTo: jose@monkey.org\nBody:\nHi Jose,\n\nA new device has logged into your account. If this was not you, please change your password immediately.\n\nRegards,\nMail Server",
+    "text": "Subject: Email notification: new login attempt. From: email update team. Body:\nHi Jose,\n\nA new device has logged into your account. If this was not you, please change your password immediately.\n\nRegards,\nMailbox team",
     "Id": 14428,
-    "label": [
+    "annotations": [
       {
         "start": 197,
         "end": 208,
-        "text": "Mail Server",
+        "text": "email update team",
+        "labels": [
+          "identity"
+        ]
+      },
+      {
+        "start": 197,
+        "end": 208,
+        "text": "Mailbox team",
         "labels": [
           "identity"
         ]
@@ -364,9 +444,9 @@
     "lead_time": 14.174
   },
   {
-    "text": "Subject: Scheduled Maintenance Notice\nFrom: System Administrator\nTo: jose@monkey.org\nBody:\nDear Jose,\n\nPlease be advised that there will be a scheduled maintenance on our email servers this weekend. The maintenance window is set as follows:\n\nDate: 23rd-24th July\nTime: 12:00 AM - 4:00 AM\n\nDuring this time, you may experience intermittent access to your email account. We apologize for any inconvenience this may cause and appreciate your understanding.\n\nIf you have any questions or concerns, please do not hesitate to contact our support team.\n\nThank you,\nSystem Administrator\n",
+    "text": "Subject: Scheduled Maintenance Notice. From: System Administrator. Body:\nDear Jose,\n\nPlease be advised that there will be a scheduled maintenance on our email servers this weekend. The maintenance window is set as follows:\n\nDate: 23rd-24th July\nTime: 12:00 AM - 4:00 AM\n\nDuring this time, you may experience intermittent access to your email account. We apologize for any inconvenience this may cause and appreciate your understanding.\n\nIf you have any questions or concerns, please do not hesitate to contact our support team.\n\nThank you,\nSystem Administrator\n",
     "Id": 14429,
-    "label": [
+    "annotations": [
       {
         "start": 44,
         "end": 64,
@@ -408,9 +488,25 @@
     "lead_time": 25.105
   },
   {
-    "text": "Subject: Mailbox Full Warning\nFrom: no-reply\nTo: jose@monkey.org\nBody:\nHi Jose,\n\nYour mailbox is 95% full. Please delete unnecessary emails or request additional storage.\n\nRegards,\nMail Server\n",
+    "text": "Subject: Mailbox Full Warning from postmaster. From: adminstrator. Body:\nHi Jose,\n\nYour mailbox is 95% full. Please delete unnecessary emails or request additional storage.\n\nRegards,\nMail Server\n",
     "Id": 14430,
-    "label": [
+    "annotations": [
+      {
+        "start": 181,
+        "end": 192,
+        "text": "postmaster",
+        "labels": [
+          "identity"
+        ]
+      },
+      {
+        "start": 181,
+        "end": 192,
+        "text": "adminstrator",
+        "labels": [
+          "identity"
+        ]
+      },
       {
         "start": 181,
         "end": 192,
@@ -436,9 +532,17 @@
     "lead_time": 10.693
   },
   {
-    "text": "Subject: Important Security Update Required\nFrom: IT Department\nTo: jose@monkey.org\nBody:\nDear User,\n\nWe have detected unusual activity in your email account. To secure your account, please click the link below to verify your identity and update your password immediately.\n\n[Verify Your Account](#)\n\nFailure to act promptly may result in a temporary suspension of your account for security reasons.\n\nThank you for your attention to this important matter.\n\nBest Regards,\nIT Department\n",
+    "text": "Subject: [allstaff] Important Security Update Required\nFrom: IT Department\nTo: jose@monkey.org\nBody:\nDear User,\n\nWe have detected unusual activity in your email account. To secure your account, please click the link below to verify your identity and update your password immediately.\n\n[Verify Your Account](#)\n\nFailure to act promptly may result in a temporary suspension of your account for security reasons.\n\nThank you for your attention to this important matter.\n\nBest Regards,\nIT Department\n",
     "Id": 14431,
-    "label": [
+    "annotations": [
+      {
+        "start": 50,
+        "end": 63,
+        "text": "allstaff",
+        "labels": [
+          "relation"
+        ]
+      },
       {
         "start": 50,
         "end": 63,
@@ -488,9 +592,9 @@
     "lead_time": 16.68
   },
   {
-    "text": "Subject: Payroll Information Update Required\nFrom: HR Payroll Team\nTo: jose@monkey.org\nBody:\nDear Jose,\n\nWe need you to update your payroll information to ensure timely processing of your salary. Please update your details using the link below.\n\nUpdate Payroll Information\n\nThank you for your cooperation.\n\nBest,\nHR Payroll Team",
+    "text": "Subject: Payroll Information Update Required. From: HR Payroll Team. Body:\nDear Jose,\n\nWe need you to update your payroll information to ensure timely processing of your salary. Please update your details using the link below.\n\nUpdate Payroll Information\n\nThank you for your cooperation.\n\nBest,\nHR Payroll Team",
     "Id": 14432,
-    "label": [
+    "annotations": [
       {
         "start": 9,
         "end": 44,
@@ -540,9 +644,9 @@
     "lead_time": 16.672
   },
   {
-    "text": "Subject: Monthly Financial Report\nFrom: Finance Department\nTo: jose@monkey.org\nBody:\nDear Jose,\n\nThe monthly financial report is ready for your review. Please provide your feedback.\n\nReview Report\n\nThank you,\nFinance Department",
+    "text": "Subject: Monthly Financial Report. From: Finance Department. Body:\nDear Jose,\n\nThe monthly financial report is ready for your review. Please provide your feedback.\n\nReview Report\n\nThank you,\nFinance Department",
     "Id": 14433,
-    "label": [
+    "annotations": [
       {
         "start": 40,
         "end": 58,
@@ -576,9 +680,9 @@
     "lead_time": 11.95
   },
   {
-    "text": "Subject: Request for Feedback\nFrom: HR Team\nTo: jose@monkey.org\nBody:\nDear Jose,\n\nWe value your feedback on our recent training program. Please provide your feedback using the link below.\n\nProvide Feedback\n\nThank you for your input.\n\nBest,\nHR Team",
+    "text": "Subject: Request for Feedback. From: HR Team. Body:\nDear Jose,\n\nWe value your feedback on our recent training program. Please provide your feedback using the link below.\n\nProvide Feedback\n\nThank you for your input.\n\nBest,\nHR Team",
     "Id": 14434,
-    "label": [
+    "annotations": [
       {
         "start": 9,
         "end": 29,
@@ -620,13 +724,13 @@
     "lead_time": 10.419
   },
   {
-    "text": "Subject: Notification: Email Quota Exceeded\nFrom: Mail Admin\nTo: jose@monkey.org\nBody:\nDear Jose,\n\nYour email storage has exceeded the limit. Please manage your storage by archiving or deleting unnecessary emails using the link below.\n\nManage Storage\n\nThank you for your cooperation.\n\nBest,\nMail Admin",
+    "text": "Subject: Notification: Email Quota Exceeded. From: Account Support. Body:\nDear Jose,\n\nYour email storage has exceeded the limit. Please manage your storage by archiving or deleting unnecessary emails using the link below.\n\nManage Storage\n\nThank you for your cooperation.\n\nBest,\nSupport Team",
     "Id": 14435,
-    "label": [
+    "annotations": [
       {
         "start": 50,
         "end": 60,
-        "text": "Mail Admin",
+        "text": "Account Support",
         "labels": [
           "identity"
         ]
@@ -634,7 +738,7 @@
       {
         "start": 291,
         "end": 301,
-        "text": "Mail Admin",
+        "text": "Support Team",
         "labels": [
           "identity"
         ]
@@ -656,45 +760,9 @@
     "lead_time": 8.613
   },
   {
-    "text": "Subject: New Health Guidelines\nFrom: Health\nTo: jose@monkey.org\nBody:\nHi Team,\n\nPlease find attached the new health guidelines for our office. Make sure to review and adhere to them.\n\nStay safe,",
-    "Id": 14436,
-    "label": [
-      {
-        "start": 73,
-        "end": 77,
-        "text": "Team",
-        "labels": [
-          "identity"
-        ]
-      },
-      {
-        "start": 131,
-        "end": 141,
-        "text": "our office",
-        "labels": [
-          "identity"
-        ]
-      },
-      {
-        "start": 143,
-        "end": 182,
-        "text": "Make sure to review and adhere to them.",
-        "labels": [
-          "action"
-        ]
-      }
-    ],
-    "Path": "./datasets/augmented_internal_emails/6.eml",
-    "annotator": 1,
-    "annotation_id": 628,
-    "created_at": "2024-07-17T07:34:16.733101Z",
-    "updated_at": "2024-07-17T07:34:16.733122Z",
-    "lead_time": 10.047
-  },
-  {
     "text": "Subject: Meeting Rescheduled\nFrom: Meeting Coordinator\nTo: jose@monkey.org\nBody:\nDear Jose,\n\nThe meeting scheduled for tomorrow has been rescheduled. Please check the new time using the link below.\n\nView New Schedule\n\nThank you for your understanding.\n\nBest,\nMeeting Coordinator",
     "Id": 14437,
-    "label": [
+    "annotations": [
       {
         "start": 259,
         "end": 278,
@@ -730,7 +798,7 @@
   {
     "text": "Subject: Annual Performance Review Schedule\nFrom: HR Department\nTo: jose@monkey.org\nBody:\nDear Jose,\n\nIt's time for your annual performance review. Please select a convenient time slot for the meeting.\n\nSchedule Review\n\nBest,\nHR Department",
     "Id": 14438,
-    "label": [
+    "annotations": [
       {
         "start": 50,
         "end": 63,
@@ -762,5 +830,440 @@
     "created_at": "2024-07-17T07:34:37.294916Z",
     "updated_at": "2024-07-17T07:34:37.294936Z",
     "lead_time": 7.311
+  },
+  {
+    "text": "Subject: Action Needed: Update Your Account Information. From: Webmail Security Team. Body: Dear jose,\n\nWe have noticed unusual activity on your email account. To protect your account, please **update your account information** by clicking the link below:\n\n[Update Information]\n\nIf you do not update your information within 24 hours, your account may be temporarily suspended.\n\nThank you for your prompt attention.\n\nBest regards,\n\nThis mail is automatically generated by your Mailbox System\n",
+    "Id": 14439,
+    "annotations": [
+      {
+        "text": "Mailbox System",
+        "labels": [
+          "identity"
+        ]
+      },
+      {
+        "text": "Webmail Security Team",
+        "labels": [
+          "identity"
+        ]
+      },
+      {
+        "text": "Update Your Account Information",
+        "labels": [
+          "action"
+        ]
+      },
+      {
+        "text": "please **update your account information** by clicking the link below:\n\n[Update Information]",
+        "labels": [
+          "action"
+        ]
+      }
+    ],
+    "Path": ""
+  },
+  {
+    "text": "Subject: Notice of Unusual Activity on Your Email Account. From: Mail Security Server Body: \n\nWe have detected unusual activity originating from your email account. To safeguard your data and prevent unauthorized access, please review your recent login history by visiting:. \n\nIf you do not recognize any of these activities, it's crucial that you change your password immediately and enable two-factor authentication for added security.\n\n",
+    "Id": 14440,
+    "Path": "",
+    "annotations": [
+      {"text":  "Mail Security Server",
+      "labels": ["identity"]},
+      {"text":  "To safeguard your data and prevent unauthorized access, please review your recent login history by visiting:",
+      "labels": ["action"]}
+    ]
+  },
+  {
+    "text": "Subject: Email Delivery Failure Notification. From: mail delivery subsystem Body: This is a system-generated message to inform you that several emails addressed to you could not be delivered due to a temporary issue with your mailbox. Please verify that your mailbox has sufficient storage space and that your email address is correctly configured. If the problem persists, contact your email provider for further assistance.",
+    "Id": 14441,
+    "Path": "",
+    "annotations": [
+      {"text":  "mail delivery subsystem",
+      "labels": ["identity"]},
+      {"text":  "Please verify that your mailbox has sufficient storage space and that your email address is correctly configured",
+      "labels": ["action"]}
+    ]
+  },
+  {
+    "text": "Subject: Security Upgrade Required: Protect Your Email. From: Email Server Administrator. Body: To enhance the security of your email account and protect against emerging threats, we are implementing a mandatory security upgrade. Please click the following link to update your account settings and enable enhanced security features. \n\nThis upgrade is essential to ensure the continued safety of your personal information. Failure to upgrade within 24 hours may result in temporary restrictions on your account's functionality.",
+     "Id": 14442,
+    "Path": "",
+    "annotations": [
+      {"text":  "Email Server Administrator",
+      "labels": ["identity"]},
+      {"text":  "Please click the following link to update your account settings and enable enhanced security features",
+      "labels": ["action"]}
+    ]
+  },
+  {
+    "text": "Subject: Action Required: Reactivate Your Email Account. From: Email Service Provider. Body: Your email account has been temporarily deactivated due to inactivity. To reactivate your account and regain access to your emails, please click the following link and follow the instructions",
+    "Id": 14443,
+    "Path": "",
+    "annotations": [
+      {"text":  "Email Service Provider",
+      "labels": ["identity"]},
+      {"text":  "To reactivate your account and regain access to your emails, please click the following link and follow the instructions",
+      "labels": ["action"]}
+    ]
+  },
+  {
+    "text": "Subject: Your mailbox is full!. From: Account Service. Body: Dear user,\n\nYour email inbox is almost full. To avoid missing important emails, please delete unwanted messages or upgrade your storage plan. You can manage your mailbox settings and upgrade options here:\nIf you do not take action soon, you may be unable to send or receive new emails.\n\nSincerely,\n\nThe Account Service Team",
+    "Id": 14444,
+    "Path": "",
+    "annotations": [
+      {
+        "text": "user",
+        "labels": [
+          "relation"
+        ]
+      },
+      {"text":  "Account Service",
+      "labels": ["identity"]},
+       {"text":  "The Account Service Team",
+      "labels": ["identity"]},
+      {"text":  "You can manage your mailbox settings and upgrade options here",
+      "labels": ["action"]},
+      {"text":  "please delete unwanted messages or upgrade your storage plan",
+      "labels": ["action"]}
+    ]
+  },
+  {
+    "text": "Subject: Unauthorized Login Attempt. From: IT Dept. Body: Dear user,\n\nWe detected a login to your email account from an unrecognized device. If this wasn't you, please immediately reset your password. \n\nFor your security, we recommend enabling two-factor authentication in your account settings.\n\nIf you have any questions, please contact the IT Helpdesk.",
+    "Id": 14445,
+    "Path": "",
+    "annotations": [
+      {
+        "text": "user",
+        "labels": [
+          "relation"
+        ]
+      },
+      {"text":  "IT Dept",
+      "labels": ["identity"]},
+       {"text":  "IT Helpdesk",
+      "labels": ["identity"]},
+      {"text":  "please immediately reset your password",
+      "labels": ["action"]}
+    ]
+  },
+  {
+    "text": "Subject: You have a new pending message!. From: Email Service. Body: You have a new pending message in your inbox. Click here to view:\n\n\nNote: This message was sent by the Email Service. Please do not reply.",
+    "Id": 14446,
+    "Path": "",
+    "annotations": [
+      {"text":  "Email Service",
+      "labels": ["identity"]},
+      {"text":  "Click here to view",
+      "labels": ["action"]}
+    ]
+  },
+  {
+    "text": "Subject: Important Mailbox Update. From: Mail Admin. Body: Dear valued customer,\n\nWe are updating our email servers to enhance security and performance. To ensure uninterrupted access to your email, please verify your account details by clicking the link below:\n\n\nFailure to verify your account within 24 hours may result in temporary suspension.\n\nThank you for your cooperation.\n\nMail Admin",
+    "Id": 14447,
+    "Path": "",
+    "annotations": [
+      {
+        "text": "customer",
+        "labels": [
+          "relation"
+        ]
+      },
+      {"text":  "Mail Admin",
+      "labels": ["identity"]},
+      {"text":  "To ensure uninterrupted access to your email, please verify your account details by clicking the link below",
+      "labels": ["action"]}
+    ]
+  },
+  {
+    "text": "Subject: Email Account Verification Required. From: Support Team. Body: Dear user,\n\nFor your security, we require you to verify your email account. Please click the following link to complete the verification process. \n\nThis will help us ensure that your account remains secure and protected from unauthorized access.\n\nSincerely,\n\nThe Support Team",
+    "Id": 14448,
+    "Path": "",
+    "annotations": [
+      {
+        "text": "user",
+        "labels": [
+          "relation"
+        ]
+      },
+      {"text":  "Support Team",
+      "labels": ["identity"]},
+       {"text":  "The Support Team",
+      "labels": ["identity"]},
+      {"text":  "Please click the following link to complete the verification process",
+      "labels": ["action"]}
+    ]
+  },
+  {
+    "text": "Subject: Urgent Action Required: Unusual Activity Detected. From: Email Notification Service. Body: Dear user,\n\nWe have detected unusual activity on your email account. To protect your information, please verify your account by following this link. \n\nIf you do not recognize this activity, please change your password immediately.\n\nThis is an automated message from Email Notification Service. Please do not reply.",
+    "Id": 14449,
+    "Path": "",
+    "annotations": [
+      {
+        "text": "user",
+        "labels": [
+          "relation"
+        ]
+      },
+      {"text":  "Email Notification Service",
+      "labels": ["identity"]},
+      {"text":  "To protect your information, please verify your account by following this link",
+      "labels": ["action"]}
+    ]
+  },
+  {
+    "text": "Subject: Your Password Will Expire Soon\nFrom: Administrator\nBody: You are required to click here to complete the update.\n",
+    "Id": 14450,
+    "Path": "",
+    "annotations": [
+      {"text":  "Administrator",
+      "labels": ["identity"]},
+      {"text":  "You are required to click here to complete the update",
+      "labels": ["action"]}
+    ]
+  },
+  {
+    "text": "Subject: General Account Activation\nFrom: Email Administrator\nBody: Dear user, your mailbox is almost full. 3840MB space used, current used space of 4000MB. You have incoming messages pending. Click here to add more space to your mailbox. Copyright 2023 Email Administrator. All rights reserved.\n",
+    "Id": 14451,
+    "Path": "",
+    "annotations": [
+      {"text": "user",
+       "labels": ["relation"]},
+      {"text":  "Email Administrator",
+      "labels": ["identity"]},
+      {"text":  "Copyright 2023 Email Administrator",
+      "labels": ["identity"]},
+      {"text":  "Click here to add more space to your mailbox",
+      "labels": ["action"]}
+    ]
+  },
+  {
+    "text": "Subject: webmail support - Messages Could Not Be Delivered\nFrom: Email Server\nBody: Some email messages could not be delivered. There are new messages in your email quarantine. Messages will be automatically removed from quarantine after 7 days. \n\nThe following summary displays a maximum of the most recent quarantined block messages:\n\nQuarantined Email Recipient:\n- Subject: Incoming Transfer from [HSBC] 07/10/2023\n- Subject: Re: Contract | Invoice Copy | 07/10/2023\n- Subject: Sales Order Confirmation SO: 0057528 07/10/2023\n- Subject: DHL Express Shipment Notification 07/10/2023\n\nPlease note, this message was sent by the system for notification only. If this message lands in your spam folder, please move it to your inbox. Important: do not forward this message. For more information, contact your mail administrator.\n\nBest regards,\nEmail Server\n",
+    "Id": 14452,
+    "Path": "",
+    "annotations": [
+      {"text":  "Email Server",
+      "labels": ["identity"]},
+      {"text":  "webmail support",
+      "labels": ["identity"]},
+      {"text":  "mail administrator",
+      "labels": ["identity"]},
+      {"text":  "system for notification",
+      "labels": ["identity"]}
+    ]
+  },
+  {
+    "text": "Subject: E-mail Customer Relation Care Satisfaction\nFrom: Account Service\nBody: Verify your mailbox, dear jose@monkey.org. Your mailbox account has expired. We recommend that you verify and upgrade your account within 24 hours to avoid deactivation. Upgrade your mailbox now. \n\nThank you,\nAccount Service Team\n",
+    "Id": 14453,
+    "Path": "",
+    "annotations": [
+      {"text":  "Customer",
+      "labels": ["relation"]},
+      {"text":  "Account Service",
+      "labels": ["identity"]},
+      {"text":  "Account Service Team",
+      "labels": ["identity"]},
+      {"text":  "Upgrade your mailbox now",
+      "labels": ["action"]}
+    ]
+  },
+  {
+    "text": "Subject: Pending Messages to View\nFrom: Helpdesk\nBody: Dear Jose,\n\nYou have pending messages waiting in your inbox. Please click here to view and release your pending messages. \n\nBest regards,\nHelpdesk Team\n",
+    "Id": 14454,
+    "Path": "",
+    "annotations": [
+      {"text":  "Helpdesk",
+      "labels": ["identity"]},
+      {"text":  "Helpdesk Team",
+      "labels": ["identity"]},
+      {"text":  "Please click here to view and release your pending messages",
+      "labels": ["action"]}
+    ]
+  },
+  {
+    "text": "Subject: Email Account Suspension Notice! : ( jose @ monkey.org ) Verify Ownership\nFrom: Email Service\nBody: Dear Email User: jose @ monkey.org\n\nYour email account has been placed on hold in our server. Please verify the ownership to avoid total email account shutdown. Kindly click on the link below to confirm the ownership of this email account.\n\n[Click Here to Verify Now]\n\nFailure to verify the account will result in the shutdown of this email account without further notice.\n\nThank you,\n\nMail Team Supporting: Administrator Service",
+    "Id": 14455,
+    "Path": "",
+    "annotations": [
+      {"text":  "Email Service",
+      "labels": ["identity"]},
+      {"text":  "Administrator Service",
+      "labels": ["identity"]},
+      {"text":  "Mail Team",
+      "labels": ["identity"]},
+      {"text":  "Verify Ownership",
+      "labels": ["action"]},
+      {"text":  "Kindly click on the link below to confirm the ownership of this email account.\n\n[Click Here to Verify Now]",
+      "labels": ["action"]}
+    ]
+  },
+  {
+    "text": "Subject: Urgent: Domain Renewal Required for monkey.org. From: Domain Registrar. Body: Dear Valued Customer,\n\nYour domain is due for renewal. Failure to renew by this date will result in the loss of your domain and potential disruption to your website and email services.\n\nTo ensure uninterrupted service, please renew your domain promptly by clicking the following link. \n\nIf you have any questions or need assistance, please contact our support team.\n\nSincerely,\n\n[Your Domain Registrar]",
+    "Id": 14456,
+    "Path": "",
+    "annotations": [
+      {"text":  "Domain Registrar",
+      "labels": ["identity"]},
+      {"text":  "Your Domain Registrar",
+      "labels": ["identity"]},
+      {"text":  "Customer",
+      "labels": ["relation"]},
+      {"text":  "Domain Renewal Required for monkey.org",
+      "labels": ["action"]},
+      {"text":  "To ensure uninterrupted service, please renew your domain promptly by clicking the following link",
+      "labels": ["action"]}
+    ]
+  },
+  {
+    "text": "Subject: Employee Benefits Update: Important Documents Pending Review. From: HR Department. Body: Dear Jose,\n\nWe have several important documents pending your review in the employee portal. These documents include:\n\nUpdated benefits enrollment forms\nPerformance review feedback\nTax withholding information\nPlease take a moment to review and sign these documents by today to avoid any disruptions to your benefits or payroll. You can access the employee portal here. \n\nIf you have any questions, please feel free to contact the HR Department.\n\nBest regards,\n\nHR Representative",
+    "Id": 14457,
+    "Path": "",
+    "annotations": [
+       {"text":  "Employee",
+      "labels": ["relation"]},
+      {"text":  "HR Department",
+      "labels": ["identity"]},
+      {"text":  "HR Representative",
+      "labels": ["identity"]},
+      {"text":  "You can access the employee portal here",
+      "labels": ["action"]},
+      {"text":  "We have several important documents pending your review in the employee portal",
+      "labels": ["action"]}
+    ]
+  },
+  {
+    "text": "Subject: Payroll Update: Action Required for Upcoming Paycheck. From: Payroll Department. Body: Dear Jose,\n\nWe are writing to inform you that your direct deposit information is out of date in our system. To ensure your next paycheck is processed correctly, please update your banking details by clicking the link below\n\nFailure to update your information may result in delays to your paycheck. Please complete this update by [Deadline Date].\n\nThank you for your prompt attention to this matter.\n\nSincerely,\n\nPayroll Team",
+    "Id": 14458,
+    "Path": "",
+    "annotations": [
+      {"text":  "Payroll Department",
+      "labels": ["identity"]},
+      {"text":  "Payroll Team",
+      "labels": ["identity"]},
+      {"text":  "Action Required for Upcoming Paycheck",
+      "labels": ["action"]},
+      {"text":  "please update your banking details by clicking the link below",
+      "labels": ["action"]}
+    ]
+  },
+  {
+    "text": "Subject: Action Required: Review Suspicious Login Attempt. From: System Administrator. Body: We've noticed an unusual login attempt on your work account from an unrecognized device. Details:\n\nTime: 2023-11-15 03:22 AM\nLocation: Singapore \nIP Address: 15.83.131.101\nIf you did NOT initiate this login, your account may be compromised.\n\nURGENT:\n\nReset your password NOW via.\nContact IT Support to report this incident.\nFailure to act may result in unauthorized access to your data.",
+    "Id": 14459,
+    "Path": "",
+    "annotations": [
+      {"text":  "System Administrator",
+      "labels": ["identity"]},
+      {"text":  "IT Support",
+      "labels": ["identity"]},
+      {"text":  "Reset your password NOW via",
+      "labels": ["action"]},
+      {"text":  "Action Required: Review Suspicious Login Attempt",
+      "labels": ["action"]}
+    ]
+  },
+  {
+    "text": "Subject: Payroll Discrepancy Alert. From: Accounting Dept. Body: Hi Jose,\n\nThere seems to be an issue with your recent payroll deposit. It appears the amount deposited doesn't match our records.\n\nPlease log into the employee portal ASAP to verify your payment details and bank account information\n\nIf you spot any errors, report them immediately to avoid further delays.\n\nThanks,\n\n\nAccounting",
+    "Id": 14460,
+    "Path": "",
+    "annotations": [
+      {"text":  "Accounting Dept",
+      "labels": ["identity"]},
+      {"text":  "Accounting",
+      "labels": ["identity"]},
+      {"text":  "Please log into the employee portal ASAP to verify your payment details and bank account information",
+      "labels": ["action"]}
+    ]
+  },
+  {
+    "text": "Subject: Urgent Project Update: Critical Issue with Project. From: Michael. Body: Team,\n\nWe've hit a major roadblock with our project. The issue is causing significant delays, and we need your IMMEDIATE attention.\n\nAction Items: 1. Review the attached report ASAP. 2. Join the emergency meeting today at3. Update your individual task statuses on the project dashboard.\nThis is time-sensitive. Your swift action is crucial to getting this project back on track.\n\nThanks,",
+    "Id": 14461,
+    "Path": "",
+    "annotations": [
+      {"text":  "Team",
+      "labels": ["identity"]},
+      {"text":  "Action Items: 1. Review the attached report ASAP. 2. Join the emergency meeting today at3. Update your individual task statuses on the project dashboard",
+      "labels": ["action"]}
+    ]
+  },
+  {
+    "text": "Subject: Urgent: Account Verification Required. From: System Administrator. Body:\n\nDear Valued User,\n\nOur system has detected unusual activity associated with your email account. To ensure the security of your information, we require you to verify your account details immediately. Failure to do so within the next 24 hours will result in temporary account suspension.\n\nPlease click the following link to complete the verification process: VERIFY MY ACCOUNT. Thank you for your cooperation.\n\nSincerely, web admin",
+    "Id": 14462,
+    "Path": "",
+    "annotations": [
+      {"text":  "User",
+      "labels": ["relation"]},
+      {"text":  "System Administrator",
+      "labels": ["identity"]},
+      {"text":  "web admin",
+      "labels": ["identity"]},
+      {"text":  "Please click the following link to complete the verification process: VERIFY MY ACCOUNT",
+      "labels": ["action"]}
+    ]
+  },
+  {
+    "text": "Subject: Final Notice from admin: Email Upgrade Required. From:. Body:\n\nYour current email version is outdated and no longer supported. To continue using our services without interruption, you must upgrade to the latest version.\n\nThis upgrade will enhance your email security and provide you with new features. You have 48 hours to complete this upgrade before your access is restricted. If you have any questions, please contact our support team.",
+    "Id": 14463,
+    "Path": "",
+    "annotations": [
+      {"text":  "admin",
+      "labels": ["identity"]},
+      {"text":  "support team",
+      "labels": ["identity"]},
+      {"text":  "you must upgrade to the latest version",
+      "labels": ["action"]}
+    ]
+  },
+  {
+    "text": "Subject: Warning: Gmail Storage Full. From: Gmail Team. Body:\n\nYour Gmail account has reached its storage capacity. You will be unable to send or receive new emails until you free up space.\n\n Click here to manage your storage and avoid service interruption. \n\nPlease take immediate action to prevent the loss of important messages.\n\nThank you,\nThe Gmail Team\n\n",
+    "Id": 14464,
+    "Path": "",
+    "annotations": [
+      {"text":  "Gmail Team",
+      "labels": ["identity"]},
+      {"text":  "The Gmail Team",
+      "labels": ["identity"]},
+      {"text":  "Click here to manage your storage and avoid service interruption",
+      "labels": ["action"]}
+    ]
+  },
+  {
+    "text": "Subject: Password Expiration Notice. From: IT Support Team. Body:\n\nYour email account password is about to expire. To prevent your account from being locked, you must update your password immediately.\n\n Click here to update your password now\n\nIgnoring this message will result in the deactivation of your account.\n\nThank you for your cooperation.\n\n\n\nIT Department",
+    "Id": 14465,
+    "Path": "",
+    "annotations": [
+      {"text":  "IT Support Team",
+      "labels": ["identity"]},
+      {"text":  "IT Department",
+      "labels": ["identity"]},
+      {"text":  "Click here to update your password now",
+      "labels": ["action"]}
+    ]
+  },
+  {
+    "text": "Subject: Account Deletion Notice. From: Account Security Team. Body:\n\nDear User,\n\nWe have received a request to delete your email account. If you did not initiate this request, you must take immediate action to prevent the permanent removal of your account.\n\n Click here to cancel this deletion request. \n\nFailure to verify your account within the next 24 hours will result in your account being permanently deleted, and all associated data will be lost.\n\nPlease act promptly to secure your account.\n\nSincerely,\n\nThe Account Security Team",
+    "Id": 14466,
+    "Path": "",
+    "annotations": [
+      {"text":  "User",
+      "labels": ["relation"]},
+      {"text":  "Account Security Team",
+      "labels": ["identity"]},
+      {"text":  "The Account Security Team",
+      "labels": ["identity"]},
+      {"text":  "Click here to cancel this deletion request",
+      "labels": ["action"]}
+    ]
+  },
+  {
+    "text": "Subject: Reminder: New Expense Reporting System. From: Sarah from Accounting. Body:\n\nHey team,\n\nJust a friendly reminder that we're switching to the new expense reporting system next week. It's supposed to be way easier to use (fingers crossed!).\n\nTo make sure you're all set up, please click on this link and update your login credentials: Update My Info.\n\nSee you all at the lunch-and-learn on Friday!\n\nBest,\nSarah",
+    "Id": 14467,
+    "Path": "",
+    "annotations": [
+      {"text":  "team",
+      "labels": ["identity"]},
+      {"text":  "Accounting",
+      "labels": ["identity"]},
+      {"text":  "please click on this link and update your login credentials: Update My Info",
+      "labels": ["action"]}
+    ]
   }
 ]
