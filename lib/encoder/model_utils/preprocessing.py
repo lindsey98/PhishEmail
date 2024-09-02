@@ -86,7 +86,7 @@ def pad_eos(ds):
 def tokenize_and_align_labels(examples, tokenizer):
     tokenized_inputs = tokenizer(examples["tokens"], truncation=True, is_split_into_words=True)
 
-    labels = []
+
     word_ids = tokenized_inputs.word_ids()  # This function is applied directly to the tokenized_inputs.
     previous_word_idx = None
     label_ids = []
@@ -101,3 +101,4 @@ def tokenize_and_align_labels(examples, tokenizer):
 
     tokenized_inputs["labels"] = label_ids  # Assign labels directly, not in a nested list
     return tokenized_inputs
+

@@ -3,7 +3,7 @@ from transformers.integrations import WandbCallback
 from transformers import GenerationConfig
 import wandb
 import torch
-from lib.model_utils.postprocessing import ner_prediction_postprocess, ner_clean_predictions, ner_create_spacy_doc
+from lib.encoder.model_utils.postprocessing import ner_prediction_postprocess, ner_create_spacy_doc
 import spacy
 from tqdm import tqdm
 
