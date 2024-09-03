@@ -1,6 +1,5 @@
 import shutil
 
-from lib.web_utils.CustomDriver import CustomWebDriver
 import time
 from selenium.webdriver.common.by import By
 import pandas as pd
