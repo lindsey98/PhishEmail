@@ -127,6 +127,10 @@
     "WeTransfer": [
         "wetransfer.com"
     ],
+    "We Transfer": [
+        "wetransfer.com"
+    ],
+
     "Verizon Wireless": [
         "verizon.com",
         "verizonwireless.com"
@@ -197,7 +201,7 @@
         "mastercard.com"
     ],
     "Alibaba": [
-        "service.alibaba.com"
+        "alibaba.com"
     ],
     "Bank of Montreal": [
         "bmo.com"
@@ -366,7 +370,6 @@
     "Caixa Geral de Depositos": [
         "cgd.fr"
     ],
-    "Telekom Brunei": [],
     "EarthLink": [
         "earthlink.com"
     ],
@@ -392,7 +395,7 @@
     "Swisscom": [
         "swisscom.com"
     ],
-    "Juno Online Services": [
+    "Juno Online": [
         "juno.com"
     ],
     "Cairo Amman Bank": [
@@ -668,9 +671,6 @@
     "Capital one": [
         "capitalone.com"
     ],
-    "db": [
-        "dbjourney.com"
-    ],
     "QNB": [
         "qnb.com"
     ],
@@ -779,8 +779,8 @@
         "knab.nl"
     ],
     "sharp": [
-        "sharpservices.com",
-        "sharpclinical.com"
+        "global.sharp",
+        "sharpconsumer.com"
     ],
     "smartsheet": [
         "smartsheet.com"
@@ -925,9 +925,6 @@
     "China Marine Bunker (Petro China) Co., Ltd": [
         "chimbusco.com.cn"
     ],
-    "sjtu.edu.cn": [
-        "sjtu.edu.cn"
-    ],
     "Wing Hang Bank": [
         "winghangbank.com.hk"
     ],
@@ -961,18 +958,14 @@
     "DHL": [
         "dhl.com"
     ],
-    "sjtu.edu.cn Message Center": [
-        "sjtu.edu.cn"
-    ],
+
     "Rakuten Card Corporation": [
         "rakuten.jp"
     ],
-    "InterPore 2018": [
+    "InterPore": [
         "interpore.org"
     ],
-    "Rakuten Card": [
-        "rakuten.com"
-    ],
+
     "Frontera Capital": [
         "fronteracap.com"
     ],
@@ -988,15 +981,11 @@
     "European Anti-Fraud Commission": [
         "ec.europa.eu"
     ],
-    "DHL Shp": [
-        "dhl.com"
-    ],
-    "Email management center of SJTU (Shanghai Jiao Tong University)": [
+
+    "SJTU (Shanghai Jiao Tong University)": [
         "sjtu.edu.cn"
     ],
-    "Department of Homeland Security": [
-        "dhs.gov"
-    ],
+
     "JAS Forwarding GmbH": [
         "jas.com"
     ],
@@ -1006,7 +995,7 @@
     "Mitsubishi UFJ NICOS Co., Ltd": [
         "nico.co.jp"
     ],
-    "Trust WaIIet": [
+    "Trust Wallet": [
         "trustwallet.com"
     ],
     "Maina Point Office": [
@@ -1021,9 +1010,6 @@
     "Sf-Express": [
         "sf-express.com"
     ],
-    "Google Lottery Winning Team": [
-        "google.com"
-    ],
     "EMBRAPII - Empresa Brasileira de Pesquisa e Inova Industrial": [
         "embrapii.org.br"
     ],
@@ -1036,27 +1022,21 @@
     "UNiDAYS": [
         "myunidays.com"
     ],
-    "Sjtu": [
-        "sjtu.edu.cn"
-    ],
+
     "Sumitomo Mitsui": [
         "smcc.co.jp"
     ],
     "Saints Peter and Paul Catholic Church": [
         "sppcc.org"
     ],
-    "sjtu.edu.cn SYSTEM": [
-        "sjtu.edu.cn"
-    ],
+
     "MyJCB": [
         "jcb.com"
     ],
     "Eskom Holdings Ltd. SA": [
         "eskom.co.za"
     ],
-    "51\u53d1\u7968\u5e73\u53f0": [
-        "51invoice.com"
-    ],
+
     "Acleda Bank of Cambodia": [
         "acledabank.com.kh"
     ],
@@ -1066,14 +1046,15 @@
     "DHL Delivery": [
         "dhl.com"
     ],
-    "Sjtu Support": [
+    "Sjtu": [
         "sjtu.edu.cn"
     ],
     "Hassei Trading (Shanghai) Co., Ltd. is the sender's claimed organization": [
         "hasseitrading.com"
     ],
-    "MetaMask Support": [
-        "metamask.io"
+    "MetaMask": [
+        "metamask.io",
+        "facebook.com"
     ],
     "Emirates Glass LLC": [
         "emiratesglass.com"
@@ -1120,40 +1101,25 @@
     "UPS My Choice.": [
         "ups.com"
     ],
-    "Chase.": [
-        "chase.com"
-    ],
-    "Amazon.com.": [
-        "amazon.com"
-    ],
-    "UPS.": [
+
+    "UPS": [
         "ups.com"
     ],
-    "Navy Federal Protection.": [
+    "Navy Federal Protection": [
         "navyfederal.org"
     ],
-    "Alibaba Trade Center.": [
+    "Alibaba Trade Center": [
         "service.alibaba.com"
     ],
-    "TNT Express.": [
-        "tnt.com"
-    ],
-    "FedEx.": [
-        "fedex.com"
-    ],
-    "OurTime.com.": [
-        "ourtime.com"
-    ],
-    "Emirates NBD Bank PJSC.": [
+
+    "Emirates NBD Bank": [
         "emiratesnbd.com"
     ],
     "Pennsylvania State Employees Credit Union (PSECU).": [
         "psecu.com"
     ],
-    "Standard Bank.": [
-        "standardbank.co.za"
-    ],
-    "Al Ghurair Group.": [
+
+    "Al Ghurair Group": [
         "al-ghurair.com"
     ],
     "Netflix Inc.": [
@@ -1162,181 +1128,111 @@
     "Euro Exchange Securities UK LTD.": [
         "euroexchangefinance.com"
     ],
-    "Maersk Line.": [
+    "Maersk Line": [
         "maersk.com"
     ],
-    "Chronopost.": [
+    "Chronopost": [
         "chronopost.fr"
     ],
-    "Notificados.com.": [
-        "notificados.com"
-    ],
-    "OneDrive.": [
-        "support.microsoft.com"
-    ],
-    "TSB Online Banking Team.": [
+
+    "TSB Online Banking": [
         "tsb.co.uk"
     ],
-    "Ministerio del Interior.": [
+    "Ministerio del Interior": [
         "interior.gob.es"
     ],
-    "Fidelity Investments.": [
+    "Fidelity Investments": [
         "fidelity.com"
     ],
-    "Microsoft OneDrive.": [
+    "Microsoft OneDrive": [
         "microsoft.com"
     ],
-    "CA Post.": [
+    "CA Post": [
         "capostmagazine.com"
     ],
-    "RoyalMail.": [
+    "RoyalMail": [
         "royalmail.com"
     ],
-    "Pay-PaI.": [
-        "paypal.com"
-    ],
-    "DHL WorldWide.": [
-        "dhl.com"
-    ],
-    "USAA Federal Savings Bank.": [
+
+    "USAA Federal Savings Bank": [
         "usaa.com"
     ],
-    "USAA Bank.": [
+    "USAA Bank": [
         "usaa.com"
     ],
-    "AppStore.": [
-        "appstore.com"
-    ],
-    "Chase Online.": [
-        "chase.com"
-    ],
-    "NatWest.": [
-        "natwest.com"
-    ],
-    "Citi Bank.": [
-        "citi.com"
-    ],
-    "UBA PLC.": [
-        "ubagroup.com"
-    ],
+
+
     "Wells Fargo Online Bank.": [
         "wellsfargo.com"
     ],
-    "PayPal Support.": [
-        "paypal.com"
-    ],
-    "Capital One Bank.": [
+
+    "Capital One Bank": [
         "capitalone.com"
     ],
     "PayPal Inc.": [
         "paypal.com"
     ],
-    "HMRC (Her Majesty's Revenue and Customs).": [
-        "hmrc.gov.uk"
-    ],
-    "DHL Cargo Service.": [
-        "dhl.com"
-    ],
-    "CapitalOne360.": [
-        "capitalone.com"
-    ],
+
     "Apple Inc.": [
         "apple.com"
     ],
-    "Alibaba.com.": [
-        "alibaba.com"
-    ],
-    "Barclays Customer Service.": [
-        "barclays.com"
-    ],
-    "Microsoft account.": [
-        "microsoft.com"
-    ],
-    "iCloud.": [
+
+
+    "iCloud": [
         "apple.com"
     ],
-    "DHL Courier Service.": [
-        "dhl.com"
-    ],
-    "Apple Support.": [
-        "apple.com"
-    ],
+
+
     "Justdial Limited (Justdial).": [
         "justdial.com"
     ],
-    "Exporters.SG.": [
-        "exporters.sg"
-    ],
-    "DHL International GmbH.": [
+
+    "DHL International GmbH": [
         "dhl.com"
     ],
-    "Nedbank.": [
-        "nedbank.co.za"
-    ],
-    "Banco Patagonia.": [
+
+    "Banco Patagonia": [
         "bancopatagonia.com.ar"
     ],
-    "CIBC BANK.": [
+    "CIBC BANK": [
         "cibc.com"
     ],
-    "Absa Bank.": [
+    "Absa Bank": [
         "absa.africa"
     ],
-    "SSA Gov.": [
+    "SSA Gov": [
         "ssa.gov"
     ],
     "DPD Group.": [
         "dpdgroup.co.uk"
     ],
-    "Alibaba Group.": [
+    "Alibaba Group": [
         "alibaba-inc.com"
     ],
-    "Absa Cheque Account.": [
-        "absa.co.za"
-    ],
-    "Absa.": [
+    "Absa": [
+        "absa.co.za",
         "absa.africa"
     ],
-    "cPanel Team.": [
+    "cPanel": [
         "cpanel.net"
     ],
-    "Capital One Investing.": [
-        "capitalone.com"
-    ],
-    "ABSA.": [
-        "absa.africa"
-    ],
+
     "American Express": [
         "americanexpress.com"
     ],
-    "Discovery Bank.": [
+    "Discovery Bank": [
         "discovery.co.za"
     ],
-    "Apple.com.": [
-        "apple.com"
-    ],
-    "Navy Federal.": [
+    "Navy Federal": [
         "navyfederal.org"
     ],
-    "DHL EXPRESS.": [
+    "DHL EXPRESS": [
         "dhl.com"
     ],
-    "Luno Support.": [
-        "luno.com"
-    ],
-    "PNC Alerts.": [
-        "pnc.com"
-    ],
-    "The My Cash Capital representing Critical Financing.": [
-        "mycashcapital.com"
-    ],
-    "HSBC Bank (Hong Kong).": [
+    "HSBC Bank (Hong Kong)": [
         "hsbc.com.hk"
     ],
-    "ICICI Bank.": [
-        "icicibank.com"
-    ],
-    "Vivo.": [
+    "Vivo": [
         "vivo.com"
     ],
     "LinkedIn Corporation.": [
@@ -1345,174 +1241,91 @@
     "Adobe Acrobat.": [
         "adobe.com"
     ],
-    "First National Bank & Trust Company of Newtown.": [
-        "fnbn.com"
-    ],
-    "Boohoo.": [
+    "Boohoo": [
         "boohoo.com"
     ],
-    "Marshalls.": [
+    "Marshalls": [
         "marshalls.com"
     ],
-    "ICANN Domain Validation.": [
+    "ICANN Domain Validation": [
         "icann.org"
     ],
     "Bed Bath & Beyond.": [
         "bedbath.com"
     ],
-    "Tinder.": [
-        "gotinder.com"
-    ],
-    "MetaMask.": [
-        "metamask.io"
-    ],
+
+
     "Google Drive.": [
         "google.com"
     ],
-    "ONE DRIVE.": [
-        "onedrive.com"
-    ],
-    "eChase Customer.": [
-        "echase.com"
-    ],
-    "WalletConnect.": [
-        "walletconnect.com"
-    ],
-    "United States Postal Service.": [
+
+    "United States Postal Service": [
         "usps.gov"
     ],
-    "RingCentral.": [
-        "ringcentral.com"
-    ],
-    "Apple billing team.": [
-        "apple.com"
-    ],
-    "SherePo!nt Storage.": [
-        "sherepoint.com"
-    ],
-    "CHASE ONLINE SUPPORT.": [
-        "chase.com"
-    ],
-    "Paypal.": [
-        "paypal.com"
-    ],
-    "HSBC Bank (China).": [
-        "hsbc.com.cn"
-    ],
-    "Turbo Service.": [
-        "turboservice.com"
-    ],
-    "Natwest PLC.": [
+
+
+
+    "Natwest PLC": [
         "natwest.com"
     ],
-    "ABSA ONLINE.": [
-        "absa.co.za"
-    ],
-    "Optus.": [
-        "optus.com.au"
-    ],
-    "cPanel.": [
-        "cpanel.net"
-    ],
-    "USPS Rewards.": [
+
+
+    "USPS Rewards": [
         "usps.gov"
     ],
-    "Chase\u00ae Services.": [
-        "chase.com"
-    ],
-    "Chase Friend.": [
-        "chasefriend.com"
-    ],
-    "LinkedIn Business.": [
+
+
+    "LinkedIn Business": [
         "linkedin.com"
     ],
-    "OpenSea.": [
+    "OpenSea": [
         "opensea.io"
     ],
-    "Magyar Posta.": [
-        "posta.hu"
-    ],
-    "Seguridad Social.": [
-        "seg-social.es"
-    ],
-    "Roundcube.": [
-        "roundcube.net"
-    ],
-    "Mashreq.": [
-        "mashreq.com"
-    ],
-    "McAfee AntiVirus.": [
+
+    "McAfee AntiVirus": [
         "mcafee.com"
     ],
-    "Coldwell Banker.": [
+    "Coldwell Banker": [
         "coldwellbanker.com"
     ],
-    "Autowini.com.": [
-        "autowini.com"
-    ],
-    "Outlook.com.": [
-        "outlook.com"
-    ],
+
     "Santander.": [
         "santander.com.br"
     ],
     "USAA Membership.": [
         "usaa.com"
     ],
-    "Skrill.": [
+    "Skrill": [
         "skrill.com"
     ],
-    "APPLE.": [
-        "apple.com"
-    ],
-    "Member FDIC.": [
-        "fdic.gov"
-    ],
+
     "JP Morgan Chase Bank, N.A.": [
         "chase.com"
     ],
-    "iStore.": [
-        "istore.com"
+
+    "JP Morgan Chase": [
+        "chase.com"
     ],
-    "iTunes Account.": [
-        "itunes.com"
+
+    "JP Morgan Chase Online": [
+        "chase.com"
     ],
-    "Mononinja.com.": [
-        "mononinja.com"
-    ],
-    "Ita\u00fa.": [
-        "itau-unibanco.com.br"
-    ],
+
     "Lloyds Bank.": [
         "lloydsbanking.com"
     ],
     "USAA Financial Advisors Inc.": [
         "usaa.com"
     ],
-    "PayPal - Customer Service.": [
-        "paypal.com"
-    ],
-    "BB Online.": [
-        "bbonline.com"
-    ],
-    "Ram Hand to Hand Couriers.": [
-        "ram.co.za"
-    ],
-    "South African post office.": [
+
+    "South African post office": [
         "postoffice.co.za"
     ],
     "Charles Schwab.": [
         "schwab.com"
     ],
-    "Fastway.": [
-        "fastway.ie"
-    ],
-    "Truist.": [
-        "truist.com"
-    ],
-    "Sharefile.net.": [
-        "sharefile.com"
-    ],
+
+
     "AliExpress.": [
         "service.alibaba.com"
     ],
@@ -1522,43 +1335,26 @@
     "Binance.": [
         "binance.com"
     ],
-    "PayPay Bank.": [
-        "paypay.neobank"
-    ],
-    "DocuSign Service.": [
-        "docusign.com"
-    ],
-    "Biogen.": [
+
+    "Biogen": [
         "biogen.com"
     ],
-    "NeIfl\u00edx.": [
-        "netflix.com"
-    ],
-    "Optus-Service Support.": [
-        "optus.com.au"
-    ],
-    "CONDUSEF.": [
+
+    "CONDUSEF": [
         "condusef.gob.mx"
     ],
-    "Morgan Stanley.": [
-        "ms.com"
-    ],
+
     "US TOOL GROUP INC.": [
         "ustoolgroup.com"
     ],
-    "TheDealMayor.": [
+    "TheDealMayor": [
         "thedealmayor.com"
     ],
-    "eChase Center\u00ae.": [
-        "chasecenter.com"
-    ],
-    "ram.co.za.": [
-        "ram.co.za"
-    ],
+
     "Coffee Bean Direct.": [
         "coffeebeandirect.com"
     ],
-    "DHL delivery service": [
+    "DHL delivery": [
         "dhl.com"
     ],
     "Ecobank": [
@@ -1573,9 +1369,7 @@
     "Fedex": [
         "fedex.com"
     ],
-    "ADP Payroll Services": [
-        "adp.com"
-    ],
+
     "eBucks": [
         "ebucks.com"
     ],
@@ -1588,80 +1382,50 @@
     "Absa Bank Ltd": [
         "absa.africa"
     ],
-    "Absa Credit Card Account": [
-        "absa.africa"
-    ],
+
     "Sasfin": [
         "sasfin.com"
     ],
     "Al Attiyah Group LLC": [
         "alattiyah.com.lb"
     ],
-    "HM Revenue & Customs": [
-        "hmrc.gov.uk"
-    ],
+
     "Central Maine Healthcare": [
         "cmhc.org"
     ],
-    "Davivienda": [
-        "davivienda.com.co"
-    ],
+
     "USAA Rewards Contact Centre.": [
         "usaa.com"
     ],
-    "U.S.": [
-        "uspto.gov"
-    ],
+
     "Nautril Holdings Athens Gr.": [
         "naoutril.com"
     ],
-    "Monkey Office Printer.": [
-        "monkeyofficeprinter.com"
-    ],
-    "HSBC Advising Service": [
-        "us.hsbc.com"
-    ],
+
+
     "SunTrust Online": [
         "suntrust.com"
     ],
-    "GeekTech Solutions.": [
+    "GeekTech Solutions": [
         "geektechsolutions.com"
     ],
-    "Office 365 Team.": [
-        "microsoft.com"
-    ],
+
     "Synergy Media Ltd.": [
         "synergymedialtd.com"
     ],
-    "Microsoft 365 Message center.": [
-        "microsoft.com"
-    ],
-    "OCMW Antwerpen.": [
-        "ocmw.antwerpen.be"
-    ],
+
     "Avast Internet Security.": [
         "avast.com"
     ],
     "Avast AntiVirus.": [
         "avast.com"
     ],
-    "Zimbra Technical support team.": [
-        "zimbra.com"
-    ],
-    "Seven Rivers.": [
-        "sevenrivers.com"
-    ],
-    "Webmail Inc.": [
-        "webmail.com"
-    ],
-    "IT-Service Help Desk.": [
-        "itservice.com"
-    ],
+
     "Fallon Health.": [
         "fallonhealth.org"
     ],
-    "Bigpond.": [
-        "team.telstra.com"
+    "Bigpond": [
+        "telstra.com"
     ],
     "Patterson Companies.": [
         "pattersoncompanies.com"
@@ -1672,105 +1436,30 @@
     "Zimbra Alert.": [
         "zimbra.com"
     ],
-    "LinkedIn Security.": [
-        "linkedin.com"
-    ],
-    "ICT (Information and Communication Technology).": [
-        "ict.org"
-    ],
-    "Mailbox Security.": [
-        "mailboxsecurity.com"
-    ],
-    "Microsoft Corporation.": [
-        "microsoft.com"
-    ],
-    "Microsoft Outlook.": [
-        "microsoft.com"
-    ],
-    "Cpanel Support Team.": [
-        "cpanel.net"
-    ],
-    "Monkey Administrator.": [
-        "monkeyadministrator.com"
-    ],
-    "W\u0435llsf\u0430rg\u043e \u0412\u0430nk Access.": [
-        "wellsfargo.com"
-    ],
-    "MonkeyWebmail.": [
-        "monkeywebmail.com"
-    ],
-    "Sharepoint.": [
-        "sharepoint.com"
-    ],
-    "Monkey.Email_Notification.": [
-        "monkeybusiness.com"
-    ],
-    "Roundcube / Horde Server.": [
+
+    "Roundcube": [
         "roundcube.net"
     ],
     "FDNY (Fire Department of New York).": [
         "fdny.nyc.gov"
     ],
-    "iTunes Support.": [
-        "apple.com"
-    ],
-    "Support i-Tunes.": [
-        "apple.com"
-    ],
-    "ITS Service Desk.": [
-        "its.ny.gov"
-    ],
-    "MICRO SOFT.": [
-        "microsoft.com"
-    ],
+
     "Google Docs.": [
         "googledocs.com"
     ],
-    "FDNY.": [
-        "fdny.nyc.gov"
-    ],
-    "University Information Center.": [
-        "university.edu"
-    ],
-    "MetaMask, Inc.": [
-        "metamask.io"
-    ],
-    "Webmail.com.": [
-        "webmail.com"
-    ],
-    "Brownsville Independent School District": [
-        "bisd.us"
-    ],
-    "Harris County Department of Education": [
-        "hcde-texas.org"
-    ],
-    "ADP HR Portal": [
-        "adp.com"
-    ],
-    "Outlook Web App Helpdesk ISQ": [
-        "isq.qld.edu.au"
-    ],
-    "Microsoft WebAccess desk": [
-        "microsoft.com"
-    ],
-    "IT DEPT.": [
-        "itdept.com"
-    ],
+
+
     "Indeed.": [
         "indeed.com"
     ],
     "Ann Arbor Public Schools.": [
         "a2schools.org"
     ],
-    "Support Center\u00ae.": [
-        "supportcenter.com"
-    ],
+
     "PARGOPOINTS (PTY) LTD.": [
         "pargopoint.com"
     ],
-    "SCHS (School of Computer Science)": [
-        "cs.stanford.edu"
-    ],
+
     "Tesco.": [
         "tesco.co.uk"
     ],
@@ -1784,18 +1473,12 @@
     "Yahoo Finance": [
         "yahoo.com"
     ],
-    "Lindows.": [
-        "lindows.com"
-    ],
+
     "Foundstone Labs": [
         "foundstone.com"
     ],
-    "JDC Tech Tips": [
-        "gmail.com"
-    ],
-    "Guardian": [
-        "theguardian.com"
-    ],
+
+
     "New Scientist": [
         "newscientist.com"
     ],
@@ -1820,9 +1503,6 @@
     "Libertarian Party": [
         "lp.org"
     ],
-    "Gamasutra": [
-        "gamasutra.com"
-    ],
     "Media Unspun": [
         "poynter.org",
         "imakenews.net"
@@ -1833,21 +1513,15 @@
     "Ayn Rand Institute": [
         "aynrand.org"
     ],
-    "Lockergnome Apple Core": [
-        "lockergnome.com"
-    ],
+
     "One Income Living": [
         "oneincomeliving.com"
     ],
-    "Testing Security Team": [
-        "testing.com"
-    ],
+
     "Lockergnome Penguin Shell": [
         "lockergnome.com"
     ],
-    "AppleUsers.": [
-        "brand.com"
-    ],
+
     "Electronic Frontier Foundation (EFF)": [
         "eff.org"
     ],
@@ -1860,66 +1534,18 @@
     "TeleDynamics Communications Inc": [
         "teledynamics.com"
     ],
-    "Astrology.": [
-        "astrology.com"
-    ],
-    "Red Hat Professional Consulting": [
-        "redhat.com"
-    ],
+
     "ABS Global": [
         "absglobal.com"
     ],
-    "SweatyFrog": [
-        "sweatyfrog.com"
-    ],
-    "SearchNetworking": [
-        "techtarget.com"
-    ],
+
     "MIT": [
         "mit.edu"
     ],
     "HP Ireland": [
         "hp.com"
     ],
-    "The Register": [
-        "theregister.com"
-    ],
-    "Merit Solutions Ltd": [
-        "meritsolutionsltd.com"
-    ],
-    "sidux e.": [
-        "sidux.com"
-    ],
-    "DivX News": [
-        "divx.com"
-    ],
-    "FoRK listserv": [
-        "listserv.aol.com"
-    ],
-    "The MUG Center": [
-        "mugcenter.com"
-    ],
-    "TheServerSide Connection": [
-        "theserverside.com"
-    ],
-    "boingboing": [
-        "boingboing.net"
-    ],
-    "ClearFoundation": [
-        "clearfoundation.com"
-    ],
-    "jobfair24": [
-        "jobfair24.de"
-    ],
-    "NTK": [
-        "ntk-ceramic.ru"
-    ],
-    "Lockergnome Windows Daily": [
-        "lockergnome.com"
-    ],
-    "SUN Ireland": [
-        "sungroup.com"
-    ],
+
     "CBS News": [
         "cbsnews.com"
     ],
@@ -1947,63 +1573,26 @@
     "O'Reilly Media": [
         "oreilly.com"
     ],
-    "Lockergnome Digital Media": [
-        "lockergnome.com"
-    ],
-    "ILUG": [
-        "ilug.org"
-    ],
-    "RFC Networks": [
-        "rfcnetworks.com"
-    ],
-    "The Motley Fool": [
-        "fool.com"
-    ],
-    "Paradigm, Omega, LLC": [
-        "paradigmspeaker.com"
-    ],
-    "Lockergnome Webmaster Weekly": [
-        "lockergnome.com"
-    ],
-    "redhat": [
-        "redhat.com"
-    ],
+
     "MEDIC": [
         "medic.org"
     ],
     "O'Reilly & Associates": [
         "oreilly.com"
     ],
-    "Davos Newbies": [
-        "davosnewbies.com"
-    ],
-    "Delmarva Online, Inc": [
-        "delmarva.com"
-    ],
-    "Tribute Movie Mail": [
-        "tributemovie.com"
-    ],
-    "Nessus mailing list": [
-        "nessus.org"
-    ],
-    "Chicago Apple User Group (CAUG)": [
-        "caug.net"
-    ],
+
+
     "iSilo": [
         "isilo.com"
     ],
-    "Blueline/Gulfsat.": [
-        "gulfsat.com"
-    ],
-    "DayTips.": [
+
+    "DayTips": [
         "daytips.com"
     ],
     "Dell": [
         "dell.com"
     ],
-    "Department of Justice": [
-        "usdoj.gov"
-    ],
+
     "NYTimes.": [
         "nytimes.com"
     ],
@@ -2016,24 +1605,18 @@
     "Consult Hyperion": [
         "chyp.com"
     ],
-    "Sun Microsystems Inc": [
-        "sun.com"
-    ],
+
     "Oracle Technology Network": [
         "oracle.com"
     ],
-    "World Wide Words": [
-        "worldwidewords.org"
-    ],
-    "The sender's claimed organization is the Internet Bearer Underwriting Corporation": [
+
+    "Internet Bearer Underwriting Corporation": [
         "ibucorp.org"
     ],
     "MSN Groups": [
         "msn.com"
     ],
-    "Ximian": [
-        "ximian.com"
-    ],
+
     "Fortean Times Online": [
         "forteantimes.com"
     ],
@@ -2046,38 +1629,22 @@
     "Ashfield Online": [
         "ashfieldonline.com"
     ],
-    "Mozilla": [
-        "mozilla.com"
-    ],
+
     "ArgoTech": [
         "argotech.com"
     ],
-    "Amazon Prime Team": [
-        "amazon.com"
-    ],
+
     "e*trade": [
         "etrade.com"
     ],
-    "ADT | Lider Mundial en Seguridad": [
-        "adt.com"
-    ],
-    "U.": [
-        "urbanoutfitters.com"
-    ],
-    "Apple INC": [
-        "apple.com"
-    ],
+
+
     "USAA Savings Bank": [
         "usaa.com"
     ],
-    "Neat": [
-        "neat.com"
-    ],
-    "ram.": [
-        "ramtrucks.com"
-    ],
-    "ONE-DRIVE MAIL NOTIFICATION": [
-        "microsoft.com"
+    "OneDrive": [
+        "microsoft.com",
+        "onedrive.live.com"
     ],
     "WellsFargo Bank": [
         "wellsfargo.com"
@@ -2091,9 +1658,7 @@
     "Majid Hussain Al Ghurair Group": [
         "majidalfuttaim.com"
     ],
-    "Chase Online Support": [
-        "chase.com"
-    ],
+
     "NetEase Inc": [
         "service.netease.com"
     ],
@@ -2106,9 +1671,7 @@
     "LinkedIn Inc.": [
         "linkedin.com"
     ],
-    "HM & Customs": [
-        "hmrc.gov.uk"
-    ],
+
     "Christus Health": [
         "christushealth.org"
     ],
@@ -2118,21 +1681,14 @@
     "Barclays": [
         "barclays.com"
     ],
-    "BigPond.com": [
-        "bigpond.com"
-    ],
+
     "CIBC IMPERIAL BANK OF COMMERCE (CIBC)": [
         "cibc.com"
     ],
     "CHASE BANK": [
         "chase.com"
     ],
-    "Microsoft Admin": [
-        "microsoft.com"
-    ],
-    "cPanel Team Networks": [
-        "cpanel.net"
-    ],
+
     "University of Suffolk": [
         "uos.ac.uk"
     ],
@@ -2148,75 +1704,22 @@
     "Deltares": [
         "deltares.nl"
     ],
-    "Microsoft Admin Service": [
-        "microsoft.com"
-    ],
-    "HSBC Bank Service": [
-        "hsbc.com"
-    ],
-    "Blood.ca": [
-        "blood.ca"
-    ],
+
     "Marfin Investment Group": [
         "marfininvestmentgroup.com"
     ],
-    "Wells Fargo Bank Review": [
-        "wellsfargo.com"
-    ],
-    "CustomerOne\u00ae": [
+
+    "CustomerOne": [
         "customerone.com"
     ],
     "Coinbase": [
         "coinbase.com"
     ],
-    "NETFLlX": [
-        "netflix.com"
-    ],
-    "FedEx Express": [
-        "fedex.com"
-    ],
-    "Wells Fargo Bank Access": [
-        "wellsfargo.com"
-    ],
-    "eCustom Manuel\u00ae": [
-        "custommanuel.com"
-    ],
-    "Wells Fargo Bank Commerce": [
-        "wellsfargo.com"
-    ],
-    "eCustom Felicia\u00ae": [
-        "ecustomfelicia.com"
-    ],
-    "Sparklyn International Co., Ltd": [
-        "sparklynshops.com"
-    ],
-    "Monkey cPan\ud835\ude5al": [
-        "monkeycpanel.com"
-    ],
-    "Get a Smooth Digestion": [
-        "getasmoothdigestion.com"
-    ],
-    "Webmail, LLC": [
-        "webmail.com"
-    ],
-    "Chase Online deposit account": [
-        "chase.com"
-    ],
+
     "Sasfin Online Banking": [
         "sasfin.com"
     ],
-    "Monkey Delivery System.": [
-        "monkeydeliverysystem.com"
-    ],
-    "ITS Service Information": [
-        "itsserviceinfo.com"
-    ],
-    "Usaa.com": [
-        "usaa.com"
-    ],
-    "Conservation by Design": [
-        "conservation-by-design.co.uk"
-    ],
+
     "Google Inc": [
         "google.com"
     ],
@@ -2235,7 +1738,7 @@
     "Itau": [
         "itau.com.br"
     ],
-    "Microsoft Outlook Web Support": [
+    "Microsoft Outlook": [
         "microsoft.com"
     ],
     "Barcelona Media": [
@@ -2244,12 +1747,8 @@
     "Citizens Bank": [
         "citizensbank.com"
     ],
-    "Monkey Server": [
-        "monkeyserver.com"
-    ],
-    "Account Storage": [
-        "accountstorage.com"
-    ],
+
+
     "Nautril Holdings": [
         "nautrilholdings.com"
     ],
@@ -2259,30 +1758,11 @@
     "Tianjin Hongtai Pipe Industry Co., Ltd": [
         "tjhtsteel.com"
     ],
-    "University": [
-        "university.com"
-    ],
-    "IT| Supports": [
-        "itsupports.com"
-    ],
-    "Reliant Spray Systems": [
-        "reliantspray.com"
-    ],
-    "The sender is the Guardian.": [
-        "theguardian.com"
-    ],
+
     "WorldCom": [
         "worldcomgroup.com"
     ],
-    "fark": [
-        "fark.com"
-    ],
-    "newscientist.": [
-        "newscientist.com"
-    ],
-    "use Perl": [
-        "perl.org"
-    ],
+
     "Artifex Maximus": [
         "artifexmaximus.com"
     ],
@@ -2295,77 +1775,33 @@
     "RedHat": [
         "redhat.com"
     ],
-    "Freshmeat.net": [
-        "freshmeat.net"
-    ],
+
     "Moller International": [
         "moller.com"
     ],
-    "EMI": [
-        "emi.com"
-    ],
-    "The Guardian.": [
+
+    "The Guardian": [
         "theguardian.com"
     ],
-    "politikcity.de": [
-        "politikcity.de"
-    ],
-    "Michael Moore's Mailing List.": [
-        "michaelmoore.com"
-    ],
-    "Quick Topic": [
-        "quicktopic.com"
-    ],
+
     "Starflung NIC": [
         "starflung.com"
     ],
     "BBC": [
         "bbc.co.uk"
     ],
-    "Nessus": [
-        "tenable.com"
-    ],
-    "Fleishman-Hillard Saunders.": [
-        "fleishman.com"
-    ],
-    "Wired.": [
-        "wired.com"
-    ],
-    "CERT Advisory": [
-        "cert.org"
-    ],
-    "Conservative party": [
-        "conservatives.com"
-    ],
-    "Buy.com": [
-        "rakuten.com"
-    ],
-    "SearchSecurity": [
-        "searchsecurity.tech"
-    ],
+
     "FARK": [
         "fark.com"
     ],
     "Disney": [
         "disney.com"
     ],
-    "Macstjylland.": [
-        "macstjylland.com"
-    ],
-    "Bank of America, N.A. Member FDIC": [
-        "bankofamerica.com"
-    ],
     "Ryanair.com": [
         "ryanair.com"
     ],
     "Habeas": [
         "habeas.com"
-    ],
-    "External.": [
-        "externalbrand.com"
-    ],
-    "The recipient address is update@list.theregister.co.uk, indicating that the sender is The Register.": [
-        "theregister.com"
     ],
     "InfiniSource, Inc": [
         "infinisource.com"
@@ -2400,9 +1836,6 @@
     "DHL Express (Dubai) LTD": [
         "dhl.com"
     ],
-    "sales.co.za": [
-        "sales.co.za"
-    ],
     "Justdial": [
         "justdial.com"
     ],
@@ -2412,13 +1845,13 @@
     "TurboTax": [
         "intuit.com"
     ],
-    "PNC Financial Services Group": [
+    "PNC Financial": [
         "pnc.com"
     ],
     "cPanel, Inc": [
         "cpanel.net"
     ],
-    "WalletConnect - Crypto | NFT": [
+    "WalletConnect": [
         "walletconnect.com"
     ],
     "ICANN": [
@@ -2427,58 +1860,23 @@
     "Mashreq Bank": [
         "mashreq.com"
     ],
-    "PayPal.com": [
-        "paypal.com"
-    ],
     "Al Attiyah Group Holding": [
         "alattiyah.com.qa"
     ],
     "Banco Davivienda": [
         "davivienda.com.co"
     ],
-    "Dropbox and Agencia MOCH": [
-        "dropbox.com"
-    ],
-    "Office 365 Team Microsoft 2019": [
-        "microsoft.com"
-    ],
+
     "NFCU": [
         "navyfederal.org"
     ],
-    "E*TRADE Support": [
-        "etrade.com"
-    ],
-    "Netflix Support": [
-        "netflix.com"
-    ],
-    "Yahoo Mail Service Inc": [
+
+    "Yahoo": [
         "yahoo.com",
         "yahoo-inc.com"
     ],
-    "Outlook.com Team": [
-        "outlook.com",
-        "outlook.com"
-    ],
-    "Amex": [
-        "welcome.aexp.com"
-    ],
-    "Absa eStatements": [
-        "absa.africa"
-    ],
-    "American Express Card Services": [
-        "service.americanexpress.com"
-    ],
-    "American Express Security Team": [
-        "aexp.com"
-    ],
     "boohoo": [
         "boohoo.com"
-    ],
-    "cPanel E-mail Administrator": [
-        "cpanel.net"
-    ],
-    "Mail Team! Inc": [
-        "mailteaminc.com"
     ],
     "Docu online": [
         "docu-online.com"
@@ -2486,74 +1884,37 @@
     "TSB BANK": [
         "tsb.co.uk"
     ],
-    "Alibaba.com Service Team": [
-        "alibaba.com"
-    ],
+
     "UPS Alerts": [
         "ups.com"
-    ],
-    "cPanel Support": [
-        "cpanel.net"
     ],
     "Hermes": [
         "hermes.com"
     ],
-    "Paypal Service": [
-        "paypal.com"
-    ],
+
     "Avast": [
         "avast.com"
     ],
-    "AT&T! Mail": [
-        "att.com"
-    ],
-    "Netflix Renewal": [
-        "netflix.com"
-    ],
+
     "Bare Bones Software": [
         "barebones.com"
     ],
-    "Innoventive Software LLC": [
-        "frameforge.com"
-    ],
-    "Cisco Systems": [
-        "cisco.com"
-    ],
-    "micros ft": [
-        "microsoft.com"
-    ],
+
     "ssa gov": [
         "ssa.gov"
     ],
     "peacock": [
         "peacocktv.com"
     ],
-    "the cpanel support team": [
-        "cpanel.net"
-    ],
-    "chase bank regain-access": [
-        "chase.com"
-    ],
-    "apple pay": [
-        "apple.com"
-    ],
-    "the postmaster": [
-        "thepostmaster.com"
-    ],
-    "2019 Webmaster Services Limited and affiliates": [
-        "2019webmasterservices.com"
-    ],
-    "Addenbrooke's NHS Trust": [
-        "nhs.net"
-    ],
-    "TNT | Sf Express": [
-        "tnt.com",
+
+
+    "SF Express": [
         "sf-express.com"
     ],
     "Canada Post": [
         "canadapost.post"
     ],
-    "Malware-Bytes Team": [
+    "Malware-Bytes": [
         "malwarebytes.com"
     ],
     "Wittenberg University": [
@@ -2562,28 +1923,18 @@
     "American Samoa Community College": [
         "amsamoa.edu"
     ],
-    "Migros Basel": [
-        "mgb.ch"
-    ],
+
     "AVAST": [
         "avast.com"
     ],
     "Aeroflot": [
         "aeroflot.ru"
     ],
-    "PT. MNC Sky Vision": [
-        "indovision.tv"
-    ],
-    "D1sc0ver C4rd": [
-        "service.discoversvg.com"
-    ],
-    "c.Panel Online Team": [
-        "cpanel.net"
-    ],
+
     "PNC": [
         "pnc.com"
     ],
-    "Bed Bath & Beyond Customer Support": [
+    "Bed Bath & Beyond": [
         "bedbath.com"
     ],
     "Intermedia Cloud communications, L.L.C": [
@@ -2595,21 +1946,17 @@
     "APEX Analytix, LLC": [
         "apexanalytix.com"
     ],
-    "RoundCube Support": [
+    "RoundCube": [
         "roundcube.net"
     ],
     "Xerox": [
         "xerox.com"
     ],
-    "Web.com Group, Inc": [
-        "web.com"
-    ],
+
     "cpanel": [
         "cpanel.net"
     ],
-    "Apple Secure.inc": [
-        "support.apple.com"
-    ],
+
     "Conjeo Unified School District": [
         "conejousd.org"
     ],
@@ -2619,15 +1966,11 @@
     "PARGO": [
         "pargo.co.za"
     ],
-    "Apple Info Validation Data": [
-        "apple.com"
-    ],
+
     "Electronic Arts": [
         "ea.com"
     ],
-    "RPM-List mailing list": [
-        "redhat.com"
-    ],
+
     "CNN": [
         "cnn.com"
     ],
@@ -2640,9 +1983,7 @@
     "RealNetworks": [
         "realnetworks.com"
     ],
-    "SETI at Home": [
-        "ssl.berkeley.edu"
-    ],
+
     "Perl Foundation": [
         "perlfoundation.org"
     ],
@@ -2668,7 +2009,7 @@
     "Internet Archive": [
         "archive.org"
     ],
-    "Research Computing Services at The University of Manchester": [
+    "The University of Manchester": [
         "manchester.ac.uk"
     ],
     "TechTarget": [
@@ -2677,9 +2018,7 @@
     "Matrox Graphics": [
         "matrox.com"
     ],
-    "MMOOS (Maine Macintosh Owners & Operators Society)": [
-        "mac.com"
-    ],
+
     "ISC": [
         "isc.org"
     ],
@@ -2689,9 +2028,7 @@
     "University of Delaware": [
         "udel.edu"
     ],
-    "Red Hat Linux": [
-        "redhat.com"
-    ],
+
     "William Osler Health System": [
         "williamoslerhs.ca"
     ],
@@ -2710,9 +2047,7 @@
     "MIT Lincoln Laboratory": [
         "ll.mit.edu"
     ],
-    "AP Customer Support Admin": [
-        "ap.org"
-    ],
+
     "YWCA of St. Paul": [
         "ywcastpaul.org"
     ],
@@ -2737,9 +2072,7 @@
     "Amanah Raya Berhad and its subsidiaries": [
         "amanahraya.my"
     ],
-    "D1sc0ver C4rd Service": [
-        "discover.com"
-    ],
+
     "LUNO": [
         "luno.com"
     ],
@@ -2752,156 +2085,71 @@
     "Apple Pay": [
         "apple.com"
     ],
-    "Truist Alerts": [
-        "truist.com"
-    ],
-    "UW Email Robot": [
-        "uw.edu"
-    ],
-    "PostgreSQL": [
-        "postgresql.org"
-    ],
-    "Darkling Simulations": [
-        "darklingsimulations.com"
-    ],
-    "EFFector List": [
-        "eff.org"
-    ],
-    "SGI": [
-        "sgi.com"
-    ],
+
     "Fark": [
         "fark.com"
-    ],
-    "ISC Mailing List Manager": [
-        "isc.org"
     ],
     "Nintendo Co. Ltd": [
         "noa.nintendo.com"
     ],
-    "Endeavors Technology and RSA Security": [
-        "endeavorstech.com",
-        "rsa.com"
-    ],
-    "PSECU Security Assistance": [
-        "psecu.com"
-    ],
-    "SharePoint Click To View -Microsoft SharePoint": [
+
+    "SharePoint": [
         "service.microsoft.com"
     ],
-    "PayPal PayPal": [
-        "paypal.com"
-    ],
-    "WeTransfer. Body": [
-        "wetransfer.com"
-    ],
+
     "AMERICAN EXPRESS ONLINE": [
         "service.americanexpress.com"
     ],
     "dhl": [
-        "dpdhl.com"
+        "dhl.com"
     ],
-    "Pay Pal Policy Security": [
-        "paypal.com"
-    ],
-    "United Parcel Service of America, Inc.": [
-        "ups.com"
-    ],
-    "PayPal Copyright    1999-2019 PayPal, Inc.": [
-        "paypal.com"
-    ],
-    "Navy Federal Credit Union, we look forward to serving you moreNavy Federal Credit Union": [
-        "navyfederal.org"
-    ],
+
+
     "FedEx Global": [
         "fedex.com"
     ],
-    "PAYPAL": [
-        "paypal.com"
-    ],
+
     "InterBank": [
         "interbank.com.pe"
     ],
     "Standard Bank of South Africa Limited": [
         "standardbank.co.za"
     ],
-    "rgan Chase & Co": [
+    "Morgan Chase & Co": [
         "jpmorganchase.com"
     ],
     "Red Rock Threads": [
         "redrockthreads.com"
     ],
-    "2019 PayPal, Inc.": [
-        "paypal.com"
-    ],
-    "Huntington Bancshares Incorporated.": [
-        "huntington.com"
-    ],
-    "Microsoft Corporation, One Microsoft Way,": [
-        "microsoft.com"
-    ],
-    "1997-2019 NetEase Inc.": [
+
+
+    "NetEase Inc.": [
         "service.netease.com"
     ],
-    "D H L Tracking services": [
-        "dhl.com"
-    ],
-    "The Wells Fargo Team": [
-        "wellsfargo.com"
-    ],
-    "Onedrive Team": [
-        "microsoft.com"
-    ],
-    "United Services Automobile Association and its insurance, banking and investment affiliates": [
+
+
+    "United Services Automobile Association": [
         "usaa.com"
     ],
-    "FedEx Support Team": [
-        "fedex.com"
-    ],
+
     "Indeed, Inc": [
         "indeed.com"
     ],
-    "Wetransfer About Help": [
-        "wetransfer.com"
-    ],
+
     "Fidelity": [
         "fidelity.com"
     ],
     "Proofpoint, Inc.": [
         "proofpoint.com"
     ],
-    "Amazon            Amazon                                               Amazon": [
-        "amazon.com"
-    ],
-    "paypaI costumer Support": [
-        "paypal.com"
-    ],
-    "USAA 2016 USAA": [
-        "usaa.com"
-    ],
+
     "Usaa": [
         "usaa.com"
     ],
-    "USAA P.S": [
-        "usaa.com"
-    ],
-    "SunTrust Security Team": [
-        "suntrust.com"
-    ],
+
+
     "COMCAST": [
         "comcast.com"
-    ],
-    "USAA USAA": [
-        "usaa.com"
-    ],
-    "USAA Privacy Promise": [
-        "usaa.com"
-    ],
-    "USAA / Quick Alert": [
-        "usaa.com"
-    ],
-    "USAA, 9800 Fredericksburg Road, San Antonio, Texas": [
-        "usaa.com"
     ],
     "NatWest Security Center": [
         "nwolb.com"
@@ -2909,19 +2157,15 @@
     "Chase Bank and Co": [
         "chase.com"
     ],
-    "PayPal Pte": [
-        "paypal.com"
-    ],
-    "USAA Account Protection Team": [
-        "usaa.com"
-    ],
+
+
     "paypal": [
         "paypal.com"
     ],
     "CAPITAL ONE ONLINE": [
         "capitalone.com"
     ],
-    "Wells Fargo Bank, 2016 N.A.": [
+    "Wells Fargo Bank": [
         "wellsfargo.com"
     ],
     "SECURITY ZONE ONLINE": [
@@ -2933,24 +2177,12 @@
     "Merrill Edge": [
         "ml.com"
     ],
-    "PayPal Support Department": [
-        "paypal.com"
-    ],
-    "Apple account team": [
-        "apple.com"
-    ],
-    "usaa.": [
+
+
+    "usaa": [
         "usaa.com"
     ],
-    "First National Bank, a division of FirstRand Bank Limited": [
-        "fnb.co.za"
-    ],
-    "The Dropbox Team 2015 Dropbox": [
-        "dropbox.com"
-    ],
-    "DHL  .": [
-        "dhl.com"
-    ],
+
     "DHL Shipping": [
         "dhl.com"
     ],
@@ -2960,48 +2192,17 @@
     "USAA Security Department": [
         "usaa.com"
     ],
-    "The iTunes Team": [
-        "apple.com"
-    ],
-    "Pay Pal Secure": [
-        "paypal.com"
-    ],
+
     "Maersk Group": [
         "maersk.com"
-    ],
-    "Microsoft Security.": [
-        "microsoft.com"
-    ],
-    "DHL Climate Neutral": [
-        "dhl.com"
-    ],
-    "PayPal    .": [
-        "paypal.com"
-    ],
-    "LinkedIn Ireland Unlimited Company": [
-        "linkedin.com"
-    ],
-    "Wells Fargo Advisors": [
-        "wellsfargo.com"
-    ],
-    "Wells Fargo Online Customer Service wellsfar": [
-        "wellsfago.com"
-    ],
-    "Microsoft Office One Microsoft Way": [
-        "microsoft.com"
     ],
     "Patterson Technology Center (PTC)": [
         "pattersondental.com"
     ],
-    "1998-2020 PayPal, Inc.": [
+    "PayPal, Inc": [
         "paypal.com"
     ],
-    "PayPal, Inc 2020.": [
-        "paypal.com"
-    ],
-    "Netflix Security Services Team": [
-        "netflix.com"
-    ],
+
     "Bank of Nova Scotia": [
         "scotiabank.com"
     ],
@@ -3011,29 +2212,15 @@
     "WELLS FARGO ONLINE": [
         "wellsfargo.com"
     ],
-    "Netflix Corporate Headquarters 100": [
-        "netflix.com"
-    ],
-    "Chase Online Services Email Operations Team": [
-        "chase.com"
-    ],
-    "Absa Rewards": [
-        "absa.africa"
-    ],
     "Netflix International B.V.": [
         "netflix.com"
     ],
-    "Dropbox Team": [
-        "dropbox.com"
-    ],
+
     "ign": [
         "ign.com"
     ],
     "USAA Center": [
         "usaa.com"
-    ],
-    "Barclays Bank Plc, London": [
-        "barclays.com"
     ],
     "USAA SECURITY ZONE Security and Privacy Center": [
         "usaa.com"
@@ -3043,9 +2230,6 @@
     ],
     "Dhl": [
         "dhl.com"
-    ],
-    "-2016 PayPal.": [
-        "paypal.com"
     ],
     "Pay Pal .lnc": [
         "paypal.com"
@@ -3065,29 +2249,11 @@
     "Wells Fargo Corporation.": [
         "wellsfago.com"
     ],
-    "Dropbox Service": [
-        "dropbox.com"
-    ],
-    "Bank of America Alerts.": [
-        "ealerts.bankofamerica.com"
-    ],
     "Deutsche Bank Middle East Limited": [
         "db.com"
     ],
-    "LinkedIn Ireland": [
-        "linkedin.com"
-    ],
-    "DHL is the world's largest package delivery company": [
-        "dhl.com"
-    ],
-    "Chase,   JPMorgan,   JPMorgan Chase,  the JPMorgan Chase logo and the Octagon Symbol are trademarks of JPMorgan Chase Bank, N.A": [
-        "jpmchase.com"
-    ],
     "BLOCKCHAIN WALLET": [
         "blockchain.com"
-    ],
-    "Dropbox, we re emailing you about a separate, unused account": [
-        "dropbox.com"
     ],
     "AmericanExpress Customer Center": [
         "welcome.aexp.com"
@@ -3095,92 +2261,38 @@
     "Discover Financial": [
         "service.discover.com"
     ],
-    "Apple Distribution International, Hollyhill Industrial Estate, Hollyhill": [
-        "apple.com"
-    ],
     "Chase Bank JP Morgan": [
         "chase.com"
     ],
     "Bank of America Corporation.": [
         "bankofamerica.com"
     ],
-    "FedEx Customer Care Line.": [
-        "fedex.com"
-    ],
-    "American Express Company.": [
-        "welcome.aexp.com"
-    ],
-    "NAVY FED": [
-        "navyfederal.org"
-    ],
-    "FedEx 1995-2018 | Global Home": [
-        "fedex.com"
-    ],
     "ABSA Group Limited": [
         "absa.africa"
     ],
-    "NETFLIX Team": [
-        "netflix.com"
-    ],
-    "Apple Technical Support": [
-        "apple.com"
-    ],
+
     "ANN ARBOR PUBLIC SCHOOLS": [
         "a2schools.org"
-    ],
-    "Trust WaIIet Support team": [
-        "trustwallet.com"
     ],
     "cPanel, L.L.C.": [
         "cpanel.net"
     ],
-    "DocuSign Electronic Signature Service": [
-        "docusign.com"
-    ],
-    "Netflix Help Center": [
-        "netflix.com"
-    ],
-    "ase & Co": [
-        "aseglobal.com"
-    ],
-    "Netflix Team": [
-        "netflix.com"
-    ],
+
     "Match Group, LLC.": [
         "matchgroup.com"
     ],
-    "YMCA Black Country Group,": [
-        "bcymca.co.uk"
-    ],
-    "Mashreq Mashreqbank PSC is regulated by the Central Bank": [
+    "Mashreq": [
         "mashreq.com"
     ],
-    "American Express Card Services Privacy Statement": [
-        "aexp.com"
-    ],
-    "Support@PayPaL": [
-        "paypal.com"
-    ],
-    "Navy Federal Credit Union, PO Box 3000, Merrifield": [
-        "navyfederal.org"
-    ],
-    "Autowini Team -": [
+    "Autowini": [
         "autowini.com"
     ],
-    "Apple Customer Support": [
-        "apple.com"
-    ],
-    "National Health Laboratory Service": [
-        "nhls.ac.za"
-    ],
+
     "Discover Card": [
         "discover.com"
     ],
-    "Microsoft outlook Web Access": [
+    "Microsoft outlook": [
         "microsoft.com"
-    ],
-    "Paypal Service Account": [
-        "paypal.com"
     ],
     "Amazon Web Services (AWS)": [
         "amazon.com"
@@ -3188,29 +2300,12 @@
     "AUTOWINI": [
         "autowini.com"
     ],
-    "The Hermes team": [
-        "hermes.com"
-    ],
-    "DHL Express Tracking": [
-        "dhl.com"
-    ],
-    "Chase Online services": [
-        "chase.com"
-    ],
-    "WeTransfer           Help": [
-        "wetransize.com"
-    ],
+
     "Schwab Alliance": [
         "schwaballiance.com"
     ],
     "Blockchain Luxembourg S.A.": [
         "blockchain.com"
-    ],
-    "Wells Fargo Online security system": [
-        "wellsfargo.com"
-    ],
-    "RAM Transport (South Africa) (Proprietary) Limited t/a RAM Hand-to-Hand Couriers": [
-        "ram.co.za"
     ],
     "SharePoint Online": [
         "microsoft.com"
@@ -3233,7 +2328,7 @@
     "hyatt": [
         "hyatt.com"
     ],
-    "Cisco Aironet": [
+    "Cisco": [
         "cisco.com"
     ],
     "Mercedes-Benz": [
@@ -3251,20 +2346,14 @@
     "WordPress": [
         "wordpress.org"
     ],
-    "Internet Archive bookmobile": [
-        "archive.org"
-    ],
     "ARM": [
         "arm.com"
     ],
-    "Red Hat 8.": [
+    "Red Hat": [
         "redhat.com"
     ],
     "USENIX": [
         "usenix.org"
-    ],
-    "HP-Ireland,ex2": [
-        "hp.com"
     ],
     "mulberry": [
         "mulberry.com"
@@ -3275,16 +2364,10 @@
     "Scotsman": [
         "scotsman-ice.com"
     ],
-    "Google PR sends a message t": [
-        "google.com"
-    ],
     "Cradlepoint": [
         "cradlepoint.com"
     ],
-    "Gnu": [
-        "gnu.org"
-    ],
-    "-Omega,": [
+    "Omega": [
         "omegawatches.com"
     ],
     "Realtek": [
@@ -3308,23 +2391,11 @@
     "Toshiba": [
         "toshiba.co.jp"
     ],
-    "CERT/CC": [
-        "cert.org"
-    ],
     "Virginia Tech": [
         "vt.edu"
     ],
-    "ThinkGeek Welcome to geek heaven": [
-        "thinkgeek.com"
-    ],
     "ShopTalk": [
         "shoptalk.com"
-    ],
-    "P&G": [
-        "custhelp.com"
-    ],
-    "Webex": [
-        "cisco.com"
     ],
     "Outlook Corporation": [
         "microsoft.com"
@@ -3335,14 +2406,9 @@
     "Microsoft SharePoint": [
         "microsoft.com"
     ],
-    "NavyFederal Online Team": [
-        "navyfederal.org"
-    ],
+
     "Kingston": [
         "kingston.com"
-    ],
-    "American Express, we look forward to serving you moreAmerican Express": [
-        "welcome.aexp.com"
     ],
     "TNT": [
         "tntdrama.com"
@@ -3350,40 +2416,14 @@
     "Huntington National Bank": [
         "huntington.com"
     ],
-    "iales, DHL": [
-        "mail.dhl.com",
-        "dhl.com"
+    "Cinar": [
+        "cinar.com"
     ],
-    "Cinar Webmail Support": [
-        "webmail.cinar.com"
-    ],
-    "Adobe Systems Incorporated": [
-        "adoversary.com",
-        "adobe.com"
-    ],
-    "PayPal Copyright   1999-2016": [
-        "paypal.com"
-    ],
-    "USAA SECURITY ZONE Brenda Miller USAA": [
+    "USAA Online": [
         "usaa.com"
     ],
-    "USAA Online Team": [
-        "usaa.com"
-    ],
-    "Citi Bank U.S.A 388 Greenwich Street New York, NY 10013 U.S.": [
+    "Citi Bank": [
         "citi.com"
-    ],
-    "ADT |": [
-        "adt.com"
-    ],
-    "Account Paypal": [
-        "paypal.com"
-    ],
-    "IT- Desk Service Desk 2010 Microsoft Corporation.": [
-        "microsoft.com"
-    ],
-    "Linkedin Message Service": [
-        "linkedin.com"
     ],
     "Navy Federal Credit Union & Corporation .": [
         "navyfederal.org"
@@ -3394,20 +2434,8 @@
     "FirstRand Bank Limited": [
         "firstrand.co.za"
     ],
-    "Apple Team": [
-        "apple.com"
-    ],
-    "Hello AppleID": [
-        "id.apple.com"
-    ],
-    "Deutsche Post DHL - The Mail & Logistics Group.": [
+    "Deutsche Post DHL": [
         "dpdhl.com"
-    ],
-    "service@paypal": [
-        "paypal.com"
-    ],
-    "United": [
-        "united.com"
     ],
     "SunTrust online banking": [
         "suntrust.com"
@@ -3415,14 +2443,11 @@
     "CHATIME MALAYSIA": [
         "chatime.com.my"
     ],
-    "Wellsfargo, Service": [
+    "Wellsfargo": [
         "wellsfargo.com"
     ],
-    "Microsoft Office One Microsoft Way Redmond, WA 98052-6399": [
+    "Microsoft Office": [
         "microsoft.com"
-    ],
-    "Wells Fargo Bill Payment": [
-        "wellsfargo.com"
     ],
     "DPD Europe": [
         "dpd.com"
@@ -3430,35 +2455,20 @@
     "Mighty Ape Limited": [
         "mightyape.co.nz"
     ],
-    "DocuSign via DocuSign": [
-        "docusign.com"
-    ],
     "Qi Lifecare": [
         "qilifecare.com"
-    ],
-    "PayPal Support Notification": [
-        "paypal.com"
-    ],
-    "PayPal (Europe) S": [
-        "paypal.com"
     ],
     "HSBC Bank (China) Company Limited": [
         "hsbc.com.cn"
     ],
-    "2017 Intuit Inc.": [
+    "Intuit Inc.": [
         "intuit.com"
     ],
     "USAA General Indemnity Company, Garrison Property and Casualty Insurance Company": [
         "usaa.com"
     ],
-    "Natwest Credit Card": [
+    "Natwest": [
         "natwest.com"
-    ],
-    "USAA Web Service  .": [
-        "usaa.com"
-    ],
-    "PayPaI 1999-2018": [
-        "paypal.com"
     ],
     "Absa Mobile Banking": [
         "absa.africa"
@@ -3469,89 +2479,47 @@
     "Trustwave": [
         "trustwave.com"
     ],
-    "LinkedIn Privacy Policy": [
-        "linkedin.com"
-    ],
     "Uber do Brasil Tecnologia Ltda": [
         "uber.com"
     ],
     "Netflix, LLC": [
         "netflix.com"
     ],
-    "Apple Distribution International": [
-        "apple.com"
-    ],
-    "1999-2018 PayPal": [
-        "paypal.com"
-    ],
     "Inter-switch Limited": [
         "interswitchgroup.com"
     ],
-    "ICICI Bank network": [
+    "ICICI Bank": [
         "icicibank.com"
     ],
-    "Microsoft Corporation 00 Pine Street, Suite 352, Seattle, WA 98101": [
+    "Microsoft Corporation": [
         "office.com"
-    ],
-    "Chase Bank Company": [
-        "chase.com"
     ],
     "Weston SAS": [
         "weston.fr"
     ],
-    "FedEx   FedEx": [
+    "FedEx": [
         "fedex.com"
     ],
-    "Nedbank Team": [
+    "Nedbank": [
         "nedbank.co.za"
-    ],
-    "gan Chase": [
-        "jpmorganchase.com"
-    ],
-    "Amazon Amazon": [
-        "amazon.com"
-    ],
-    "Optus 1 Lyonpark Road Macquarie Park": [
-        "optus.com.au"
-    ],
-    "RingCentral, you acknowledge agreement to our  Terms of Use": [
-        "ringcentral.com"
     ],
     "USPS": [
         "usps.com",
         "usps.gov"
     ],
-    "YMCA Black Country Group, 38 Carters Green, West Bromwich B70 9LG": [
+    "YMCA Black Country Group": [
         "ymcablackcountrygroup.org.uk"
     ],
-    "Skype Inc support@skype": [
+    "Skype Inc": [
         "skype.com"
     ],
-    "2015 Apple Inc": [
+    "Apple Inc": [
         "apple.com"
     ],
-    "cPanel & WHM": [
-        "cpanel.net"
-    ],
-    "Google Inc., 1600 Amphitheatre Pkwy": [
-        "google.com"
-    ],
-    "Drop": [
-        "drop.com"
-    ],
-    "Apple Pay, iPhone, iPad are registered trademarks of Apple Inc": [
-        "apple.com"
-    ],
-    "Chase Abuse": [
-        "chase.com"
-    ],
-    "Support Netflix.": [
-        "netflix.com"
-    ],
-    "Schwab\")": [
+    "Schwab": [
         "schwab.com"
     ],
-    "Microsoft 365              <Microsoft-365@email.microsoft-365": [
+    "Microsoft 365": [
         "service.microsoft.com"
     ],
     "Blockchain Access UK Ltd": [
@@ -3560,81 +2528,39 @@
     "Zix": [
         "zix.com"
     ],
-    "Charles Schwab & Co., Inc., 211 Main": [
+    "Charles Schwab": [
         "schwab.com"
-    ],
-    "UPS\u00ae": [
-        "ups.com"
-    ],
-    "support_monkey.org": [
-        "monkey.org"
-    ],
-    "monkey": [
-        "monkey.org"
-    ],
-    "Scotiabank Global Banking and Markets, 1832 Asset Management L.P": [
-        "scotiabank.com",
-        "1832asset.com"
-    ],
-    "LinkedIn Help Desk": [
-        "linkedin.com"
     ],
     "PNC Alerts": [
         "pnc.com"
     ],
-    "Service Billing Apple": [
-        "apple.com"
-    ],
+
     "TNT Express": [
         "tnt.com"
     ],
     "DHL International": [
         "dhl.com"
     ],
-    "Ourtime Customer Care Team": [
-        "peoplemedia.com"
-    ],
-    "Ecobank.": [
-        "ecobank.com"
-    ],
-    "Standard Bank For any queries please call us on 0861201311 Our lines are open from 8am to 9pm Monday to Friday and 8am to 4pm on weekends and public holidays": [
-        "standardbank.co.za"
-    ],
-    "PSECU.": [
+    "PSECU": [
         "psecu.com"
     ],
     "Standard Bank": [
         "standardbank.co.za"
     ],
-    "Nedbank Limited Reg No 1951/000009/06, VAT Reg No 4320116074, 135 Rivonia Road, Sandown, Sandton, 2196, South Africa": [
+    "Nedbank Limited": [
         "nedbank.co.za"
     ],
     "Paypal": [
         "paypal.com"
     ],
-    "USAA.": [
-        "usaa.com"
-    ],
-    "PayPal.security": [
-        "paypal.com"
-    ],
-    "SunTrust.": [
+    "SunTrust": [
         "suntrust.com"
-    ],
-    "Comcast.": [
-        "comcast.com"
     ],
     "Amazon": [
         "amazon.com"
     ],
     "Chase Online": [
         "chase.com"
-    ],
-    "Chase Bank.": [
-        "chase.com"
-    ],
-    "DHL.": [
-        "dhl.com"
     ],
     "Wharton": [
         "wharton.upenn.edu"
@@ -3645,31 +2571,25 @@
     "UBA PLC": [
         "ubagroup.com"
     ],
-    "Amex Card.": [
+    "Amex Card": [
         "welcome.aexp.com"
     ],
-    "BBVA.": [
+    "BBVA": [
         "bbva.com"
     ],
     "CapitalOne360": [
         "capitalone.com"
     ],
-    "Apple.": [
-        "apple.com"
-    ],
     "WELLS FARGO": [
         "wellsfargo.com"
     ],
-    "First National Bank, a division of": [
-        "fnb.co.za"
-    ],
-    "Capital One 360 Banking Team": [
+    "Capital One 360 Banking": [
         "capitalone.com"
     ],
     "National Westminster Bank Plc": [
         "natwest.co.uk"
     ],
-    "US-Bank": [
+    "US Bank": [
         "usbank.com"
     ],
     "postcanada": [
@@ -3684,13 +2604,10 @@
     "NatWest": [
         "natwest.com"
     ],
-    "Server paypal": [
-        "paypal.com"
-    ],
     "Icloud": [
         "apple.com"
     ],
-    "Chevron Oil &": [
+    "Chevron Oil": [
         "chevron.com"
     ],
     "Chase": [
@@ -3702,7 +2619,7 @@
     "USAA SECURITY ZONE USAA": [
         "usaa.com"
     ],
-    "Microsoft inc   2020": [
+    "Microsoft inc": [
         "microsoft.com"
     ],
     "Rabobank": [
@@ -3717,20 +2634,9 @@
     "Barclays Bank Plc": [
         "barclays.co.uk"
     ],
-    "AT&amp;T": [
-        "att.com"
-    ],
-    "Dhl service": [
-        "dhl.com"
-    ],
-    "GOOGLE Team": [
-        "google.com"
-    ],
+
     "ABSA": [
         "absa.africa"
-    ],
-    "Microsoft account teamMicrosoft account": [
-        "accountprotection.microsoft.com"
     ],
     "Ned Bank": [
         "nedbank.co.za"
@@ -3738,12 +2644,7 @@
     "Netflix": [
         "netflix.com"
     ],
-    "DHL TEAM": [
-        "dhl.com"
-    ],
-    "Team Luno": [
-        "luno.com"
-    ],
+
     "FedEx  Messaging center": [
         "fedex.com"
     ],
@@ -3753,7 +2654,7 @@
     "Chase Fraud Department": [
         "chase.com"
     ],
-    "Adobe Acrobat DC Team": [
+    "Adobe Acrobat": [
         "adobe.com"
     ],
     "ICANN Domain": [
@@ -3765,13 +2666,11 @@
     "Post AG": [
         "deutschepost.de"
     ],
-    "Natwest Bank Online Support": [
-        "natwest.com"
-    ],
+
     "Standard Bank And UCount Rewards": [
         "standardbank.co.za"
     ],
-    "iTunes Store Team": [
+    "iTunes Store": [
         "apple.com"
     ],
     "Microsoft Office 365": [
@@ -3786,16 +2685,7 @@
     "boohoo.": [
         "boohoo.com"
     ],
-    "he oppo": [
-        "oppo.com"
-    ],
-    "Netflix : We're": [
-        "netflix.com"
-    ],
-    "D H L - Express": [
-        "dhl.com"
-    ],
-    "Optus Team": [
+    "Optus": [
         "optus.com.au"
     ],
     "RingCentral": [
@@ -3810,7 +2700,7 @@
     "Mcafee": [
         "mcafee.com"
     ],
-    "American Express Cards.": [
+    "American Express Cards": [
         "welcome.aexp.com"
     ],
     "OWA Helpdesk": [
@@ -3822,7 +2712,7 @@
     "uct": [
         "uct.ac.za"
     ],
-    "USAA Team": [
+    "USAA": [
         "usaa.com"
     ],
     "Chase Privacy": [
@@ -3831,14 +2721,11 @@
     "Lloyds Bank": [
         "lloydstsb.co.uk"
     ],
-    "Celine-": [
+    "Celine": [
         "celine.com"
     ],
     "Google Drive": [
         "google.com"
-    ],
-    "Block": [
-        "block.xyz"
     ],
     "Zix Corp.": [
         "zixcorp.com"
@@ -3846,9 +2733,7 @@
     "YMCA": [
         "ymca.net"
     ],
-    "Pay Pal Support": [
-        "paypal.com"
-    ],
+
     "Scottish Microelectronics Centre": [
         "ed.ac.uk"
     ],
@@ -3864,15 +2749,7 @@
     "Xerox Fax": [
         "xerox.com"
     ],
-    "microsoft 2019": [
-        "microsoft.com"
-    ],
-    "choice": [
-        "choicehotels.com"
-    ],
-    "wells fargo clearing services, llc (": [
-        "wellsfargo.com"
-    ],
+
     "ups brand": [
         "ups.com"
     ],
@@ -3885,21 +2762,10 @@
     "microsoft forefront": [
         "microsoft.com"
     ],
-    "care": [
-        "care.org"
-    ],
     "royal mail group ltd": [
         "royalmail.com"
     ],
-    "paypal. security.": [
-        "paypal.com"
-    ],
-    "dhl team excellence": [
-        "dhl.com"
-    ],
-    "usaa security zone security team": [
-        "usaa.com"
-    ],
+
     "chase credit card": [
         "chase.com"
     ],
@@ -3912,10 +2778,10 @@
     "hess": [
         "hess.com"
     ],
-    "chase online ( sm )": [
+    "chase online": [
         "chase.com"
     ],
-    "deutsche post dhl -": [
+    "deutsche post dhl": [
         "dpdhl.com"
     ],
     "edigitalresearch ltd": [
@@ -3933,20 +2799,8 @@
     "maersk line corporate office": [
         "maersk.com"
     ],
-    "apple inc. 1 infinite": [
-        "apple.com"
-    ],
-    "wells fargo + wells fargo -": [
-        "wellsfargo.com"
-    ],
-    "dhl -": [
-        "dhl.com"
-    ],
-    "fedex team": [
+    "fedex": [
         "fedex.com"
-    ],
-    "dhl express express": [
-        "dpdhl.com"
     ],
     "microsoft defender": [
         "microsoft.com"
@@ -3957,43 +2811,23 @@
     "drive google llc": [
         "google.com"
     ],
-    "post dhl group 2023 dhl paket gmbh": [
-        "dhl.com"
-    ],
-    "dhl paket gmbh": [
-        "dhl.com"
-    ],
-    "echase\u00ae": [
-        "echaseapp.com"
-    ],
-    "cepro service team": [
-        "cepro.com"
-    ],
+
     "dhl express delivery": [
         "dhl.com"
     ],
     "ourtime": [
         "peoplemedia.com"
     ],
-    "ups '": [
+    "ups": [
         "ups.com"
     ],
-    "pay pal policy": [
-        "paypal.com"
-    ],
-    "wells fargo banking, credit cards, loans, mortgage": [
+    "wells fargo banking": [
         "wellsfargo.com"
     ],
     "proofpoint": [
         "proofpoint.com"
     ],
-    "comcast high - speed internet": [
-        "cable.comcast.com"
-    ],
-    "dhl contactus.": [
-        "dhl.com"
-    ],
-    "citi bank u. s. a": [
+    "citi bank": [
         "citi.com"
     ],
     "fdic": [
@@ -4008,17 +2842,8 @@
     "wells fargo personal": [
         "wellsfargo.com"
     ],
-    "dropbox res": [
-        "dropbox.com"
-    ],
-    "alibaba inquiry": [
-        "service.alibaba.com"
-    ],
     "navy federal security": [
         "navyfederal.org"
-    ],
-    "apple inc. 1 infinite loop, ms 83 - dm, cup": [
-        "apple.com"
     ],
     "lloyds": [
         "lloydstsb.co.uk"
@@ -4026,9 +2851,7 @@
     "market natrent": [
         "natrent.co.za"
     ],
-    "apple security team": [
-        "apple.com"
-    ],
+
     "victor soa industries": [
         "vsi.co.za"
     ],
@@ -4038,7 +2861,7 @@
     "cyber security challenge uk": [
         "cybersecuritychallenge.org.uk"
     ],
-    "wi - fi alliance": [
+    "wi-fi alliance": [
         "wi-fi.org"
     ],
     "stmicroelectronics": [
@@ -4143,8 +2966,8 @@
     "usenix association": [
         "usenix.org"
     ],
-    "google brain team": [
-        "googlegroups.com"
+    "google brain": [
+        "google.com"
     ],
     "georgia institute of technology institute for information security & privacy (": [
         "gatech.edu"
@@ -4173,9 +2996,7 @@
     "ripe ncc": [
         "ripe.net"
     ],
-    "zmap project team": [
-        "umich.edu"
-    ],
+
     "carnegie mellon university - software engineering institutes": [
         "sei.cmu.edu"
     ],
@@ -4239,7 +3060,7 @@
     "shell": [
         "shell.com"
     ],
-    "caida team": [
+    "caida": [
         "caida.org"
     ],
     "openai": [
@@ -4266,28 +3087,22 @@
     "university of california berkeley": [
         "berkeley.edu"
     ],
-    "university of california berkeley center for human - compatible": [
-        "berkeley.edu"
-    ],
-    "of california, berkeley": [
-        "berkeley.edu"
-    ],
     "telecommunications industry association ( tia )": [
         "tiaonline.org"
     ],
     "department of homeland security - national cybersecurity and communications integration center": [
         "hq.dhs.gov"
     ],
-    "caida ( center for applied internet data analysis )": [
+    "caida ( center for applied internet data analysis": [
         "caida.org"
     ],
-    "dartmouth college institute for security, technology,": [
+    "dartmouth college institute for security": [
         "dartmouth.edu"
     ],
     "sans institute": [
         "sans.org"
     ],
-    "stanford university human - centered artificial intelligence institute ( hai )": [
+    "stanford university human - centered artificial intelligence institute": [
         "stanford.edu"
     ],
     "ieee communications society": [
@@ -4338,7 +3153,7 @@
     "iot security foundation": [
         "iotsecurityfoundation.org"
     ],
-    "uw seclab team": [
+    "uw seclab": [
         "cs.washington.edu"
     ],
     "mit csail": [
@@ -4347,13 +3162,13 @@
     "rmilab": [
         "rimlab.com"
     ],
-    "internet corporation for assigned names and numbers )": [
+    "internet corporation for assigned names and numbers": [
         "icann.org"
     ],
-    "of california, berkeley security lab": [
+    "california, berkeley security lab": [
         "cs.berkeley.edu"
     ],
-    "nsa )": [
+    "nsa": [
         "nsa.gov"
     ],
     "the wireless lan professionals inc": [
@@ -4362,13 +3177,13 @@
     "taiwanese american cyber conference": [
         "itri.org.tw"
     ],
-    "cisa )": [
+    "cisa": [
         "cisa.dhs.gov"
     ],
     "qualcomm": [
         "qualcomm.com"
     ],
-    "eff team": [
+    "eff": [
         "eff.org"
     ],
     "the north face": [
@@ -4386,10 +3201,10 @@
     "the fireeye": [
         "fireeye.com"
     ],
-    "rei co - op": [
+    "rei coop": [
         "rei.com"
     ],
-    "the neurips conference team": [
+    "the neurips conference": [
         "neurips.cc"
     ],
     "blackshield technologies": [

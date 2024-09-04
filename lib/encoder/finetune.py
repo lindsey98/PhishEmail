@@ -1,35 +1,15 @@
-
-import json
 import os
-import shutil
-
 import datasets
-from transformers import AutoTokenizer
 os.environ['http_proxy'] = 'http://127.0.0.1:7890'
 os.environ['https_proxy'] = 'http://127.0.0.1:7890'
-import numpy as np
-import evaluate
-from transformers import AutoModelForTokenClassification, TrainingArguments, Trainer
-from transformers import DataCollatorForTokenClassification
+from transformers import TrainingArguments
+from transformers import DataCollatorForTokenClassification, AutoModelForTokenClassification, AutoTokenizer
 import wandb
-from transformers import pipeline
-import torch
-from tqdm import tqdm
-import spacy
-from spacy import displacy
-import json
-from pathlib import Path
-import torch.nn.functional as F
-from lib.model_utils.preprocessing import tokenize_and_align_labels
-from lib.model_utils.callback import NERCallback
-from lib.model_utils.postprocessing import *
-from lib.model_utils.evaluation import compute_token_classification_metrics, compute_entity_overlap_metrics
-from lib.model_utils.trainer import BertTrainer_FocalLoss
-from functools import partial
-from spacy.tokens import Doc, Span
+from lib.encoder.model_utils.preprocessing import tokenize_and_align_labels
+from lib.encoder.model_utils.evaluation import compute_token_classification_metrics
+from lib.encoder.model_utils.trainer import BertTrainer_FocalLoss
 import nltk
 from collections import Counter
-from nltk import ngrams
 
 # Ensure you have the necessary nltk data
 # Ensure you have the necessary NLTK resources
@@ -86,6 +66,11 @@ def summarize_patterns(sentences, n=3):
     pattern_counter = Counter(phrases)
     return pattern_counter
 
+# Create a mapping from labels to integers
+def compute_metrics(p):
+    return compute_token_classification_metrics(p, label_list)
+
+
 if __name__ == '__main__':
     model_id = "google-bert/bert-large-uncased"
     dataset = 'NER'
@@ -101,10 +86,6 @@ if __name__ == '__main__':
         "B-action",
         "I-action",
     ]
-
-    # Create a mapping from labels to integers
-    def compute_metrics(p):
-        return compute_token_classification_metrics(p, label_list)
 
     label_to_id = {label: idx for idx, label in enumerate(label_list)}
     id_to_label = {idx: label for idx, label in enumerate(label_list)}
@@ -162,8 +143,6 @@ if __name__ == '__main__':
     )
 
     wandb.init(project=os.getenv("WANDB_PROJECT"), job_type='train', name=model_id)
-    # wandb_callback = NERCallback(trainer, test_dataset, num_samples=30)
-    # trainer.add_callback(wandb_callback)
     trainer.train()
     wandb.finish()
 

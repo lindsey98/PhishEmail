@@ -27,3 +27,4 @@ tqdm
 transformers
 trl
 Unidecode
+faiss-cpu

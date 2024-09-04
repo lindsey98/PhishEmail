@@ -3,9 +3,7 @@ import os
 from tqdm import tqdm
 import csv
 from lib.data.dataloader import EmailDataset
-from lib.model_utils.postprocessing import ner_clean_predictions, CustomNERPipeline
-from transformers import pipeline, AutoModelForTokenClassification, AutoTokenizer
-import time
+from lib.encoder.IdentityBert import IdentityBert
 
 # Function to read existing email_file_paths from the CSV
 def get_existing_paths(csv_file_path):
@@ -20,16 +18,12 @@ def get_existing_paths(csv_file_path):
         pass  # If the file does not exist, we have no existing paths
     return existing_paths
 
-
 if __name__ == '__main__':
 
     '''Load identity detection model'''
     # identity_checkpoint_path = "./checkpoints/output_ner/checkpoint-1554"
     identity_checkpoint_path = "./checkpoints/output_ner_augmented/checkpoint-1351"
-    classifier = pipeline("ner", model=identity_checkpoint_path, device=0, aggregation_strategy="simple")
-    tokenizer = AutoTokenizer.from_pretrained(identity_checkpoint_path)
-    model = AutoModelForTokenClassification.from_pretrained(identity_checkpoint_path)
-    token_pipeline = CustomNERPipeline(model=model, tokenizer=tokenizer)
+    IdentityBert_MODEL = IdentityBert(identity_checkpoint_path=identity_checkpoint_path)
 
     ''''''
     # desc_folder = './datasets/nazario-recent'
@@ -70,27 +64,7 @@ if __name__ == '__main__':
         #     continue
 
         parsed_email = f'Subject: {subject}. From: {sender_name}. Body: {email_body_text}'
-        tokens = tokenizer(parsed_email, return_offsets_mapping=True, truncation=True)
-        tokenized_email = tokenizer.convert_ids_to_tokens(tokens["input_ids"])
-        tokenized_email_str = tokenizer.convert_tokens_to_string(tokenized_email)
-
-        start_time = time.time()
-        entities = classifier(tokenized_email_str)
-        runtime = time.time() - start_time
-
-        identities = set()
-        relations = set()
-        actions = set()
-
-        for ent in entities:
-            ent_label = ent['entity_group']
-            ent_text = ent['word']
-            if ent_label == 'identity':
-                identities.add(ent_text)
-            elif ent_label == 'relation':
-                relations.add(ent_text)
-            else:
-                actions.add(ent_text)
+        identities, actions, relations, runtime = IdentityBert_MODEL(parsed_email)
 
         # Append the new row to the CSV file
         with open(csv_file_path, mode='a', newline='', encoding='utf-8', errors='ignore') as file:

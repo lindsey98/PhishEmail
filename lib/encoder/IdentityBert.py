@@ -4,7 +4,7 @@ import time
 import torch
 
 class IdentityBert():
-    def __init__(self, identity_checkpoint_path) -> None:
+    def __init__(self, identity_checkpoint_path: str) -> None:
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.classifier_pipeline = pipeline("ner", model=identity_checkpoint_path,
                                             device=self.device, aggregation_strategy="simple")

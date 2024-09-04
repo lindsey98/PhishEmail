@@ -1,5 +1,3 @@
-import openai
-from openai import OpenAI
 import time
 
 def assistant_completion(client, query, assistant_id):

@@ -1,16 +1,13 @@
 
-from lib.encoder.wb_finetune_bert import ner_clean_predictions, ner_create_spacy_doc
-from lib.model_utils.postprocessing import visualize_predictions
+from lib.encoder.model_utils.postprocessing import visualize_predictions, ner_clean_predictions, ner_create_spacy_doc
 from transformers import pipeline
 import spacy
-from spacy import displacy
 from tqdm import tqdm
 from lib.data.dataloader import EmailDataset
-import os
 from pathlib import Path
 
 if __name__ == '__main__':
-    classifier = pipeline("ner", model="./checkpoints/output_ner/checkpoint-1755")
+    classifier = pipeline("ner", model="./checkpoints/output_ner_augmented/checkpoint-1351", aggregation_strategy="simple")
     nlp = spacy.blank("en")
     entity_colors = {"organization": "#ADD8E6",  # Light Blue
                      "action": "#FFA07A",  # Light Salmon

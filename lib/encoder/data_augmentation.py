@@ -107,36 +107,36 @@ def align_entries(phrases, paraphrases, data):
 seen_texts = set()
 # random.seed(42)
 
-# dataset_1_name = "spam_archive_2023"
-# # need to encode to utf-8 in windows
-# with open(f'./datasets/{dataset_1_name}_unique_annotation/annotated_all.json', 'r', encoding="utf-8") as json_file:
-#     data_1 = json.load(json_file)
-# processed_phrases = process_entries(data_1)
-# paraphrased_phrases = paraphrase_entries(processed_phrases)
-# align_entries(processed_phrases, paraphrased_phrases, data_1)
-# with open(f'./datasets/{dataset_1_name}_unique_annotation/annotated_all_augmented_{AUGMENTATION_PROB * 100}.json',
-#           'w', encoding="utf-8") as outfile:
-#     json.dump(data_1, outfile, indent=4)
-#
-# dataset_2_name = "Nazario_2005"
-# with open(f'./datasets/{dataset_2_name}_unique_annotation/annotated_all.json', 'r', encoding="utf-8") as json_file:
-#     data_2 = json.load(json_file)
-# processed_phrases = process_entries(data_2)
-# paraphrased_phrases = paraphrase_entries(processed_phrases)
-# align_entries(processed_phrases, paraphrased_phrases, data_2)
-# with open(f'./datasets/{dataset_2_name}_unique_annotation/annotated_all_augmented_{AUGMENTATION_PROB * 100}.json',
-#           'w', encoding="utf-8") as outfile:
-#     json.dump(data_2, outfile, indent=4)
+dataset_1_name = "spam_archive_2023"
+# need to encode to utf-8 in windows
+with open(f'./datasets/{dataset_1_name}_unique_annotation/annotated_all.json', 'r', encoding="utf-8") as json_file:
+    data_1 = json.load(json_file)
+processed_phrases = process_entries(data_1)
+paraphrased_phrases = paraphrase_entries(processed_phrases)
+align_entries(processed_phrases, paraphrased_phrases, data_1)
+with open(f'./datasets/{dataset_1_name}_unique_annotation/annotated_all_augmented_{AUGMENTATION_PROB * 100}.json',
+          'w', encoding="utf-8") as outfile:
+    json.dump(data_1, outfile, indent=4)
 
-# dataset_3_name = "annotated_datasets_from_paul"
-# with open(f'./datasets/{dataset_3_name}/annotated_all.json', 'r', encoding="utf-8") as json_file:
-#     data_3 = json.load(json_file)
-# processed_phrases = process_entries(data_3)
-# paraphrased_phrases = paraphrase_entries(processed_phrases)
-# align_entries(processed_phrases, paraphrased_phrases, data_3)
-# with open(f'./datasets/{dataset_3_name}/annotated_all_augmented_{AUGMENTATION_PROB * 100}.json', 'w',
-#           encoding="utf-8") as outfile:
-#     json.dump(data_3, outfile, indent=4)
+dataset_2_name = "Nazario_2005"
+with open(f'./datasets/{dataset_2_name}_unique_annotation/annotated_all.json', 'r', encoding="utf-8") as json_file:
+    data_2 = json.load(json_file)
+processed_phrases = process_entries(data_2)
+paraphrased_phrases = paraphrase_entries(processed_phrases)
+align_entries(processed_phrases, paraphrased_phrases, data_2)
+with open(f'./datasets/{dataset_2_name}_unique_annotation/annotated_all_augmented_{AUGMENTATION_PROB * 100}.json',
+          'w', encoding="utf-8") as outfile:
+    json.dump(data_2, outfile, indent=4)
+
+dataset_3_name = "annotated_datasets_from_paul"
+with open(f'./datasets/{dataset_3_name}/annotated_all.json', 'r', encoding="utf-8") as json_file:
+    data_3 = json.load(json_file)
+processed_phrases = process_entries(data_3)
+paraphrased_phrases = paraphrase_entries(processed_phrases)
+align_entries(processed_phrases, paraphrased_phrases, data_3)
+with open(f'./datasets/{dataset_3_name}/annotated_all_augmented_{AUGMENTATION_PROB * 100}.json', 'w',
+          encoding="utf-8") as outfile:
+    json.dump(data_3, outfile, indent=4)
 
 dataset_4_name = "spam_archive_2023"
 with open(f'./datasets/{dataset_4_name}_unique_annotation/annotated_jiafan.json', 'r', encoding="utf-8") as json_file:
