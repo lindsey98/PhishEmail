@@ -2,7 +2,7 @@
 import os
 from tqdm import tqdm
 import csv
-from lib.data.dataloader import EmailDataset
+from lib.data.Dataset import EmailDataset
 from lib.encoder.IdentityBert import IdentityBert
 
 # Function to read existing email_file_paths from the CSV
@@ -57,14 +57,14 @@ if __name__ == '__main__':
             continue
 
         email_file_path, (sender_name, sender_address), \
-        (to_names, to_addresses), \
+        (to_names, to_addresses), reply_to_address, \
         subject, email_body_text, header = dataset[it]
 
         # if email_file_path != './datasets/GPT_Dataset/Giancarlo Pellegrino_Web_Zero_Gemini.eml':
         #     continue
 
         parsed_email = f'Subject: {subject}. From: {sender_name}. Body: {email_body_text}'
-        identities, actions, relations, runtime = IdentityBert_MODEL(parsed_email)
+        identities, actions, relations, urls_after_actions, runtime = IdentityBert_MODEL(parsed_email)
 
         # Append the new row to the CSV file
         with open(csv_file_path, mode='a', newline='', encoding='utf-8', errors='ignore') as file:

@@ -3,7 +3,7 @@ from lib.encoder.model_utils.postprocessing import visualize_predictions, ner_cl
 from transformers import pipeline
 import spacy
 from tqdm import tqdm
-from lib.data.dataloader import EmailDataset
+from lib.data.Dataset import EmailDataset
 from pathlib import Path
 
 if __name__ == '__main__':
@@ -21,7 +21,7 @@ if __name__ == '__main__':
     output_dir.mkdir(parents=True, exist_ok=True)
 
     for it in tqdm(range(len(dataset))):
-        email_file_path, (sender_name, sender_address), (to_names, to_addresses), subject, email_body_text, headers = dataset[it]
+        email_file_path, (sender_name, sender_address), (to_names, to_addresses), reply_to_address, subject, email_body_text, headers = dataset[it]
         parsed_email = f'Subject: {subject}. From: {sender_name}. Body: {email_body_text}'
 
         output = classifier(parsed_email)

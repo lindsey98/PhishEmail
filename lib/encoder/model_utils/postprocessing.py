@@ -106,67 +106,8 @@ def ner_prediction_postprocess(model, tokenizer, model_outputs, input_ids, offse
 
     return entities
 
-def adjust_for_multiline(text, start, end):
-    """Adjust entity start and end positions for multi-line text."""
-    new_start = start
-    new_end = end
-    lines = text.split('\n')
 
-    # Adjust start position
-    for line in lines:
-        if new_start > len(line):
-            new_start -= (len(line) + 1)  # +1 for the newline character
-        else:
-            break
 
-    # Adjust end position
-    for line in lines:
-        if new_end > len(line):
-            new_end -= (len(line) + 1)  # +1 for the newline character
-        else:
-            break
-
-    return new_start, new_end
-
-def ner_clean_predictions(predictions, text):
-    entities = []
-    current_entity = None
-    current_label = None
-
-    for item in predictions:
-        if item['entity'].startswith('B-') or (item['entity'].startswith('I-') and current_entity is None):
-            if current_entity is not None:
-                entities.append({
-                    "start": current_entity['start'],
-                    "end": current_entity['end'],
-                    "entity_group": current_label
-                })
-            current_entity = {"start": item['start'], "end": item['end']}
-            current_label = item['entity'][2:]
-        elif item['entity'].startswith('I-') and current_label == item['entity'][2:]:
-            current_entity['end'] = item['end']
-        else:
-            if current_entity is not None:
-                entities.append({
-                    "start": current_entity['start'],
-                    "end": current_entity['end'],
-                    "entity_group": current_label
-                })
-            current_entity = None
-            current_label = None
-
-    if current_entity is not None:
-        entities.append({
-            "start": current_entity['start'],
-            "end": current_entity['end'],
-            "entity_group": current_label
-        })
-
-    # Handle multi-line text
-    for entity in entities:
-        entity['start'], entity['end'] = adjust_for_multiline(text, entity['start'], entity['end'])
-
-    return {"text": text, "ents": entities, "title": None}
 
 def ner_clean_ground_truth(tokens, ner_tags, id_to_label):
     text = ' '.join(tokens)
@@ -214,32 +155,7 @@ def ner_clean_ground_truth(tokens, ner_tags, id_to_label):
     return {"text": text, "ents": entities, "title": None}
 
 
-def ner_create_spacy_doc(raw_text, entities, nlp):
-    doc = nlp.make_doc(raw_text)
-    ents = []
 
-    for ent in entities:
-        span = doc.char_span(ent['start'], ent['end'], label=ent['entity_group'])
-        if span is not None:
-            ents.append(span)
-    doc.ents = ents
-    return doc
-
-def visualize_predictions(pred_doc, metadata="", options=None):
-    pred_html = displacy.render(pred_doc, style="ent", page=True, options=options)
-    rendered_html = f"""
-        <h2>NER Entity Predictions</h2>
-        <div style="display: flex; justify-content: space-around; position: relative;">
-            <div style="width: 100%; border: 1px solid black;">
-                <h3>Predicted</h3>
-                {pred_html}
-            </div>
-            <div style="position: absolute; top: 0; right: 0; background-color: #fff; padding: 5px; border: 1px solid black;">
-                <strong>Metadata:</strong> {metadata}
-            </div>
-        </div>
-        """
-    return rendered_html
 
 def visualize_predictions_and_ground_truth(pred_doc, gt_doc, metadata="", options=None):
     pred_html = displacy.render(pred_doc, style="ent", page=True, options=options)

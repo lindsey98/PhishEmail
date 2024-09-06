@@ -3,7 +3,7 @@ import os
 import langdetect
 from tqdm import tqdm
 import csv
-from lib.data.dataloader import EmailDataset
+from lib.data.Dataset import EmailDataset
 import pandas as pd
 import numpy as np
 import json

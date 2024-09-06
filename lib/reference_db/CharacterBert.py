@@ -2,10 +2,8 @@
 # https://github.com/allenai/allennlp/
 
 """ Defines the main CharacterBERT PyTorch class. """
-import torch
 from torch import nn
 from transformers.models.bert.modeling_bert import BertPreTrainedModel, BertEncoder, BertPooler
-import json
 from typing import Dict, Callable, List, Any
 import numpy
 import torch
@@ -411,6 +409,7 @@ class BertCharacterEmbeddings(nn.Module):
 
 class CharacterBertModel(BertPreTrainedModel):
     """ BertModel using char-cnn embeddings instead of wordpiece embeddings. """
+    _CallerPrefix = 'CharacterBertModel'
 
     def __init__(self, config):
         super().__init__(config)

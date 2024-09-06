@@ -1,5 +1,5 @@
 import os
-from lib.data.dataloader import EmailDataset
+from lib.data.Dataset import EmailDataset
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from tqdm import tqdm

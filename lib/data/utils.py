@@ -4,7 +4,6 @@ import email
 from email import message_from_string
 from email.utils import parseaddr
 import re
-from bs4 import BeautifulSoup
 import requests
 from io import BytesIO, StringIO
 import urllib.parse
@@ -18,9 +17,7 @@ import json
 import socket
 import re
 
-def remove_urls(text):
-    pattern = r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
-    return re.sub(pattern, '', text)
+
 
 def remove_extra_spaces(text):
     # remove text surrounded by <>, since they are likely be comments that are invisible
