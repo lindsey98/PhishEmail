@@ -1,0 +1,9 @@
+version: '3.10'
+
+services:
+  email_filter:
+    image: lindsey98/email:latest
+    build: ./
+    ports:
+      - 8000:8000
+    command: ["--email_dir=./test_emails/2020"]  # Example to override CMD

@@ -11,24 +11,40 @@ from lib.data.Dataset import EmailDataset
 import argparse
 from datetime import datetime
 from pathlib import Path
+os.environ['http_proxy'] = 'http://127.0.0.1:7890'
+os.environ['https_proxy'] = 'http://127.0.0.1:7890'
 
 class Config:
-    identity_model = IdentityBert("./checkpoints/output_ner_augmented/checkpoint-1351")
-    visualizer_model = Visualizer("./checkpoints/output_ner_augmented/checkpoint-1351")
+    IDENTITY_MODEL_CHECKPOINT = "./checkpoints/output_ner_augmented/checkpoint-1351"
+    MATCHING_MODEL_CHECKPOINT = "./checkpoints/characterbert-typos-st"
 
-    matching_model = CharacterBERT("./checkpoints/characterbert-typos-st")
-    Logger.spit('Loaded the identity recognition model and brand matching model into memory', caller_prefix="Main", debug=True)
+    REF_IDENTITY_REPS = "./checkpoints/company_database_reps.npy"
+    REF_IDENTITY_NAMES = "./checkpoints/company_database_names.npy"
+    REF_IDENTITY_MAP = "./checkpoints/company_database_knowphish.json"
 
-    ref_embed_list = np.load("./datasets/company_database_reps.npy")
-    ref_tag_list = np.load("./datasets/company_database_names.npy").tolist()
-    brand_index_db = BaseFaissIPRetriever(init_reps=ref_embed_list, tags=ref_tag_list)
-    Logger.spit('Loaded the brand knowledge base into memory', caller_prefix="Main", debug=True)
+    REF_RELATION_REPS = "./checkpoints/internal_relation_reps.npy"
+    REF_RELATION_NAMES = "./checkpoints/internal_relation_names.npy"
 
-    relation_embed_list = np.load("./datasets/internal_relation_reps.npy")
-    relation_tag_list = np.load("./datasets/internal_relation_names.npy").tolist()
-    internal_relation_index_db = BaseFaissIPRetriever(init_reps=relation_embed_list, tags=relation_tag_list)
+    identity_model = IdentityBert(IDENTITY_MODEL_CHECKPOINT)
+    visualizer_model = Visualizer(IDENTITY_MODEL_CHECKPOINT)
 
-    brand_domain_map_path = "./datasets/company_database_knowphish.json"
+    matching_model = CharacterBERT(MATCHING_MODEL_CHECKPOINT)
+    Logger.spit('Loaded the identity recognition model and identity matching model into memory', caller_prefix="Main", debug=True)
+
+    ref_embed_list = np.load(REF_IDENTITY_REPS) if REF_IDENTITY_REPS else None
+    ref_tag_list = np.load(REF_IDENTITY_NAMES).tolist()
+    brand_index_db = BaseFaissIPRetriever(init_reps=ref_embed_list,
+                                          tags=ref_tag_list,
+                                          embed_model=matching_model)
+    brand_domain_map_path = REF_IDENTITY_MAP
+    Logger.spit('Loaded the identity knowledge base into memory', caller_prefix="Main", debug=True)
+
+    relation_embed_list = np.load(REF_RELATION_REPS) if REF_RELATION_REPS else None
+    relation_tag_list = np.load(REF_RELATION_NAMES).tolist()
+    internal_relation_index_db = BaseFaissIPRetriever(init_reps=relation_embed_list,
+                                                      tags=relation_tag_list,
+                                                      embed_model=matching_model)
+
     thre = 0.95
 
 if __name__ == '__main__':

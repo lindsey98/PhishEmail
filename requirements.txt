@@ -2,7 +2,6 @@ authres
 beautifulsoup4
 chardet
 evaluate
-Faker
 gensim
 matplotlib
 nltk
@@ -12,13 +11,9 @@ opencv_python
 pandas
 peft
 Pillow
-Pillow
 protobuf
 Requests
 scikit_learn
-selenium==4.22.0
-selenium_wire==5.1.0
-webdriver_manager==4.0.1
 seqeval
 spacy==3.7.5
 tiktoken
@@ -28,3 +23,4 @@ transformers
 trl
 Unidecode
 faiss-cpu
+langdetect
