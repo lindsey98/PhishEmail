@@ -12,6 +12,7 @@ from typing import List, Tuple, Union, Optional, Set, Any
 from openai import OpenAI
 import re
 from tldextract import tldextract
+ext = tldextract.TLDExtract(cache_dir='./lib/reference_db')
 from lib.utilities.gpt_utils import assistant_completion
 from lib.utilities.logger import Logger, Timer
 import difflib
@@ -23,7 +24,7 @@ class CharacterBERT:
     _CallerPrefix = "CharacterBert"
 
     def __init__(self, model_id: str='./checkpoints/characterbert-typos-st/', return_cls: bool=True, do_l2_norm: bool=True) -> None:
-        self.tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+        self.tokenizer = BertTokenizer.from_pretrained(model_id)
         self.model = CharacterBertModel.from_pretrained(model_id)
         self.model.eval()
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'

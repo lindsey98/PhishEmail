@@ -1,30 +1,55 @@
 # PhishEmail
 
-## Setup
+# Setup
 
-1. Install Anaconda, create a conda environment with name email:
+---
+
+## Preparing the ingredients
+1. Clone the repo
 ```commandline
-conda create -n email
+
 ```
 
-2. Install the requirements:
+2. Download the models
 ```commandline
-conda activate email
-pip install -r requirements.txt
+mkdir checkpoints
+cd checkpoints/
+
 ```
 
-3. Install the torch manually on https://pytorch.org/get-started/locally/. 
+---
 
-4. Process the annotated dataset in lib/encoder/wb_log_dataset.py, split them into training and testing.
+## Setup the Docker container
+1. Build the docker image (This may take some time)
+```commandline
+sudo docker compose build
+```
+Make sure the docker image has been successfully built by verifying whether the image 'lindsey98/email' is listed in ``sudo docker images``.
 
-5. Train the NER model in lib/encoder/wb_finetune_bert.py
+2. Run the docker container
+For Interactive mode (suppose we use a proxy)
+```commandline
+sudo docker compose up
+```
 
-## Current problems
+For Detached mode
+```commandline
+sudo docker compose up -d
+```
 
-1. 我们需要清理标注:
-   1) 我们需要把organization和internal role（admin，helpdesk这种）统一转换成identity.
-   2) 一个邮件 没有label =〉看是不是漏标 =〉确实没有就放过
-   3) 一个邮件 有label =〉看有没有标全，比如 有可能一个邮件里面出现多个identity的不同形式，有可能有多句话是action
-   4) 一个token可以拥有多个类别
-3. 可能需要对action做data augmentation，目前的action句式很相似
-4. 对于错误情况，需要仔细观察预测的概率
+## Other useful commands
+# View contents even if the container has been exited for some reasons
+```commandline
+sudo docker run --rm -it --entrypoint /bin/bash lindsey98/email
+```
+
+# Stop the container
+```commandline
+sudo docker stop lindsey98/email
+```
+
+# Prune unused docker images
+```commandline
+sudo docker system prune
+```
+

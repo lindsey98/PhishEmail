@@ -15,20 +15,31 @@ os.environ['http_proxy'] = 'http://127.0.0.1:7890'
 os.environ['https_proxy'] = 'http://127.0.0.1:7890'
 
 class Config:
-    IDENTITY_MODEL_CHECKPOINT = "./checkpoints/output_ner_augmented/checkpoint-1351"
-    MATCHING_MODEL_CHECKPOINT = "./checkpoints/characterbert-typos-st"
+    IDENTITY_MODEL_CHECKPOINT = os.getenv("IDENTITY_MODEL_CHECKPOINT", None)
+    if not IDENTITY_MODEL_CHECKPOINT:
+        raise NameError("The path to the identity recognition model is undefined, please configure it in the .env file")
 
-    REF_IDENTITY_REPS = "./checkpoints/company_database_reps.npy"
-    REF_IDENTITY_NAMES = "./checkpoints/company_database_names.npy"
-    REF_IDENTITY_MAP = "./checkpoints/company_database_knowphish.json"
+    MATCHING_MODEL_CHECKPOINT = os.getenv("MATCHING_MODEL_CHECKPOINT", None)
+    if not MATCHING_MODEL_CHECKPOINT:
+        raise NameError("The path to the identity matching model is undefined, please configure it in the .env file")
 
-    REF_RELATION_REPS = "./checkpoints/internal_relation_reps.npy"
-    REF_RELATION_NAMES = "./checkpoints/internal_relation_names.npy"
+    REF_IDENTITY_REPS = os.getenv("REF_IDENTITY_REPS", None)
+    REF_IDENTITY_NAMES = os.getenv("REF_IDENTITY_NAMES", None)
+    if not REF_IDENTITY_NAMES:
+        raise NameError("The reference identities are undefined, please configure it in the .env file")
+    REF_IDENTITY_MAP = os.getenv("REF_IDENTITY_MAP", None)
+    if not REF_IDENTITY_MAP:
+        raise NameError("The path to the identity knowledge base is undefined, please configure it in the .env file")
+
+    REF_RELATION_REPS = os.getenv("REF_RELATION_REPS", None)
+    REF_RELATION_NAMES = os.getenv("REF_RELATION_NAMES", None)
+    if not REF_RELATION_NAMES:
+        raise NameError("The reference internal relations are undefined, please configure it in the .env file")
 
     identity_model = IdentityBert(IDENTITY_MODEL_CHECKPOINT)
     visualizer_model = Visualizer(IDENTITY_MODEL_CHECKPOINT)
-
     matching_model = CharacterBERT(MATCHING_MODEL_CHECKPOINT)
+
     Logger.spit('Loaded the identity recognition model and identity matching model into memory', caller_prefix="Main", debug=True)
 
     ref_embed_list = np.load(REF_IDENTITY_REPS) if REF_IDENTITY_REPS else None

@@ -2,3 +2,4 @@
 datasets/
 wandb/
 deprecated/
+*__pycache__/

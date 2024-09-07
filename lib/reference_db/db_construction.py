@@ -3,6 +3,7 @@ from tqdm import tqdm
 import os
 from tldextract import tldextract
 import re
+ext = tldextract.TLDExtract(cache_dir='./lib/reference_db')
 
 # Function to validate the domain name
 
