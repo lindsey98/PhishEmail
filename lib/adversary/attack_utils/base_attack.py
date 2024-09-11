@@ -1,11 +1,24 @@
 from lib.encoder.IdentityBert import IdentityBert
 from transformers import AutoTokenizer
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Set, Tuple
 
 class SuperAttacker():
+    label_list = [
+        "O",
+        "B-identity",
+        "I-identity",
+        "B-relation",
+        "I-relation",
+        "B-action",
+        "I-action",
+    ]
+    #
+    # # Create a mapping from labels to integers
+    label_to_id = {label: idx for idx, label in enumerate(label_list)}
+    id_to_label = {idx: label for idx, label in enumerate(label_list)}
 
     @staticmethod
-    def get_entity_from_context(contexts, entities_dict, used_entities):
+    def get_entity_from_context(contexts: List[str], entities_dict: Dict, used_entities: Set[str]) -> Tuple[Optional[str], Optional[int]]:
         """ Helper function to find the matching entity in the given contexts. """
         for context in contexts:
             if context in entities_dict and context not in used_entities:
@@ -13,8 +26,7 @@ class SuperAttacker():
                 return entities_dict[context]["token"], entities_dict[context]["truth"]
         return None, None
 
-
-    def sentence_segmentation(self, tokens: List[str], ground_truth: List[int], cls_to_modify: List[int]):
+    def sentence_segmentation(self, tokens: List[str], ground_truth: List[int], cls_to_modify: List[int]) -> Tuple[List[str], List[str], List[str], List[int]]:
         '''
         Segment the paragraphs based on the entities
         :param tokens:
@@ -73,9 +85,8 @@ class SuperAttacker():
         return sentences_to_be_rephrased, other_sentences, all_sentences, sentences_to_be_rephrased_entity_id
 
 
-
-    def get_transformations(self, tokens: List[str], ground_truth: List[int], tokenizer: AutoTokenizer, cls_to_modify: List[int]):
+    def get_transformations(self) -> Dict:
         raise NotImplementedError()
 
-    def process_entries(self, data: List[Dict], model: Optional[IdentityBert], tokenizer: Optional[AutoTokenizer]) -> List[Dict]:
+    def process_entries(self) -> List[Dict]:
         raise NotImplementedError()

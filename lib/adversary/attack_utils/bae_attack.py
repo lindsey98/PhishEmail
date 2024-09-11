@@ -1,38 +1,82 @@
 from OpenAttack.attackers import BAEAttacker
 import torch
 import copy
-from transformers import AutoTokenizer
-from typing import List, Dict
+from typing import List, Dict, Optional
 from tqdm import tqdm
-import os
-import json
-from lib.encoder.IdentityBert import IdentityBert
 from .base_attack import SuperAttacker
-
+from transformers import AutoTokenizer, BertForMaskedLM
+from lib.encoder.IdentityBert import IdentityBert
+import re
 import ssl
 ssl._create_default_https_context = ssl._create_unverified_context # fix the ssl certificate expiration error
 
 class MyBAEAttacker(BAEAttacker, SuperAttacker):
 
-    def explicit_truncate_ground_truth(self, ground_truth_labels):
+    @staticmethod
+    def match_case(word, pattern):
+        """Match the case of the pattern in the original word."""
+        if pattern.islower():
+            return word.lower()
+        elif pattern.isupper():
+            return word.upper()
+        elif pattern[0].isupper():
+            return word.capitalize()
+        else:
+            return word
+
+    @staticmethod
+    def find_all_token_indices(all_tokens, entity_tokens):
+        entity_len = len(entity_tokens)
+        indices = []
+
+        for i in range(len(all_tokens) - entity_len + 1):
+            if [token.lower() for token in all_tokens[i:i + entity_len]] == entity_tokens:
+                indices.append((i, i + entity_len))
+        return indices
+
+    def tokenize_and_map(self, text, annotations, tokenizer, label_to_id):
+        # Tokenize text using a custom tokenizer function
+        tokens = tokenizer.tokenize(text)
+
+        # Initialize tags with "O"
+        tags = [label_to_id["O"]] * len(tokens)
+
+        for annot in annotations:
+            entity = annot['text']
+            entity_cls = annot['labels'][0]
+            entity_tokens = tokenizer.tokenize(entity)
+
+            all_indices = self.find_all_token_indices(tokens, entity_tokens)
+            for start_index, end_index in all_indices:
+                # Check if the range already has a tag other than "O"
+                if all(tag == label_to_id["O"] for tag in tags[start_index:end_index]) or entity_cls == "relation":
+                    # Label the found entity
+                    tags[start_index] = label_to_id["B-" + entity_cls]
+                    for i in range(start_index + 1, end_index):
+                        tags[i] = label_to_id["I-" + entity_cls]
+
+            if len(all_indices) == 0:
+                continue
+        return tokens, tags
+
+    def explicit_truncate_ground_truth(self, ground_truth_labels: List[int]):
         if len(ground_truth_labels) > self.max_length:
-            return ground_truth_labels[:self.max_length-1] + ['[SEP]'] # truncate again
+            return ground_truth_labels[:self.max_length-1] + [-100] # truncate again
         else:
             return ground_truth_labels
 
-    def explicit_truncate_tokens(self, long_tokens):
+    def explicit_truncate_tokens(self, long_tokens: List[str]):
         if len(long_tokens) > self.max_length:
             return long_tokens[:self.max_length-1] + ['[SEP]'] # truncate again
         else:
             return long_tokens
 
     ##### TODO: make this one of the substitute unit under ./substitures #####
-    def get_substitues(self, masked_index, tokens, tokenizer, model, sub_mode, k, threshold=3.0):
-        masked_tokens = copy.deepcopy(tokens)
+    def get_substitues(self, masked_index: int, tokens: List[str], tokenizer: AutoTokenizer, model: BertForMaskedLM, sub_mode: str, k: int, threshold: float=3.0) -> List[str]:
 
+        masked_tokens = copy.deepcopy(tokens)
         if sub_mode == "r":
             masked_tokens[masked_index] = '[MASK]'
-
         elif sub_mode == "i":
             masked_tokens.insert(masked_index, '[MASK]')
         else:
@@ -58,17 +102,17 @@ class MyBAEAttacker(BAEAttacker, SuperAttacker):
             outputs = model(tokens_tensor, token_type_ids=segments_tensors)
             predictions = outputs[0]
 
-        predicted_indices = torch.topk(predictions[0, masked_index], self.k)[1]
+        predicted_indices = torch.topk(predictions[0, masked_index], k)[1]
         predicted_tokens = tokenizer.convert_ids_to_tokens(predicted_indices)
         return predicted_tokens
 
-    def get_transformations(self, model, tokens, ground_truth, tokenizer, cls_to_modify: List[int]=[1, 3, 5]):
+    def get_transformations(self, model: IdentityBert, tokens: List[str], ground_truth: List[int], tokenizer: AutoTokenizer, cls_to_modify: List[int]=[1]) -> Dict:
 
         # with CLS and SEP tokens added
         tokens = ['[CLS]'] + tokens[:self.max_length - 2] + ['[SEP]']
         ground_truth = [-100] + ground_truth[:self.max_length - 2] + [-100]
 
-        sent = " ".join(tokens)
+        sent = tokenizer.convert_tokens_to_string(tokens)
 
         # get the original prob
         input_ids = torch.tensor([tokenizer.convert_tokens_to_ids(tokens)])
@@ -79,7 +123,6 @@ class MyBAEAttacker(BAEAttacker, SuperAttacker):
 
         offset = 0
         final_words = copy.deepcopy(tokens)
-        final_ground_truth = copy.deepcopy(ground_truth)
         inserted_new_tokens = {}
 
         for top_index in interested_indices:
@@ -135,79 +178,69 @@ class MyBAEAttacker(BAEAttacker, SuperAttacker):
 
             # keep the subsitute that most significantly decrease the confidence
             if most_gap > 0:
-                inserted_new_tokens[tgt_word + '_' + str(top_index)] = candidate
+                inserted_new_tokens[tgt_word] = candidate
                 final_words.insert(top_index + offset, candidate)
-                final_ground_truth.insert(top_index + offset, 0)
-
                 final_words = self.explicit_truncate_tokens(final_words)
-                final_ground_truth = self.explicit_truncate_tokens(final_ground_truth)
 
                 if len(final_words) >= self.max_length:
                     break  # Stop processing further to prevent exceeding max_length
 
                 offset += 1
 
-        return {
-            "perturbed_tokens": final_words,
-            "perturbed_ground_truth": final_ground_truth,
-            "rephrased_dict": inserted_new_tokens
-        }
+        return inserted_new_tokens
 
 
-    def process_entries(self, data, model, tokenizer):
+    def process_entries(self, data: List[Dict], model: Optional[IdentityBert], tokenizer: Optional[AutoTokenizer]) -> List[Dict]:
         seen_texts = set()
         processed_data = []
 
         for entry in tqdm(data):
-            tokens = entry['tokens']
-            tags = entry['ner_tags']
-            text = ' '.join(tokens)
-            if text in seen_texts:
+            orig_text = entry['text']
+            if orig_text in seen_texts:
                 continue  # Skip duplicates
-            seen_texts.add(text)
+            seen_texts.add(orig_text)
 
-            rephrased_result = self.get_transformations(model=model,
-                                                        tokens=tokens,
-                                                        tokenizer=tokenizer,
-                                                        ground_truth=tags,
-                                                        cls_to_modify=[1, 3])
-            rephrased_tokens = rephrased_result["perturbed_tokens"]
-            rephrased_tags = rephrased_result["perturbed_ground_truth"]
+            annotations = entry.get('annotations', [])
+            rephrased = {}
+            if len(annotations) == 0:
+                continue
+
+            for annot in annotations:
+                annot['text'] = re.sub(r"From:\s*", "", annot['text'], re.IGNORECASE) # very ad-hoc fix
+
+            tokens, tags = self.tokenize_and_map(orig_text, annotations, tokenizer, SuperAttacker.label_to_id)
+            rephrased_dict = self.get_transformations(model, tokens, tags, tokenizer, cls_to_modify=[1])
+
+            have_attacked = False
+            for annot in annotations:
+                entity = annot['text']
+                entity_cls = annot['labels'][0]
+                entity_tokens = tokenizer.tokenize(entity)
+                old_entity_starting_token = entity_tokens[0]
+
+                if have_attacked==False and entity_cls == "identity":
+                    if old_entity_starting_token in rephrased_dict.keys():
+                        new_entity_starting_token = rephrased_dict[old_entity_starting_token]
+                        new_entity = tokenizer.convert_tokens_to_string([new_entity_starting_token] + entity_tokens)
+
+                        # Use a case-insensitive replacement while preserving the original case
+                        def replace_with_case(match):
+                            matched_case_new_entity = self.match_case(new_entity, match.group(0))
+                            # Update annot['text'] with the properly cased version
+                            rephrased[entity] = matched_case_new_entity
+                            annot['text'] = matched_case_new_entity
+                            return matched_case_new_entity
+
+                        orig_text = re.sub(re.escape(entity), replace_with_case, orig_text, flags=re.IGNORECASE)
+                        have_attacked = True
 
             processed_data.append({
-                "id": entry['id'],
-                "tokens": rephrased_tokens,
-                "ner_tags": rephrased_tags,
-                'rephrased_dict': rephrased_result["rephrased_dict"],
-                "metadata": entry["metadata"]  # Add metadata field
+                "id": entry['Id'],
+                "text": orig_text,
+                "annotations": annotations,
+                "metadata": entry.get("Path", ""),  # Add metadata field
+                "rephrased_text": rephrased
             })
 
         return processed_data
 
-# if __name__ == '__main__':
-    # label_list = [
-    #     "O",
-    #     "B-identity",
-    #     "I-identity",
-    #     "B-relation",
-    #     "I-relation",
-    #     "B-action",
-    #     "I-action",
-    # ]
-    # label_to_id = {label: idx for idx, label in enumerate(label_list)}
-    #
-    # with open('./datasets/ner_training_augmented/test.json', 'r') as json_file:
-    #     data = json.load(json_file)
-    #
-    # transformation = MyBAEAttacker()
-    # model = IdentityBert("./checkpoints/identity-model", aggregation_strategy="none")
-    # tokenizer = AutoTokenizer.from_pretrained("google-bert/bert-large-uncased")
-    #
-    # processed_data = []
-    # seen_texts = set()
-    # transformation.process_entries(data, model, tokenizer)
-    #
-    # output_dir = f'./datasets/ner_training_adversarial/'
-    # os.makedirs(output_dir, exist_ok=True)
-    # with open(os.path.join(output_dir, f'adversarial_rephrase_bae.json'), 'w') as outfile:
-    #     json.dump(processed_data, outfile, indent=4)

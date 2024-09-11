@@ -1,0 +1,5 @@
+tldextract
+faiss-cpu
+OpenAttack
+tensorflow-cpu
+tensorflow_hub
