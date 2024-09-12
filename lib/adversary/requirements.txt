@@ -3,3 +3,10 @@ faiss-cpu
 OpenAttack
 tensorflow-cpu
 tensorflow_hub
+accelerate
+beautifulsoup4
+datasets
+langdetect
+transformers
+nltk
+openai
