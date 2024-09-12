@@ -1,4 +1,7 @@
-from OpenAttack.attackers import DeepWordBugAttacker
+import copy
+import random
+
+from OpenAttack.attackers import VIPERAttacker
 from .base_attack import SuperAttacker
 from lib.adversary.utils import *
 from tqdm import tqdm
@@ -8,22 +11,14 @@ from transformers import AutoTokenizer
 from typing import List, Dict, Optional, Set, Tuple
 import re
 
-class MyDeepWordBugAttacker(DeepWordBugAttacker, SuperAttacker):
+class MyViperAttacker(VIPERAttacker):
 
-
-    def transform(self, type_: str, word: str) -> str:
-        if type_ == 'repeat':
-            typoed_text = repeat_char(word)
-        elif type_ == 'delete':
-            typoed_text = delete_char(word)
-        elif type_ == 'switch':
-            typoed_text = switch_chars(word)
-        elif type_ == 'replace':
-            typoed_text = replace_with_similar(word)
-        else:
-            raise NotImplementedError
-
-        return typoed_text
+    def transform(self, word: str):
+        random_pos = random.choice(range(len(word)))
+        s = self.substitute(word[random_pos])[0][0]
+        new_word = copy.deepcopy(word)
+        new_word = new_word.replace(word[random_pos], s)
+        return new_word
 
     def process_entries(self, data: List[Dict], model: Optional[IdentityBert], tokenizer: Optional[AutoTokenizer]) -> List[Dict]:
         seen_texts = set()
@@ -49,7 +44,7 @@ class MyDeepWordBugAttacker(DeepWordBugAttacker, SuperAttacker):
                 entity_cls = annot['labels'][0]
 
                 if have_attacked == False and entity_cls == "identity":
-                    typoed_entity = self.transform(self.transformer, entity)
+                    typoed_entity = self.transform(entity)
                     orig_text = orig_text.replace(entity, typoed_entity)
                     rephrased[entity] = typoed_entity
                     annot['text'] = typoed_entity
