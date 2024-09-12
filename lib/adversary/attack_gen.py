@@ -2,7 +2,7 @@
 import click
 from lib.encoder.IdentityBert import IdentityBert
 from transformers import AutoTokenizer
-from lib.adversary.attack_utils import MySCPNAttacker, MyBAEAttacker, MyDeepWordBugAttacker, MyGPTAttacker
+from lib.adversary.attack_utils import MySCPNAttacker, MyBAEAttacker, MyDeepWordBugAttacker, MyGPTAttacker, MyViperAttacker, MyBartParaphraseAttacker, MyT5ParaphraseAttacker
 import os
 import json
 os.environ['http_proxy'] = 'http://127.0.0.1:7890'
@@ -27,9 +27,15 @@ def pick_attacker(attacker_name, typo_type):
         return MyDeepWordBugAttacker(transform=typo_type, power=1)
     elif attacker_name == "gpt":
         return MyGPTAttacker()
+    elif attacker_name == 'viper':
+        return MyViperAttacker()
+    elif attacker_name == 'bart':
+        return MyBartParaphraseAttacker()
+    elif attacker_name == 't5':
+        return MyT5ParaphraseAttacker()
 
 @click.command()
-@click.option('--attacker', required=True, type=click.Choice(['bae', 'scpn', 'deepwordbug', 'gpt'], case_sensitive=False), help="Specify the attacker type (e.g., 'bae')")
+@click.option('--attacker', required=True, type=click.Choice(['bae', 'scpn', 'deepwordbug', 'gpt', 'viper', 'bart', 't5'], case_sensitive=False), help="Specify the attacker type (e.g., 'bae')")
 @click.option('--typo_type', help="Specify the typo type, only for the DeepWordBug attacking method", type=click.Choice(['repeat', 'delete', 'replace', 'switch'], case_sensitive=False))
 def main(attacker, typo_type):
     # Initialize the transformation based on the attacker argument
