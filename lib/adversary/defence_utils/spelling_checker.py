@@ -1,18 +1,20 @@
 from transformers import T5ForConditionalGeneration, AutoTokenizer
 import os
 import re
+import torch
 os.environ['http_proxy'] = 'http://127.0.0.1:7890'
 os.environ['https_proxy'] = 'http://127.0.0.1:7890'
 
 class SpellFixer:
 
     def __init__(self, model_id="ai-forever/T5-large-spell"):
-        self.model = T5ForConditionalGeneration.from_pretrained(model_id)
+        self.model = T5ForConditionalGeneration.from_pretrained(model_id, device_map='balanced')
         self.tokenizer = AutoTokenizer.from_pretrained(model_id)
         self.prefix = "grammar: "
         self.max_length = 512
 
-    def preserve_case(self, original_sentence, corrected_sentence):
+    @staticmethod
+    def preserve_case(original_sentence, corrected_sentence):
         """Preserve the original case for the first letter of each sentence."""
         if original_sentence and corrected_sentence:
             if original_sentence[0].isupper():
@@ -25,6 +27,7 @@ class SpellFixer:
         # Find sentences and keep delimiters
         sentences_with_delimiters = re.findall(r'([^.!?]+)([.!?]*)', paragraph)
 
+        # Dynamically determine how many sentences to include in the batch
         corrected_sentences = []
         i = 0
         while i < len(sentences_with_delimiters):
@@ -40,7 +43,6 @@ class SpellFixer:
                 sent_token_count = encodings['input_ids'].shape[1]
 
                 if token_count + sent_token_count > self.max_length:
-                    # If adding this sentence exceeds max_length, process the batch
                     break
                 else:
                     batch.append(sent)
@@ -49,10 +51,10 @@ class SpellFixer:
 
             if batch:  # If there's anything to process
                 # Tokenize the batch
-                encodings = self.tokenizer(batch, return_tensors="pt", padding=True, truncation=True)
-
+                encodings = self.tokenizer(batch, return_tensors="pt", padding=True)
+                encodings = encodings.to(self.model.device)
                 # Generate corrections in a batch
-                generated_tokens = self.model.generate(**encodings)
+                generated_tokens = self.model.generate(**encodings, max_new_tokens=512)
 
                 # Decode the batch and collect corrected sentences
                 answers = self.tokenizer.batch_decode(generated_tokens, skip_special_tokens=True)

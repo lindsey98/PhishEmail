@@ -198,7 +198,7 @@ class MyAttackEvaluator():
 
 
 @click.command()
-@click.option('--attacker', required=True, type=click.Choice(['bae', 'deepwordbug', 'scpn', 'gpt', 'viper', 'bart', 't5'], case_sensitive=False), help="Specify the attacker type (e.g., 'bae')")
+@click.option('--attacker', required=True, type=click.Choice(['bae', 'deepwordbug', 'scpn', 'gpt', 'viper', 'bart', 't5', 'concatsent'], case_sensitive=False), help="Specify the attacker type (e.g., 'bae')")
 @click.option('--cls_to_attack', required=True, type=click.Choice(['identity', 'action'], case_sensitive=False), help="Attack which NER class")
 @click.option('--typo_type', help="Specify the typo type, only for the DeepWordBug attacking method", type=click.Choice(['repeat', 'delete', 'replace', 'switch'], case_sensitive=False))
 @click.option('--eval_only', help="Eval only or Attack+Eval", is_flag=True, show_default=True, default=False)
@@ -250,22 +250,35 @@ def main(attacker, cls_to_attack, typo_type, eval_only, defence):
 if __name__ == '__main__':
     main()
 
-#
+##############################################################################################################################
+# Baseline NER detection rate = 1147/1227 = 0.93480032599837
+# Attacker = deepwordbug replace, Without defence          Attacking class = identity      NER detection rate = 977/1227 = 0.7962510187449062
+# Attacker = deepwordbug replace, With defence     Attacking class = identity      NER detection rate = 1135/1227 = 0.9250203748981255
 
+# Baseline NER detection rate = 1145/1226 = 0.933931484502447
+# Attacker = deepwordbug switch, Without defence   Attacking class = identity      NER detection rate = 1084/1226 = 0.8841761827079935
+# Attacker = deepwordbug switch, With defence      Attacking class = identity      NER detection rate = 1129/1226 = 0.9208809135399674
+
+# Baseline NER detection rate = 1152/1229 = 0.9373474369406021
+# Attacker = deepwordbug delete, Without defence   Attacking class = identity      NER detection rate = 1098/1229 = 0.8934092758340114
+# Attacker = deepwordbug delete, With defence      Attacking class = identity      NER detection rate = 1120/1229 = 0.9113100081366965
 
 # Baseline NER detection rate = 1145/1227 = 0.9331703341483293
 # Attacker = deepwordbug repeat, Without defence   Attacking class = identity      NER detection rate = 1107/1227 = 0.902200488997555
 # Attacker = deepwordbug repeat, With defence      Attacking class = identity      NER detection rate = 1137/1227 = 0.9266503667481663
 
 # Baseline NER detection rate = 1138/1217 = 0.9350862777321282
-# Attacker = viper None, Without defence 	 Attacking class = identity 	 NER detection rate = 1126/1217 = 0.9252259654889071
+# Attacker = VIPER None, Without defence 	 Attacking class = identity 	 NER detection rate = 1126/1217 = 0.9252259654889071
 
 # Baseline NER detection rate = 1095/1155 = 0.948051948051948
-# Attacker = bae None, Without defence 	 Attacking class = identity 	 NER detection rate = 1068/1155 = 0.9246753246753247
+# Attacker = BAE None, Without defence 	 Attacking class = identity 	 NER detection rate = 1068/1155 = 0.9246753246753247
 
 ##############################################################################################################################
 # Baseline NER detection rate = 796/913 = 0.8718510405257394
-# Attacker = gpt None, With defence = False 	 Attacking class = action 	 NER detection rate = 744/913 = 0.8148959474260679
+# Attacker = GPT None, With defence = False 	 Attacking class = action 	 NER detection rate = 744/913 = 0.8148959474260679
 
 # Baseline NER detection rate = 793/913 = 0.8685651697699891
-# Attacker = t5 None, Without defence 	 Attacking class = action 	 NER detection rate = 749/913 = 0.8203723986856517
+# Attacker = T5 None, Without defence 	 Attacking class = action 	 NER detection rate = 749/913 = 0.8203723986856517
+
+# Baseline NER detection rate = 613/711 = 0.8621659634317862
+# Attacker = concatsent None, Without defence 	 Attacking class = action 	 NER detection rate = 574/711 = 0.8073136427566807

@@ -5,6 +5,7 @@ import random
 ssl._create_default_https_context = ssl._create_unverified_context # fix the ssl certificate expiration error
 from tqdm import tqdm
 from .base_attack import SuperAttacker
+from ..utils import to_sentence_case
 from transformers import AutoTokenizer, BertForMaskedLM
 from lib.encoder.IdentityBert import IdentityBert
 from typing import List, Dict, Optional
@@ -21,25 +22,6 @@ class MyBartParaphraseAttacker(SuperAttacker):
         self.model = self.model.to(self.device)
         self.tokenizer = BartTokenizer.from_pretrained('eugenesiow/bart-paraphrase')
 
-    @staticmethod
-    def to_sentence_case(text):
-        """
-        Converts the given text into sentence case.
-        Capitalizes the first word and lowers the rest, except for proper nouns or acronyms.
-        """
-        # Tokenize based on whitespace or specific parse tokens
-        tokens = re.split(r'(\s+|\(|\)|,|\.|\;)', text)  # split but keep delimiters
-
-        # Capitalize first VB (or other sentence-starting token)
-        capitalized = False
-        new_tokens = []
-        for token in tokens:
-            if not capitalized and token.isalpha():
-                new_tokens.append(token.capitalize())  # capitalize first alphabetic word
-                capitalized = True
-            else:
-                new_tokens.append(token.lower())  # lowercase the rest
-        return ''.join(new_tokens)
 
     def gen_paraphrase(self, sent: str):
         batch = self.tokenizer(sent, return_tensors='pt')
@@ -75,7 +57,7 @@ class MyBartParaphraseAttacker(SuperAttacker):
                         )[0]  # generate only ONE candidate
                     except KeyError:
                         rephrased_text = entity
-                    rephrased_text = self.to_sentence_case(rephrased_text)
+                    rephrased_text = to_sentence_case(rephrased_text)
                     text = text.replace(entity, rephrased_text)
                     rephrased[entity] = rephrased_text
                     annot['text'] = rephrased_text

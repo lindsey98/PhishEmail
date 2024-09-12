@@ -8,56 +8,10 @@ from transformers import AutoTokenizer, BertForMaskedLM
 from lib.encoder.IdentityBert import IdentityBert
 import re
 import ssl
+from ..utils import match_case, tokenize_and_map
 ssl._create_default_https_context = ssl._create_unverified_context # fix the ssl certificate expiration error
 
 class MyBAEAttacker(BAEAttacker, SuperAttacker):
-
-    @staticmethod
-    def match_case(word, pattern):
-        """Match the case of the pattern in the original word."""
-        if pattern.islower():
-            return word.lower()
-        elif pattern.isupper():
-            return word.upper()
-        elif pattern[0].isupper():
-            return word.capitalize()
-        else:
-            return word
-
-    @staticmethod
-    def find_all_token_indices(all_tokens, entity_tokens):
-        entity_len = len(entity_tokens)
-        indices = []
-
-        for i in range(len(all_tokens) - entity_len + 1):
-            if [token.lower() for token in all_tokens[i:i + entity_len]] == entity_tokens:
-                indices.append((i, i + entity_len))
-        return indices
-
-    def tokenize_and_map(self, text, annotations, tokenizer, label_to_id):
-        # Tokenize text using a custom tokenizer function
-        tokens = tokenizer.tokenize(text)
-
-        # Initialize tags with "O"
-        tags = [label_to_id["O"]] * len(tokens)
-
-        for annot in annotations:
-            entity = annot['text']
-            entity_cls = annot['labels'][0]
-            entity_tokens = tokenizer.tokenize(entity)
-
-            all_indices = self.find_all_token_indices(tokens, entity_tokens)
-            for start_index, end_index in all_indices:
-                # Check if the range already has a tag other than "O"
-                if all(tag == label_to_id["O"] for tag in tags[start_index:end_index]) or entity_cls == "relation":
-                    # Label the found entity
-                    tags[start_index] = label_to_id["B-" + entity_cls]
-                    for i in range(start_index + 1, end_index):
-                        tags[i] = label_to_id["I-" + entity_cls]
-
-            if len(all_indices) == 0:
-                continue
-        return tokens, tags
 
     def explicit_truncate_ground_truth(self, ground_truth_labels: List[int]):
         if len(ground_truth_labels) > self.max_length:
@@ -208,7 +162,7 @@ class MyBAEAttacker(BAEAttacker, SuperAttacker):
             for annot in annotations:
                 annot['text'] = re.sub(r"From:\s*", "", annot['text'], re.IGNORECASE) # very ad-hoc fix
 
-            tokens, tags = self.tokenize_and_map(orig_text, annotations, tokenizer, SuperAttacker.label_to_id)
+            tokens, tags = tokenize_and_map(orig_text, annotations, tokenizer, SuperAttacker.label_to_id)
             rephrased_dict = self.get_transformations(model, tokens, tags, tokenizer, cls_to_modify=[1])
 
             have_attacked = False
@@ -225,7 +179,7 @@ class MyBAEAttacker(BAEAttacker, SuperAttacker):
 
                         # Use a case-insensitive replacement while preserving the original case
                         def replace_with_case(match):
-                            matched_case_new_entity = self.match_case(new_entity, match.group(0))
+                            matched_case_new_entity = match_case(new_entity, match.group(0))
                             # Update annot['text'] with the properly cased version
                             rephrased[entity] = matched_case_new_entity
                             annot['text'] = matched_case_new_entity
