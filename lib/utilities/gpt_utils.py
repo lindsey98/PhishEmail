@@ -1,5 +1,24 @@
 import time
 
+def chat_completion(client, query, context, model_id="gpt-3.5-turbo"):
+    while True:
+        try:
+            response = client.chat.completions.create(
+                model=model_id,
+                messages=[
+                    {"role": "system",
+                     "content": f"{context}"},
+                    {"role": "assistant",
+                     "content": f"{query}"},
+                ]
+            )
+            rephrased_text = response.choices[0].message.content
+            break
+        except Exception as e:
+            print(e)
+            time.sleep(2)
+    return rephrased_text
+
 def assistant_completion(client, query, assistant_id):
     # Step 1: create new thread
     thread = client.beta.threads.create()

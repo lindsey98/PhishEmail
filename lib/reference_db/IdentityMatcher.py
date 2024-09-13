@@ -12,7 +12,7 @@ from typing import List, Tuple, Union, Optional, Set, Any
 import re
 from tldextract import tldextract
 ext = tldextract.TLDExtract(cache_dir='./lib/reference_db')
-from lib.utilities.gpt_utils import assistant_completion
+from lib.utilities.gpt_utils import chat_completion
 from lib.utilities.logger import Logger, Timer
 import difflib
 os.environ['http_proxy'] = 'http://127.0.0.1:7890'
@@ -224,9 +224,22 @@ class IdentityMatcher:
             return None, None
 
     def expand_knowledge_base(self, queried_identity: str) -> Tuple[Optional[List[str]], float]:
+        if self.gpt_client is None:
+            from openai import OpenAI
+            import openai
+            openai.api_key = os.getenv("OPENAI_API_KEY")
+            openai.proxy = os.getenv("http_proxy")  # proxy
+            self.gpt_client = OpenAI()
 
         with Timer() as timer:
-            search_email = assistant_completion(client=self.gpt_client, query=queried_identity, assistant_id=self.gpt_assistant.id)
+            search_email = chat_completion(client=self.gpt_client,
+                            context="Given a brand, output its official email address. "
+                                    "If the input is not a brand/organization name, output ''. "
+                                    "Directly give the email address with no additional explanation. "
+                                    "If the you are not sure about the official email, do not respond. "
+                                    "If there are multiple possible emails, output them all as a list [email_1, email_2, ...].",
+                            query=queried_identity)
+
         searching_time = timer.interval
         Logger.spit(f'Searching {queried_identity} in GPT, return {search_email}, searching time = {searching_time}', caller_prefix=IdentityMatcher._CallerPrefix, debug=True)
 
