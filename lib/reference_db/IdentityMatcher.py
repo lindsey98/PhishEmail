@@ -9,7 +9,6 @@ from tqdm import tqdm
 import numpy as np
 import json
 from typing import List, Tuple, Union, Optional, Set, Any
-from openai import OpenAI
 import re
 from tldextract import tldextract
 ext = tldextract.TLDExtract(cache_dir='./lib/reference_db')
@@ -66,7 +65,7 @@ class BaseFaissIPRetriever:
             assert embed_model is not None
             self.embed_model = embed_model
             Logger.spit("No cached representations, build index from scratch ..", caller_prefix=BaseFaissIPRetriever._CallerPrefix, debug=True)
-            init_reps = self.build_reps_from_scratch()
+            init_reps = self.build_reps_from_scratch(self.tags)
 
         assert len(tags) == init_reps.shape[0], "Number of tags must match the number of representations."
         # Create index based on the specified index type
@@ -87,13 +86,13 @@ class BaseFaissIPRetriever:
                     caller_prefix=BaseFaissIPRetriever._CallerPrefix,
                     debug=True)
 
-    def build_reps_from_scratch(self):
+    def build_reps_from_scratch(self, tag_list):
         index_reps = np.empty((0, 768))
         batch_size = 128
-        tag_list = self.tags
         for i in range(0, len(tag_list), batch_size):
             batch = tag_list[i:min(i + batch_size, len(tag_list))]  # Get the next batch of brand names
-            batch_embeddings, time = self.embed_model(batch).cpu().numpy()  # Predict embeddings for the batch
+            batch_preds = self.embed_model(batch)
+            batch_embeddings, time = batch_preds[0].cpu().numpy(), batch_preds[1]  # Predict embeddings for the batch
             index_reps = np.concatenate((index_reps, batch_embeddings), axis=0)  # Append new embeddings
         return index_reps
 
@@ -103,10 +102,15 @@ class BaseFaissIPRetriever:
         tag_results = np.array(self.tags)[indices]
         return scores, indices, tag_results, timer.interval
 
-    def add(self, p_reps: np.ndarray, p_tags: List[str]) -> None:
+    def add(self, p_reps: Optional[np.ndarray], p_tags: List[str]) -> None:
+        if p_reps is not None:
+            self.index.add(p_reps)
+        else:
+            p_reps = self.build_reps_from_scratch(p_tags)
+            self.index.add(p_reps)
         assert len(p_tags) == p_reps.shape[0], "Number of tags must match the number of representations."
-        self.index.add(p_reps)
         self.tags.extend(p_tags) # fixme: save the updated index again?
+
 
     def batch_search(self, q_reps: np.ndarray, k: int, batch_size: int) -> Tuple[np.ndarray, np.ndarray, np.ndarray, float]:
         num_query = q_reps.shape[0]
@@ -133,20 +137,21 @@ class IdentityMatcher:
     _CallerPrefix = "IdentityMatcher"
 
     def __init__(self,
-                brand_index_db: BaseFaissIPRetriever,
-                internal_relation_index_db: BaseFaissIPRetriever,
+                brand_index_db: Optional[BaseFaissIPRetriever],
+                internal_relation_index_db: Optional[BaseFaissIPRetriever],
                 embed_model: CharacterBERT,
-                brand_domain_map_path: str,
+                brand_domain_map_path: Optional[str],
                 knowledge_base_expansion: bool=False,
-                gpt_client: Optional[OpenAI]=None, gpt_assistant: Optional[Any]=None,
+                gpt_client: Optional[Any]=None, gpt_assistant: Optional[Any]=None,
                 check_action: bool=True,
                 threshold: float=0.95):
 
         self.brand_index_db = brand_index_db
         self.internal_relation_index_db = internal_relation_index_db
         self.brand_domain_map_path = brand_domain_map_path
-        with open(self.brand_domain_map_path, 'r') as file:
-            self.brand_domain_map = json.load(file)
+        if brand_domain_map_path:
+            with open(self.brand_domain_map_path, 'r') as file:
+                self.brand_domain_map = json.load(file)
 
         self.knowledge_expansion = knowledge_base_expansion
         self.check_action = check_action

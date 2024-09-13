@@ -3,6 +3,7 @@ from tqdm import tqdm
 import os
 from tldextract import tldextract
 import re
+import difflib
 ext = tldextract.TLDExtract(cache_dir='./lib/reference_db')
 
 # Function to validate the domain name
@@ -119,28 +120,26 @@ if __name__ == "__main__":
                     brand_info = json.load(json_file)
 
                 wiki_entity_name = [brand_info["entity_name"]] if (not brand_info["entity_name"].startswith('Q')) else []
-                # brand_names = wiki_entity_name + brand_info["alias"]
                 brand_names = wiki_entity_name # just the official names
                 brand_names = list(set({v.casefold(): v for v in brand_names}.values()))
                 brand_names = [x for x in brand_names if len(x) > 3 and is_english_or_allowed_symbols(x)]
                 if len(brand_names) == 0:
                     continue
 
-                whois_domain_names = brand_info['whois_info'].get("domain_name", None)
-                if not whois_domain_names:
-                    whois_domain_names = []
-                elif isinstance(whois_domain_names, str):
-                    whois_domain_names = [whois_domain_names]
-                else:
-                    whois_domain_names = whois_domain_names
-                brand_domains = [tldextract.extract(x).domain + '.' + tldextract.extract(x).suffix for x in brand_info["urls"]] + whois_domain_names
+                knowledge_needed = False
+                for x in brand_names:
+                    matched_brand = difflib.get_close_matches(x, company_database.keys(), n=1, cutoff=0.95)
+                    if matched_brand:
+                        print(x, matched_brand)
+                        brand_domains = company_database[matched_brand[0]]
+                        knowledge_needed = True
+                        break
+                if not knowledge_needed:
+                    continue
+
+                brand_domains += [tldextract.extract(x).domain + '.' + tldextract.extract(x).suffix for x in brand_info["urls"]]
                 brand_domains = list(set({v.lower(): v for v in brand_domains}.values()))
                 brand_domains = [x for x in brand_domains if is_valid_domain(x)]
-
-                ## I try to filter out those unpopular benign sites
-                is_popular = any([True for x in brand_domains if x.lower() in tranco_top_1m_domains])
-                if not is_popular:
-                    continue
 
                 for brand_alias in brand_names:
                     company_database[brand_alias] = brand_domains

@@ -4,7 +4,7 @@ import os
 
 import json
 from tqdm import tqdm
-from lib.reference_db.BrandMatcher import CharacterBERT, BrandMatcher, BaseFaissIPRetriever
+from lib.reference_db.IdentityMatcher import CharacterBERT, IdentityMatcher, BaseFaissIPRetriever
 from tldextract import tldextract
 import matplotlib.pyplot as plt
 from typing import List
@@ -26,14 +26,14 @@ def results_calculation(df_cleaned,
                         ignore_entries: List=[]):
 
 
-    matcher_cls = BrandMatcher(brand_index_db=brand_index_db,
-                internal_relation_index_db=internal_relation_index_db,
-                embed_model=embed_model,
-                brand_domain_map_path=brand_domain_map_path,
-                knowledge_base_expansion=knowledge_base_expansion,
-                gpt_client=gpt_client, gpt_assistant=gpt_assistant,
-                check_action=check_action,
-                threshold=sim_threshold)
+    matcher_cls = IdentityMatcher(brand_index_db=brand_index_db,
+                                  internal_relation_index_db=internal_relation_index_db,
+                                  embed_model=embed_model,
+                                  brand_domain_map_path=brand_domain_map_path,
+                                  knowledge_base_expansion=knowledge_base_expansion,
+                                  gpt_client=gpt_client, gpt_assistant=gpt_assistant,
+                                  check_action=check_action,
+                                  threshold=sim_threshold)
 
     reported_ct = 0
     no_pred_ct = 0

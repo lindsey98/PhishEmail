@@ -1,17 +1,35 @@
-from transformers import pipeline, AutoTokenizer
+from transformers import pipeline, AutoTokenizer, AutoModelForTokenClassification
 from typing import Tuple, Set
 import torch
-from lib.utilities.logger import Timer
+from lib.utilities.logger import Timer, Logger
 import re
-
+import numpy as np
 
 class IdentityBert:
     _CallerPrefix = "IdentityBert"
 
-    def __init__(self, identity_checkpoint_path: str):
-        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        self.classifier_pipeline = pipeline("ner", model=identity_checkpoint_path, device=self.device, aggregation_strategy="simple")
+    def __init__(self,
+                 identity_checkpoint_path: str,
+                 aggregation_strategy="simple"):
+        self.device = 0 if torch.cuda.is_available() else 'cpu'
+        self.model = AutoModelForTokenClassification.from_pretrained(identity_checkpoint_path)
         self.tokenizer = AutoTokenizer.from_pretrained(identity_checkpoint_path)
+        self.classifier_pipeline = pipeline("ner",
+                                            tokenizer=self.tokenizer,
+                                            model=self.model,  # Use the already loaded model
+                                            device=self.device,
+                                            aggregation_strategy=aggregation_strategy)
+
+    def get_pred(self, input_ids):
+        probs = self.get_prob(input_ids)
+        pred_classes = probs.argmax(axis=-1)
+        return pred_classes
+
+    @torch.inference_mode()
+    def get_prob(self, input_ids):
+        input_ids = input_ids.to(self.device)
+        outputs = self.model(input_ids)[0][0].cpu().numpy()
+        return np.exp(outputs) / np.exp(outputs).sum(-1, keepdims=True) # B x C
 
     @staticmethod
     def remove_urls(text):
@@ -70,6 +88,7 @@ class IdentityBert:
             else:
                 actions.add(ent_text)
 
+        Logger.spit(f"Recognized identities = {identities}, recognized actions = {actions}", debug=True, caller_prefix=IdentityBert._CallerPrefix)
         ## Beta: get next-step-of-engagement
         urls_after_actions = self.get_next_step_of_engagement(raw_text, actions)
 
