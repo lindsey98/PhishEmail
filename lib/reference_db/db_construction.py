@@ -23,7 +23,6 @@ def is_english_or_allowed_symbols(s):
     return bool(pattern.match(s))
 
 if __name__ == "__main__":
-    # hunterio_api = open('./datasets/hunterio_key.txt').read()
     # clearbit_api = open('./datasets/clearbit_key.txt').read()
     #
     # gsearch_api, gsearch_id = [x.strip() for x in open('./datasets/google_api_key.txt').readlines()]
@@ -64,10 +63,6 @@ if __name__ == "__main__":
     #     else:
     #         existing_set = set()
     #
-    #     # response = requests.get(f"https://api.hunter.io/v2/domain-search?company={brand_name}&api_key={hunterio_api}")
-    #     # data = response.json()
-    #     # email_pattern = set([x['value'].split('@')[1] for x in data['data']['emails']])
-    #
     #     urls, _ = gsearch_engine.query2url(query=brand_name,
     #                                        proxies=proxies)
     #     if len(urls) > 0:
@@ -92,18 +87,6 @@ if __name__ == "__main__":
     #         with open('./datasets/company_database.json', 'w') as json_file:
     #             json.dump(company_database, json_file)
 
-    # Add brand information to the database
-    # add_brand('Brand A', 'Retail', 'contact@branda.com')
-    # add_brand('Brand B', 'Tech', 'contact@brandb.com')
-    #
-    # # Retrieve contact email for a brand
-    # brand_name_to_lookup = 'Brand A'
-    # contact_email = get_contact_email(brand_name_to_lookup)
-    #
-    # if contact_email:
-    #     print(f"Contact Email for {brand_name_to_lookup}: {contact_email}")
-    # else:
-    #     print(f"Brand {brand_name_to_lookup} not found in the database.")
 
     Knowphish_bkb = './datasets/KnowPhish_BKB/cat_and_pop_20240125_tld/targetlist'
     tranco_top_1m_domains = [x.strip().split(',')[-1] for x in open('./datasets/tranco-top-1m.csv').readlines()]

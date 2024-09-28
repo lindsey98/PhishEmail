@@ -5,13 +5,14 @@ import random
 ssl._create_default_https_context = ssl._create_unverified_context # fix the ssl certificate expiration error
 from tqdm import tqdm
 from .base_attack import SuperAttacker
-from ..utils import to_sentence_case
+from ...utilities.data_utils import to_sentence_case
 from transformers import AutoTokenizer, BertForMaskedLM
 from lib.encoder.IdentityBert import IdentityBert
 from typing import List, Dict, Optional
 import re
 
 class MyConcatSentAttacker(SuperAttacker):
+    _CallerPrefix = "ConcatSentence Attacker"
 
     def process_entries(self, data: List[Dict], model: Optional[IdentityBert], tokenizer: Optional[AutoTokenizer]) -> List[Dict]:
         processed_data = []
@@ -29,12 +30,7 @@ class MyConcatSentAttacker(SuperAttacker):
                 continue
 
             sentences_with_delimiters = re.findall(r'([^.!?]+)([.!?]*)', text)
-            sentences = []
-            delimiters = []
-            for item in sentences_with_delimiters:
-                sent, delimit = item
-                sentences.append(sent)
-                delimiters.append(delimit)
+            sentences, delimiters = zip(*sentences_with_delimiters)
 
             have_attacked = False
             for annot in annotations:
@@ -42,27 +38,20 @@ class MyConcatSentAttacker(SuperAttacker):
                 entity = annot['text']
 
                 if have_attacked == False and entity_cls == 'action':
-                    sent_index = -1
                     for idx, sentence in enumerate(sentences):
                         if entity in sentence:
-                            sent_index = idx
+                            concat_sent = to_sentence_case(sentences[idx-1] + ' ' + entity)
+                            rephrased[entity] = concat_sent
+                            # Combine the entity with its previous sentence
+                            sentences[idx-1] = concat_sent
+                            # Remove the entity in its original sentence
+                            sentences[idx] = to_sentence_case(sentences[idx].replace(entity, ""))
+
+                            # Apply case preservation and append delimiters back
+                            text = " ".join(to_sentence_case(sent + delim) for sent, delim in zip(sentences, delimiters))
+
+                            have_attacked = True
                             break
-                    if sent_index != -1:
-                        concat_sent = to_sentence_case(sentences[sent_index-1] + ' ' + entity)
-                        rephrased[entity] = concat_sent
-                        # Combine the entity with its previous sentence
-                        sentences[sent_index-1] = concat_sent
-                        # Remove the entity in its original sentence
-                        sentences[sent_index] = to_sentence_case(sentences[sent_index].replace(entity, ""))
-
-                        # Apply case preservation and append delimiters back
-                        corrected_sentences = []
-                        for correct_sent, delimit in zip(sentences, delimiters):
-                            corrected_sentences.append(correct_sent + delimit)
-
-                        text = " ".join(corrected_sentences)
-
-                        have_attacked = True
 
             processed_data.append({
                 "id": entry['Id'],

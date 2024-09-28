@@ -1,9 +1,9 @@
 
 import click
-from lib.encoder.IdentityBert import IdentityBert
+from ..encoder import IdentityBert
 from transformers import AutoTokenizer
-from lib.adversary.attack_utils import MySCPNAttacker, MyBAEAttacker, MyDeepWordBugAttacker, MyGPTAttacker, \
-    MyViperAttacker, MyBartParaphraseAttacker, MyT5ParaphraseAttacker, MyConcatSentAttacker
+from .attack_utils import MySCPNAttacker, MyBAEAttacker, MyDeepWordBugAttacker, MyGPTAttacker, \
+    MyViperAttacker, MyBartParaphraseAttacker, MyT5ParaphraseAttacker, MyConcatSentAttacker, MyTextFoolerAttacker
 import os
 import json
 os.environ['http_proxy'] = 'http://127.0.0.1:7890'
@@ -36,25 +36,15 @@ def pick_attacker(attacker_name, typo_type):
         return MyT5ParaphraseAttacker()
     elif attacker_name == 'concatsent':
         return MyConcatSentAttacker()
+    elif attacker_name == 'textfooler':
+        return MyTextFoolerAttacker()
 
 @click.command()
-@click.option('--attacker', required=True, type=click.Choice(['bae', 'scpn', 'deepwordbug', 'gpt', 'viper', 'bart', 't5', 'concatsent'], case_sensitive=False), help="Specify the attacker type (e.g., 'bae')")
+@click.option('--attacker', required=True, type=click.Choice(['bae', 'scpn', 'deepwordbug', 'gpt', 'viper', 'bart', 't5', 'concatsent', 'textfooler'], case_sensitive=False), help="Specify the attacker type (e.g., 'bae')")
 @click.option('--typo_type', help="Specify the typo type, only for the DeepWordBug attacking method", type=click.Choice(['repeat', 'delete', 'replace', 'switch'], case_sensitive=False))
 def main(attacker, typo_type):
     # Initialize the transformation based on the attacker argument
     transformation = pick_attacker(attacker, typo_type)
-
-    # Your processing logic
-    label_list = [
-        "O",
-        "B-identity",
-        "I-identity",
-        "B-relation",
-        "I-relation",
-        "B-action",
-        "I-action",
-    ]
-    label_to_id = {label: idx for idx, label in enumerate(label_list)}
 
     ### All data
     dataset_1_name = "spam_archive_2023"
@@ -77,13 +67,20 @@ def main(attacker, typo_type):
     with open(f'./datasets/Enron_2015_unique_annotation/annotated_internal.json', 'r') as json_file:
         data_7 = json.load(json_file)
     data = data_1 + data_2 + data_3 + data_4 + data_5 + data_6 + data_7
+    # get test split
+    with open('./datasets/ner_training_augmented/test.json', 'r') as outfile:
+        test_split = json.load(outfile)
+    test_text = [x['text'] for x in test_split]
+    filtered_data = []
+    for d in data:
+        if d['text'] in test_text:
+            filtered_data.append(d)
     ###
-
-    model = IdentityBert("./checkpoints/identity-model", aggregation_strategy="none")
-    tokenizer = AutoTokenizer.from_pretrained("./checkpoints/identity-model")
+    model = IdentityBert("checkpoints/identity_adversarial_training/checkpoint-435", aggregation_strategy="none")
+    tokenizer = AutoTokenizer.from_pretrained("checkpoints/identity_adversarial_training/checkpoint-435")
 
     # Process data with the selected transformation
-    processed_data = transformation.process_entries(data, model, tokenizer)
+    processed_data = transformation.process_entries(filtered_data, model, tokenizer)
 
     output_dir = f'./datasets/ner_training_adversarial/'
     os.makedirs(output_dir, exist_ok=True)

@@ -1,31 +1,44 @@
+import copy
+
 from OpenAttack.attackers import DeepWordBugAttacker
 from .base_attack import SuperAttacker
-from lib.adversary.utils import *
 from tqdm import tqdm
 import numpy as np
 from lib.encoder.IdentityBert import IdentityBert
+from ...utilities.data_utils import repeat_char, delete_char, switch_chars, replace_with_similar, find_all_token_indices
 from transformers import AutoTokenizer
 from typing import List, Dict, Optional, Set, Tuple
 import re
+import torch
 
 class MyDeepWordBugAttacker(DeepWordBugAttacker, SuperAttacker):
 
+    _CallerPrefix = "DeepWordBug Attacker"
 
-    def transform(self, type_: str, word: str) -> str:
+    def transform(self, type_: str, word: str) -> List[str]:
+        candidates = []
         if type_ == 'repeat':
-            typoed_text = repeat_char(word)
+            transform_func = repeat_char
         elif type_ == 'delete':
-            typoed_text = delete_char(word)
+            transform_func = delete_char
         elif type_ == 'switch':
-            typoed_text = switch_chars(word)
+            transform_func = switch_chars
         elif type_ == 'replace':
-            typoed_text = replace_with_similar(word)
+            transform_func = replace_with_similar
         else:
             raise NotImplementedError
 
-        return typoed_text
+        for idx in range(1, len(word) - 2):
+            if word[idx].isalpha():
+                candidate = transform_func(word, idx=idx)
+                candidates.append(candidate)
 
-    def process_entries(self, data: List[Dict], model: Optional[IdentityBert], tokenizer: Optional[AutoTokenizer]) -> List[Dict]:
+        return candidates
+
+
+    def process_entries(self, data: List[Dict], model: Optional[IdentityBert], tokenizer: Optional[AutoTokenizer],
+                        cls_to_modify=1
+                        ) -> List[Dict]:
         seen_texts = set()
         processed_data = []
 
@@ -49,11 +62,49 @@ class MyDeepWordBugAttacker(DeepWordBugAttacker, SuperAttacker):
                 entity_cls = annot['labels'][0]
 
                 if have_attacked == False and entity_cls == "identity":
-                    typoed_entity = self.transform(self.transformer, entity)
-                    orig_text = orig_text.replace(entity, typoed_entity)
-                    rephrased[entity] = typoed_entity
-                    annot['text'] = typoed_entity
-                    have_attacked = True
+                    orig_tokens = tokenizer.tokenize(orig_text, truncation=True, add_special_tokens=True)
+                    entity_tokens = tokenizer.tokenize(entity)
+
+                    entity_range = find_all_token_indices(orig_tokens, entity_tokens)
+                    if not len(entity_range):
+                        continue
+
+                    entity_starting_index = entity_range[0][0]
+                    input_ids = torch.tensor([tokenizer.convert_tokens_to_ids(orig_tokens)])
+                    orig_probs = torch.Tensor(model.get_prob(input_ids))
+                    orig_prob = orig_probs[entity_starting_index][cls_to_modify] # 1 stands for the class I-Identity
+
+                    candidates = self.transform(self.transformer, entity)
+
+                    most_gap = 0
+                    best_cand = None
+
+                    for candidate in candidates:
+                        new_text_copy = copy.deepcopy(orig_text)
+                        new_text_copy = new_text_copy.replace(entity, candidate)
+
+                        new_tokens = tokenizer.tokenize(new_text_copy, truncation=True, add_special_tokens=True)
+                        candidate_tokens = tokenizer.tokenize(candidate)
+
+                        entity_range = find_all_token_indices(new_tokens, candidate_tokens)
+                        if not len(entity_range):
+                            continue
+
+                        new_entity_starting_index = entity_range[0][0]
+                        input_ids = torch.tensor([tokenizer.convert_tokens_to_ids(new_tokens)])
+                        new_probs = torch.Tensor(model.get_prob(input_ids))
+                        new_prob = new_probs[new_entity_starting_index][cls_to_modify]  # 1 stands for the class I-Identity
+
+                        gap = orig_prob - new_prob  # decrease in confidence in the most significant way
+                        if gap > most_gap:
+                            most_gap = gap
+                            best_cand = candidate
+
+                    if most_gap > 0:
+                        orig_text = orig_text.replace(entity, best_cand)
+                        rephrased[entity] = best_cand
+                        annot['text'] = best_cand
+                        have_attacked = True
 
             processed_data.append({
                 "id": entry['Id'],

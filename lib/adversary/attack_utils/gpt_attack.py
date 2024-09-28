@@ -2,10 +2,12 @@ from .base_attack import SuperAttacker
 from tqdm import tqdm
 import os
 from lib.encoder.IdentityBert import IdentityBert
+from ...utilities.gpt_utils import chat_completion
 from transformers import AutoTokenizer
 from typing import List, Dict, Optional, Set, Tuple
 
 class MyGPTAttacker(SuperAttacker):
+    _CallerPrefix = "GPT Paraphrasing Attacker"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)  # Call the superclass constructor
@@ -16,16 +18,10 @@ class MyGPTAttacker(SuperAttacker):
         self.client = OpenAI()
 
     def gen_paraphrase(self, sent: str) -> str:
-        response = self.client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system",
-                 "content": """Paraphrase the following phrase with a special focus on diversifying the sentence patterns. Only output the rephrased text with no extra explanations."""},
-                {"role": "assistant",
-                 "content": f"{sent}"},
-            ]
-        )
-        rephrased_text = response.choices[0].message.content
+        rephrased_text = chat_completion(self.client,
+                                   query=sent,
+                                   context="""Paraphrase the following phrase with a special focus on diversifying the sentence patterns. 
+                                    Only output the rephrased text with no extra explanations.""")
         return rephrased_text
 
     def process_entries(self, data: List[Dict], model: Optional[IdentityBert], tokenizer: Optional[AutoTokenizer]) -> List[Dict]:

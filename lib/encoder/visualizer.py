@@ -1,10 +1,10 @@
-from lib.encoder.IdentityBert import IdentityBert
+from .IdentityBert import IdentityBert
 from transformers import pipeline
 from spacy import displacy
 import spacy
 from typing import Tuple, Set, Dict, List
 import torch
-from lib.utilities.logger import Timer
+from ..utilities import Timer
 
 class Visualizer(IdentityBert):
     _entity_colors = {

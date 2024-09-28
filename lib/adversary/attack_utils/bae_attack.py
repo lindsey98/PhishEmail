@@ -8,10 +8,11 @@ from transformers import AutoTokenizer, BertForMaskedLM
 from lib.encoder.IdentityBert import IdentityBert
 import re
 import ssl
-from ..utils import match_case, tokenize_and_map
+from ...utilities.data_utils import match_case, tokenize_and_map
 ssl._create_default_https_context = ssl._create_unverified_context # fix the ssl certificate expiration error
 
 class MyBAEAttacker(BAEAttacker, SuperAttacker):
+    _CallerPrefix = "BAE Attacker"
 
     def explicit_truncate_ground_truth(self, ground_truth_labels: List[int]):
         if len(ground_truth_labels) > self.max_length:
@@ -25,8 +26,10 @@ class MyBAEAttacker(BAEAttacker, SuperAttacker):
         else:
             return long_tokens
 
-    ##### TODO: make this one of the substitute unit under ./substitures #####
-    def get_substitues(self, masked_index: int, tokens: List[str], tokenizer: AutoTokenizer, model: BertForMaskedLM, sub_mode: str, k: int, threshold: float=3.0) -> List[str]:
+    @torch.inference_mode()
+    def get_substitues(self, masked_index: int, tokens: List[str],
+                       tokenizer: AutoTokenizer, model: BertForMaskedLM,
+                       sub_mode: str, k: int, threshold: float=3.0) -> List[str]:
 
         masked_tokens = copy.deepcopy(tokens)
         if sub_mode == "r":
@@ -36,12 +39,11 @@ class MyBAEAttacker(BAEAttacker, SuperAttacker):
         else:
             raise NotImplementedError()
 
-        masked_tokens = self.explicit_truncate_tokens(masked_tokens) # truncate again
+        masked_tokens = self.explicit_truncate_tokens(masked_tokens) # truncate again in case the insertion cause length overflow
 
         # Convert token to vocabulary indices
         indexed_tokens = tokenizer.convert_tokens_to_ids(masked_tokens)
 
-        # truncate again:
         # Define sentence A and B indices associated to 1st and 2nd sentences (see paper)
         segments_ids = [0] * len(indexed_tokens)
 
@@ -49,18 +51,19 @@ class MyBAEAttacker(BAEAttacker, SuperAttacker):
         tokens_tensor = torch.tensor([indexed_tokens]).to(self.device)
         segments_tensors = torch.tensor([segments_ids]).to(self.device)
 
-        model.eval()
-
         # Predict all tokens
-        with torch.no_grad():
-            outputs = model(tokens_tensor, token_type_ids=segments_tensors)
-            predictions = outputs[0]
+        model.eval()
+        outputs = model(tokens_tensor, token_type_ids=segments_tensors)
+        predictions = outputs[0]
 
+        # Get the top-k most probable tokens at the masked index
         predicted_indices = torch.topk(predictions[0, masked_index], k)[1]
         predicted_tokens = tokenizer.convert_ids_to_tokens(predicted_indices)
         return predicted_tokens
 
-    def get_transformations(self, model: IdentityBert, tokens: List[str], ground_truth: List[int], tokenizer: AutoTokenizer, cls_to_modify: List[int]=[1]) -> Dict:
+    def get_transformations(self, model: IdentityBert, tokens: List[str],
+                            ground_truth: List[int], tokenizer: AutoTokenizer,
+                            cls_to_modify: List[int]=[1]) -> Dict:
 
         # with CLS and SEP tokens added
         tokens = ['[CLS]'] + tokens[:self.max_length - 2] + ['[SEP]']
@@ -72,7 +75,7 @@ class MyBAEAttacker(BAEAttacker, SuperAttacker):
         input_ids = torch.tensor([tokenizer.convert_tokens_to_ids(tokens)])
         orig_probs = torch.Tensor(model.get_prob(input_ids))
 
-        # Those are the interested entities to be inserted
+        # Those are the interested entities' indices to be inserted
         interested_indices = [i for i in range(len(ground_truth)) if (ground_truth[i] in cls_to_modify)]
 
         offset = 0
@@ -81,7 +84,8 @@ class MyBAEAttacker(BAEAttacker, SuperAttacker):
 
         for top_index in interested_indices:
             tgt_word = tokens[top_index]
-            orig_prob = orig_probs[top_index][ground_truth[top_index]]
+            ground_truth_cls_idx = ground_truth[top_index]
+            orig_prob = orig_probs[top_index][ground_truth_cls_idx]
 
             if tgt_word in self.filter_words:
                 continue
@@ -99,7 +103,9 @@ class MyBAEAttacker(BAEAttacker, SuperAttacker):
             candidate = None
 
             for i, substitute in enumerate(substitutes):
-                if substitute == tgt_word or '##' in substitute or substitute in self.filter_words:
+                if substitute == tgt_word or \
+                        '##' in substitute or \
+                        substitute in self.filter_words:
                     continue
 
                 temp_replace = final_words
@@ -122,8 +128,8 @@ class MyBAEAttacker(BAEAttacker, SuperAttacker):
                 input_ids = torch.tensor([tokenizer.convert_tokens_to_ids(temp_replace)])
                 temp_prob = torch.Tensor(model.get_prob(input_ids))
 
-                label_prob = temp_prob[top_index + offset + 1][ground_truth[top_index]] # now the original interested indice becomes top_index + offset + 1
-                gap = orig_prob - label_prob # decrease in confidence
+                label_prob = temp_prob[top_index + offset + 1][ground_truth_cls_idx] # now the original interested indice becomes top_index + offset + 1
+                gap = orig_prob - label_prob # decrease in confidence in the most significant way
                 if gap > most_gap:
                     most_gap = gap
                     candidate = substitute
@@ -155,13 +161,13 @@ class MyBAEAttacker(BAEAttacker, SuperAttacker):
             seen_texts.add(orig_text)
 
             annotations = entry.get('annotations', [])
-            rephrased = {}
             if len(annotations) == 0:
                 continue
 
             for annot in annotations:
                 annot['text'] = re.sub(r"From:\s*", "", annot['text'], re.IGNORECASE) # very ad-hoc fix
 
+            rephrased = {}
             tokens, tags = tokenize_and_map(orig_text, annotations, tokenizer, SuperAttacker.label_to_id)
             rephrased_dict = self.get_transformations(model, tokens, tags, tokenizer, cls_to_modify=[1])
 
@@ -172,7 +178,7 @@ class MyBAEAttacker(BAEAttacker, SuperAttacker):
                 entity_tokens = tokenizer.tokenize(entity)
                 old_entity_starting_token = entity_tokens[0]
 
-                if have_attacked==False and entity_cls == "identity":
+                if have_attacked == False and entity_cls == "identity":
                     if old_entity_starting_token in rephrased_dict.keys():
                         new_entity_starting_token = rephrased_dict[old_entity_starting_token]
                         new_entity = tokenizer.convert_tokens_to_string([new_entity_starting_token] + entity_tokens)

@@ -8,20 +8,20 @@ os.environ['https_proxy'] = 'http://127.0.0.1:7890'
 AUGMENTATION_PROB = 0.5
 MAX_TOKENS = 500
 GPT_PROMPT = '''
-Paraphrase the following list of phrases with a special focus on diversifying the sentence patterns and action verbs. The input will consist of phrases separated by a newline, and your output should be in JSON format. Ensure that the paraphrased output significantly differs from the original!
-For example, transform phrases like "click the link to do something" into variations such as "to learn more about" "if you are interested" "to discover more" "for more information" "for more details" or "find out how to".
-The number of output phrases should be equal to the number of input phrases. 
-
-Example input: \n <phrase_1>
-Example output: \n {{"phrases": [{{"original": <phrase_1>, "paraphrased": "<paraphrased_phrase_1>"}}]}}
-
-Example input: \n <phrase_1> \n <phrase_2> \n <phrase_3>
-Example output: \n {{"phrases": [{{"original": <phrase_1>, "paraphrased": "<paraphrased_phrase_1>"}}, {{"original": <phrase_2>, "paraphrased": "<paraphrased_phrase_2>"}}, {{"original": <phrase_3>, "paraphrased": "<paraphrased_phrase_3>"}}]}}
-
-Input:
-{phrase_list}
-
-Output:
+    Paraphrase the following list of phrases with a special focus on diversifying the sentence patterns and action verbs. The input will consist of phrases separated by a newline, and your output should be in JSON format. Ensure that the paraphrased output significantly differs from the original!
+    For example, transform phrases like "click the link to do something" into variations such as "to learn more about" "if you are interested" "to discover more" "for more information" "for more details" or "find out how to".
+    The number of output phrases should be equal to the number of input phrases. 
+    
+    Example input: \n <phrase_1>
+    Example output: \n {{"phrases": [{{"original": <phrase_1>, "paraphrased": "<paraphrased_phrase_1>"}}]}}
+    
+    Example input: \n <phrase_1> \n <phrase_2> \n <phrase_3>
+    Example output: \n {{"phrases": [{{"original": <phrase_1>, "paraphrased": "<paraphrased_phrase_1>"}}, {{"original": <phrase_2>, "paraphrased": "<paraphrased_phrase_2>"}}, {{"original": <phrase_3>, "paraphrased": "<paraphrased_phrase_3>"}}]}}
+    
+    Input:
+    {phrase_list}
+    
+    Output:
 '''
 GPT_PROMPT_TOKENS = len(GPT_PROMPT) / 4
 GPT_MODEL = 'gpt-3.5-turbo'

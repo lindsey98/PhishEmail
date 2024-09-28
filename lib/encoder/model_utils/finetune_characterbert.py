@@ -3,76 +3,133 @@ import datasets
 os.environ['http_proxy'] = 'http://127.0.0.1:7890'
 os.environ['https_proxy'] = 'http://127.0.0.1:7890'
 from transformers import TrainingArguments
-from transformers import DataCollatorForTokenClassification, AutoModelForTokenClassification, AutoTokenizer
+from transformers import DataCollatorForTokenClassification, AutoModelForTokenClassification, BertConfig, BertPreTrainedModel
 import wandb
 from .preprocessing import tokenize_and_align_labels
 from .evaluation import compute_token_classification_metrics
 from .trainer import BertTrainer_FocalLoss
 import nltk
 from collections import Counter
-
-# Ensure you have the necessary nltk data
-# Ensure you have the necessary NLTK resources
+from ...reference_db.CharacterBert import CharacterIndexer
+from ...reference_db import CharacterBertModel
 nltk.download('punkt')
 nltk.download('averaged_perceptron_tagger')
+import torch
+import torch.nn as nn
 
-def pretty_print_metrics(metrics):
-    print("Evaluation Results:")
-    print(f"Precision: {metrics['eval_precision']:.3f}")
-    print(f"Recall: {metrics['eval_recall']:.3f}")
-    print(f"F1 Score: {metrics['eval_f1']:.3f}")
-    print("\nDetailed Classification Report:")
-    print(metrics['eval_class_report'])
+def tokenize_and_align_labels(examples, character_indexer):
+    all_input_ids = []
+    all_attention_masks = []
+    all_label_ids = []
 
-def extract_action_phrases(data):
-    action_phrases = []
+    for tokens, labels in zip(examples["tokens"], examples["ner_tags"]):
+        # Convert tokens to character IDs
+        input_ids = character_indexer.tokens_to_indices(tokens)  # List of [char_ids]
 
-    for entry in data:
-        tokens = entry['tokens']
-        tags = entry['ner_tags']
+        # Create attention mask (1 for real tokens, 0 for padding)
+        attention_mask = [1] * len(input_ids)
 
-        current_phrase = []
-        for token, tag in zip(tokens, tags):
-            if tag == 5:  # B-action
-                if current_phrase:
-                    action_phrases.append(' '.join(current_phrase))
-                    current_phrase = []
-                current_phrase.append(token)
-            elif tag == 6:  # I-action
-                if current_phrase:
-                    current_phrase.append(token)
-            else:
-                if current_phrase:
-                    action_phrases.append(' '.join(current_phrase))
-                    current_phrase = []
+        # Copy labels (assumes labels are already numerical IDs)
+        label_ids = labels.copy()
 
-        if current_phrase:  # Append any remaining phrase
-            action_phrases.append(' '.join(current_phrase))
+        # Handle padding for sequences shorter than max_seq_length
+        max_seq_length = 128  # Adjust as needed
+        seq_padding_length = max_seq_length - len(input_ids)
+        if seq_padding_length > 0:
+            # Pad input_ids
+            padding_word = character_indexer._default_value_for_padding()
+            input_ids += [padding_word] * seq_padding_length
+            # Pad attention_mask
+            attention_mask += [0] * seq_padding_length
+            # Pad labels
+            label_ids += [-100] * seq_padding_length  # Use -100 to ignore padding in loss computation
+        else:
+            # Truncate sequences longer than max_seq_length
+            input_ids = input_ids[:max_seq_length]
+            attention_mask = attention_mask[:max_seq_length]
+            label_ids = label_ids[:max_seq_length]
 
-    return action_phrases
+        all_input_ids.append(input_ids)
+        all_attention_masks.append(attention_mask)
+        all_label_ids.append(label_ids)
 
-def extract_phrases(sentences, n=3):
-    all_phrases = []
-    for sentence in sentences:
-        words = nltk.word_tokenize(sentence)
-        if len(words) >= n:
-            start_ngram = tuple(words[:n])
-            all_phrases.append(start_ngram)
-    return all_phrases
+    return {
+        "input_ids": all_input_ids,            # Shape: (batch_size, seq_length, char_length)
+        "attention_mask": all_attention_masks, # Shape: (batch_size, seq_length)
+        "labels": all_label_ids                # Shape: (batch_size, seq_length)
+    }
 
 
-def summarize_patterns(sentences, n=3):
-    phrases = extract_phrases(sentences, n)
-    pattern_counter = Counter(phrases)
-    return pattern_counter
+def custom_collate_fn(features):
+    batch_input_ids = [torch.tensor(f['input_ids'], dtype=torch.long) for f in features]
+    batch_attention_masks = [torch.tensor(f['attention_mask'], dtype=torch.long) for f in features]
+    batch_labels = [torch.tensor(f['labels'], dtype=torch.long) for f in features]
 
-# Create a mapping from labels to integers
-def compute_metrics(p):
-    return compute_token_classification_metrics(p, label_list)
+    # Stack the tensors
+    batch_input_ids = torch.stack(batch_input_ids)
+    batch_attention_masks = torch.stack(batch_attention_masks)
+    batch_labels = torch.stack(batch_labels)
 
+    return {
+        'input_ids': batch_input_ids,  # Shape: (batch_size, seq_length, char_length)
+        'attention_mask': batch_attention_masks,  # Shape: (batch_size, seq_length)
+        'labels': batch_labels  # Shape: (batch_size, seq_length)
+    }
+
+
+class CharacterBertForTokenClassification(BertPreTrainedModel):
+    def __init__(self, config):
+        super().__init__(config)
+        self.num_labels = config.num_labels
+
+        # Initialize the base CharacterBertModel
+        self.character_bert = CharacterBertModel.from_pretrained(config)
+
+        # Dropout layer for regularization
+        self.dropout = nn.Dropout(config.hidden_dropout_prob)
+
+        # Classification head
+        self.classifier = nn.Linear(config.hidden_size, self.num_labels)
+
+        # Initialize weights
+        self.init_weights()
+
+    def forward(
+            self,
+            input_ids=None,  # Shape: (batch_size, seq_length, char_length)
+            attention_mask=None,  # Shape: (batch_size, seq_length)
+            token_type_ids=None,  # Shape: (batch_size, seq_length)
+            labels=None,  # Shape: (batch_size, seq_length)
+            **kwargs
+    ):
+        # Pass inputs through CharacterBertModel
+        outputs = self.character_bert(
+            input_ids,
+            attention_mask=attention_mask,
+            token_type_ids=token_type_ids,
+            **kwargs
+        )
+
+        # Get the sequence output
+        sequence_output = outputs[0]  # Shape: (batch_size, seq_length, hidden_size)
+        sequence_output = self.dropout(sequence_output)
+
+        # Compute logits
+        logits = self.classifier(sequence_output)  # Shape: (batch_size, seq_length, num_labels)
+
+        loss = None
+        if labels is not None:
+            loss_fct = nn.CrossEntropyLoss()
+            # Flatten the tensors for loss computation
+            loss = loss_fct(
+                logits.view(-1, self.num_labels),
+                labels.view(-1)
+            )
+
+        output = (logits,) + outputs[2:]  # Include hidden states and attentions if they are present
+        return ((loss,) + output) if loss is not None else output
 
 if __name__ == '__main__':
-    model_id = "google-bert/bert-large-uncased"
     dataset = 'NER'
 
     # dataset_dir = f'./datasets/ner_training/'
@@ -89,30 +146,23 @@ if __name__ == '__main__':
 
     label_to_id = {label: idx for idx, label in enumerate(label_list)}
     id_to_label = {idx: label for idx, label in enumerate(label_list)}
+    num_labels = len(label_list)
 
     # Load the dataset using the custom dataset class
     ds = datasets.load_dataset("json", data_files={"train": dataset_dir + "train.json",
                                                    "test": dataset_dir + "test.json"})
     train_dataset = ds["train"]
     test_dataset = ds["test"]
-    print(train_dataset)
-    print(test_dataset)
 
-    '''Observe the action pattern'''
-    action_phrases = extract_action_phrases(train_dataset)
-    pattern_counter = summarize_patterns(action_phrases, n=5)
-    for phrase, count in pattern_counter.most_common():
-        print(f"Phrase: {' '.join(phrase)}, Count: {count}")
-
-    tokenizer = AutoTokenizer.from_pretrained(model_id)
-    tokenized_wnut = ds.map(lambda examples: tokenize_and_align_labels(examples, tokenizer=tokenizer))
-    data_collator = DataCollatorForTokenClassification(tokenizer=tokenizer)
+    character_indexer = CharacterIndexer()
+    tokenized_wnut = ds.map(lambda examples: tokenize_and_align_labels(examples, character_indexer=character_indexer))
 
     '''Train'''
-    model = AutoModelForTokenClassification.from_pretrained(
-        model_id, num_labels=7, id2label=id_to_label, label2id=label_to_id
-    )
-    os.environ["WANDB_PROJECT"] = f"{dataset}_bert"  # name your W&B project
+    config = BertConfig.from_pretrained('./checkpoints/characterbert-typos-st/')
+
+    # Initialize the Model
+    model = CharacterBertForTokenClassification(config)
+
     training_args = TrainingArguments(
         report_to="wandb",  # this tells the Trainer to log the metrics to W&B
         # output_dir="./checkpoints/output_ner",

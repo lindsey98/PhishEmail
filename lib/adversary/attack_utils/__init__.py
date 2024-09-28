@@ -6,3 +6,4 @@ from .viper_attack import MyViperAttacker
 from .bart_paragraphse_attack import MyBartParaphraseAttacker
 from .t5_paragraphse_attack import MyT5ParaphraseAttacker
 from .concatsent_attack import MyConcatSentAttacker
+from .textfooler_attack import MyTextFoolerAttacker

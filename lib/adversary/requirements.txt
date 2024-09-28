@@ -10,3 +10,5 @@ langdetect
 transformers
 nltk
 openai
+rouge_score
+sacrebleu

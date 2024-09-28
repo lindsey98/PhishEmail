@@ -8,9 +8,10 @@ from email.utils import parseaddr
 from email.message import Message
 from typing import Union, Optional, Tuple, List, Set
 from tldextract import tldextract
+import mailbox
 
 class EmailDataset(Dataset):
-    _CallerPrefix = "Dataset Loader"
+    _CallerPrefix = ".eml/.txt email files Loader"
 
     def __init__(self, root_path):
         file_list = []
@@ -54,7 +55,6 @@ class EmailDataset(Dataset):
                 parsed_domains = parsed_domains.union(ind_domain)
 
         return parsed_domains
-
 
     @staticmethod
     def load_email_content(email_file_path: str) -> Message:
@@ -246,3 +246,54 @@ class EmailDataset(Dataset):
                 headers
 
 
+class EmailBoxDataset(EmailDataset):
+    _CallerPrefix = ".mbox emailbox Loader"
+
+    def __init__(self, root_path):
+
+        messages = []
+        file_list = []
+        mbox = mailbox.mbox(root_path) # root_path must ends with .mbox
+        for it, message in enumerate(mbox):
+            file_list.append(root_path + '_' + str(it))
+            messages.append(message)
+
+        self.message_list = messages
+        self.file_list = file_list
+
+    def __len__(self):
+        return len(self.file_list)
+
+    def __getitem__(self, idx):
+        email_file_path = self.file_list[idx]
+        email_content = self.message_list[idx]
+
+        headers = str(email_content._headers)
+
+        sender_name, sender_address = self.extract_sender(email_content)
+        to_names, to_addresses = self.extract_recipients(email_content)
+        reply_to_address = self.extract_reply_to_address(email_content)
+
+        if reply_to_address is None:
+            reply_to_address = sender_address
+
+        subject = self.extract_subject(email_content)
+
+        text_content = self.extract_text_content(email_content)
+        text_content = self.remove_prev_messages(text_content)
+        text_content = self.clean_text_content(text_content)
+
+        return email_file_path, \
+               (sender_name, sender_address), \
+                (to_names, to_addresses), \
+                reply_to_address, \
+                subject, \
+                text_content, \
+                headers
+
+
+
+if __name__ == '__main__':
+    mailbox_dataset = EmailBoxDataset('./datasets/All mail Including Spam and Trash.mbox')
+    item = mailbox_dataset[0]
+    print()

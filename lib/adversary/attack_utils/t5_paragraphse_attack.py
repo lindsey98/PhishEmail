@@ -5,7 +5,7 @@ import random
 ssl._create_default_https_context = ssl._create_unverified_context # fix the ssl certificate expiration error
 from tqdm import tqdm
 from .base_attack import SuperAttacker
-from ..utils import to_sentence_case
+from ...utilities.data_utils import to_sentence_case
 from lib.encoder.IdentityBert import IdentityBert
 from typing import List, Dict, Optional
 import re
@@ -13,6 +13,7 @@ import torch
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
 class MyT5ParaphraseAttacker(SuperAttacker):
+    _CallerPrefix = "T5 Paraphrasing Attacker"
 
     def __init__(self):
         super().__init__()  # Call the superclass constructor
@@ -20,10 +21,12 @@ class MyT5ParaphraseAttacker(SuperAttacker):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model = self.model.to(self.device)
         self.tokenizer = AutoTokenizer.from_pretrained("Vamsi/T5_Paraphrase_Paws")
-
+        self.prefix = "paraphrase: "
+        self.suffix = " </s>"
+        self.max_length = 256
 
     def gen_paraphrase(self, sent: str):
-        text = "paraphrase: " + sent + " </s>"
+        text = self.prefix + sent + self.suffix
 
         encoding = self.tokenizer.encode_plus(text, pad_to_max_length=True, return_tensors="pt")
 
@@ -32,20 +35,21 @@ class MyT5ParaphraseAttacker(SuperAttacker):
         outputs = self.model.generate(
             input_ids=input_ids,
             attention_mask=attention_masks,
-            max_length=256,
+            max_length=self.max_length,
             do_sample=True,
             top_k=50,
             top_p=0.95,
             early_stopping=True,
             repetition_penalty=1.2,  # Penalize repetition
             num_beams=3,  # Beam search with 3 beams
-            num_return_sequences=2  # Lower this if memory is an issue
+            num_return_sequences=1  # Lower this if memory is an issue
         )
 
         generated_sentence = self.tokenizer.decode(outputs[0], skip_special_tokens=True, clean_up_tokenization_spaces=True)
         # Clean up memory (GPU or CPU) after use
         del input_ids, attention_masks, outputs
-        torch.cuda.empty_cache()  # if using GPU
+        if self.device != 'cpu':
+            torch.cuda.empty_cache()  # if using GPU
 
         return generated_sentence
 

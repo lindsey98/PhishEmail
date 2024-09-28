@@ -14,3 +14,5 @@ faiss-cpu
 Unidecode
 protobuf
 OpenAttack
+accelerate
+bitsandbytes

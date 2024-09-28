@@ -1,7 +1,7 @@
 from transformers import pipeline, AutoTokenizer, AutoModelForTokenClassification
 from typing import Tuple, Set
 import torch
-from lib.utilities.logger import Timer, Logger
+from ..utilities import Timer, Logger
 import re
 import numpy as np
 

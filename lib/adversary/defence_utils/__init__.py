@@ -1,1 +1,1 @@
-from .spelling_checker import SpellFixer
+from .t5_checker import T5SpellFixer

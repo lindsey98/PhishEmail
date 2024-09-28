@@ -2,8 +2,8 @@
 import os
 from tqdm import tqdm
 import csv
-from lib.data.Dataset import EmailDataset
-from lib.encoder.IdentityBert import IdentityBert
+from lib.data import EmailDataset, EmailBoxDataset
+from lib.encoder import IdentityBert
 
 # Function to read existing email_file_paths from the CSV
 def get_existing_paths(csv_file_path):
@@ -21,21 +21,21 @@ def get_existing_paths(csv_file_path):
 if __name__ == '__main__':
 
     '''Load identity detection model'''
-    # identity_checkpoint_path = "./checkpoints/output_ner/checkpoint-1554"
-    identity_checkpoint_path = "./checkpoints/output_ner_augmented/checkpoint-1351"
-    IdentityBert_MODEL = IdentityBert(identity_checkpoint_path=identity_checkpoint_path)
+    IdentityBert_MODEL = IdentityBert("checkpoints/identity_adversarial_training/checkpoint-435")
 
     ''''''
-    # desc_folder = './datasets/nazario-recent'
+    desc_folder = './datasets/nazario-recent'
     # desc_folder = './datasets/CSDMC2010/Ham'
-    desc_folder = './datasets/GPT_Dataset'
+    # desc_folder = './datasets/GPT_Dataset'
     dataset = EmailDataset(desc_folder)
-    # csv_file_path = './datasets/nazario_results.csv'
-    # csv_file_path = './datasets/nazario_results_augmented.csv'
+    csv_file_path = './datasets/nazario_results_augmented.csv'
     # csv_file_path = './datasets/CSDMC2010_benign_results.csv'
     # csv_file_path = './datasets/CSDMC2010_benign_results_augmented.csv'
-    csv_file_path = './datasets/GPT_results_augmented.csv'
+    # csv_file_path = './datasets/GPT_results_augmented.csv'
 
+    # dataset = EmailBoxDataset("./datasets/All mail Including Spam and Trash.mbox")
+    # csv_file_path = './datasets/sjtu_phish_results.csv'
+    #
     # Check if we're writing to a new file, and write the header if so
     if not os.path.exists(csv_file_path):
         with open(csv_file_path, mode='a', newline='', encoding='utf-8') as file:

@@ -5,7 +5,7 @@ import random
 ssl._create_default_https_context = ssl._create_unverified_context # fix the ssl certificate expiration error
 from tqdm import tqdm
 from .base_attack import SuperAttacker
-from ..utils import to_sentence_case
+from ...utilities.data_utils import to_sentence_case
 from transformers import AutoTokenizer, BertForMaskedLM
 from lib.encoder.IdentityBert import IdentityBert
 from typing import List, Dict, Optional
@@ -14,6 +14,7 @@ import torch
 from transformers import BartForConditionalGeneration, BartTokenizer
 
 class MyBartParaphraseAttacker(SuperAttacker):
+    _CallerPrefix = "BART Paraphrasing Attacker"
 
     def __init__(self):
         super().__init__()  # Call the superclass constructor
@@ -22,9 +23,8 @@ class MyBartParaphraseAttacker(SuperAttacker):
         self.model = self.model.to(self.device)
         self.tokenizer = BartTokenizer.from_pretrained('eugenesiow/bart-paraphrase')
 
-
     def gen_paraphrase(self, sent: str):
-        batch = self.tokenizer(sent, return_tensors='pt')
+        batch = self.tokenizer(sent, return_tensors='pt', truncation=True)
         batch = batch.to(self.device)
         generated_ids = self.model.generate(batch['input_ids'], max_new_tokens=512)
         generated_sentence = self.tokenizer.batch_decode(generated_ids, skip_special_tokens=True)
@@ -50,13 +50,14 @@ class MyBartParaphraseAttacker(SuperAttacker):
                 entity_cls = annot['labels'][0]
                 entity = annot['text']
 
-                if have_attacked==False and entity_cls == 'action':
+                if have_attacked == False and entity_cls == 'action':
                     try:
                         rephrased_text = self.gen_paraphrase(
                             sent=entity,
                         )[0]  # generate only ONE candidate
                     except KeyError:
-                        rephrased_text = entity
+                        rephrased_text = entity # no rephrasing happens
+
                     rephrased_text = to_sentence_case(rephrased_text)
                     text = text.replace(entity, rephrased_text)
                     rephrased[entity] = rephrased_text

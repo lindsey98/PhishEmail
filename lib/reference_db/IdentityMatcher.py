@@ -1,5 +1,5 @@
 
-from lib.reference_db.CharacterBert import CharacterBertModel, CharacterIndexer
+from .CharacterBert import CharacterBertModel, CharacterIndexer
 from transformers import BertTokenizer
 import os
 import torch.nn.functional as F
@@ -12,8 +12,8 @@ from typing import List, Tuple, Union, Optional, Set, Any
 import re
 from tldextract import tldextract
 ext = tldextract.TLDExtract(cache_dir='./lib/reference_db')
-from lib.utilities.gpt_utils import chat_completion
-from lib.utilities.logger import Logger, Timer
+from ..utilities.gpt_utils import chat_completion
+from ..utilities import Logger, Timer
 import difflib
 os.environ['http_proxy'] = 'http://127.0.0.1:7890'
 os.environ['https_proxy'] = 'http://127.0.0.1:7890'
@@ -22,7 +22,10 @@ os.environ['https_proxy'] = 'http://127.0.0.1:7890'
 class CharacterBERT:
     _CallerPrefix = "CharacterBert"
 
-    def __init__(self, model_id: str='./checkpoints/characterbert-typos-st/', return_cls: bool=True, do_l2_norm: bool=True) -> None:
+    def __init__(self, model_id: str,
+                 return_cls: bool=True,
+                 do_l2_norm: bool=True) -> None:
+
         self.tokenizer = BertTokenizer.from_pretrained(model_id)
         self.model = CharacterBertModel.from_pretrained(model_id)
         self.model.eval()
@@ -58,7 +61,10 @@ class CharacterBERT:
 class BaseFaissIPRetriever:
     _CallerPrefix = "BaseFaissIPRetriever"
 
-    def __init__(self, tags: List[str], init_reps: Optional[np.ndarray]=None, embed_model: Optional[CharacterBERT]=None, index_type: str = "Flat"):
+    def __init__(self, tags: List[str],
+                 init_reps: Optional[np.ndarray]=None,
+                 embed_model: Optional[CharacterBERT]=None,
+                 index_type: str = "Flat"):
         self.tags = tags
 
         if init_reps is None:
@@ -194,7 +200,7 @@ class IdentityMatcher:
             for i, f in enumerate(filtered):
                 if len(f) == 0:
                     continue
-                if difflib.SequenceMatcher(None, string, f).ratio() > threshold:
+                if difflib.SequenceMatcher(None, string, f).ratio() > threshold: # sequence matching
                     similar_found = True
                     # Keep the longer string
                     if len(string) > len(f):
@@ -241,7 +247,10 @@ class IdentityMatcher:
                             query=queried_identity)
 
         searching_time = timer.interval
-        Logger.spit(f'Searching {queried_identity} in GPT, return {search_email}, searching time = {searching_time}', caller_prefix=IdentityMatcher._CallerPrefix, debug=True)
+        Logger.spit(f'Searching {queried_identity} in GPT, \t'
+                    f'Return {search_email}, \t'
+                    f'Searching time = {searching_time}',
+                    caller_prefix=IdentityMatcher._CallerPrefix, debug=True)
 
         email_regex = re.compile(
             r'^\[?([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})(,\s*[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})*\]?$')
@@ -254,6 +263,7 @@ class IdentityMatcher:
             queried_identity_embed, embedding_time = self.embed_model([queried_identity.lower()])
             queried_identity_embed = queried_identity_embed.cpu().numpy()
             self.brand_index_db.add(queried_identity_embed, [queried_identity.lower()])
+            # fixme: it doesnt save the index db
 
             # update the reference list
             self.brand_domain_map[queried_identity.lower()] = official_emails
