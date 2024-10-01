@@ -20,7 +20,7 @@ class Config:
 
     REF_IDENTITY_REPS = os.getenv("REF_IDENTITY_REPS", "./checkpoints/company_database_reps.npy")
     REF_IDENTITY_NAMES = os.getenv("REF_IDENTITY_NAMES", "./checkpoints/company_database_names.npy")
-    REF_IDENTITY_MAP = os.getenv("REF_IDENTITY_MAP", "./checkpoints/company_database_knowphish.json")
+    REF_IDENTITY_MAP = os.getenv("REF_IDENTITY_MAP", "./checkpoints/company_database_knowphish_v2.json")
 
     REF_RELATION_REPS = os.getenv("REF_RELATION_REPS", "./checkpoints/internal_relation_reps.npy")
     REF_RELATION_NAMES = os.getenv("REF_RELATION_NAMES", "./checkpoints/internal_relation_names.npy")
@@ -84,20 +84,21 @@ def main(email_dir, save_vis, vis_dir, output_csv):
                              'is_inconsistent',
                              'matched_identity',
                              'identity_recog_runtime',
-                             'identity_matching_runtime'
-                             'pred_time'])
+                             'identity_matching_runtime'])
 
     for it in tqdm(range(len(dataset))):
 
         if os.path.exists(csv_file_path) and dataset.file_list[it] in [x.split(',')[0] for x in open(csv_file_path).readlines()]:
             continue
+        # if dataset.file_list[it] != './datasets/sjtu_phish/email_357.eml':
+        #     continue
 
         email_file_path, (sender_name, sender_address), \
-        (to_names, to_addresses), reply_to_address, \
-        subject, email_body_text, header = dataset[it]
+            (to_names, to_addresses), reply_to_address, \
+            subject, email_body_text, header = dataset[it]
 
         # Identity recognition
-        parsed_email = f'Subject: {subject}. From: {sender_name}. Body: {email_body_text}'
+        parsed_email = f'Subject: {subject} \n  From: {sender_name} \n Body: {email_body_text}'
         identities, actions, relations, urls_after_actions, identity_recog_runtime = Config.identity_model(parsed_email)
         if save_vis:
             html = Config.visualizer_model(parsed_email, metadata=email_file_path)
@@ -150,6 +151,8 @@ if __name__ == '__main__':
     Logger.set_debug_on()
     main()
 
-    
+    # "google-bert/bert-large-uncased" =>  340 million parameters.
+    # character-bert => 105 million parameters
+    # 5000 MiB
 
 

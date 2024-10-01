@@ -4,10 +4,11 @@ import os
 
 import json
 from tqdm import tqdm
-from lib.reference_db.IdentityMatcher import CharacterBERT, IdentityMatcher, BaseFaissIPRetriever
+from lib.reference_db import CharacterBERT, IdentityMatcher, BaseFaissIPRetriever
 from tldextract import tldextract
 import matplotlib.pyplot as plt
 from typing import List
+import re
 os.environ['http_proxy'] = 'http://127.0.0.1:7890'
 os.environ['https_proxy'] = 'http://127.0.0.1:7890'
 os.environ['OPENAI_API_KEY'] = open('./datasets/openai_key.txt').read()
@@ -38,6 +39,7 @@ def results_calculation(df_cleaned,
     reported_ct = 0
     no_pred_ct = 0
     reported = []
+    time_list = []
     failed_list = set()
     no_pred_list = set()
 
@@ -62,13 +64,17 @@ def results_calculation(df_cleaned,
                 sender_domain = sender_address.split('@')[-1]
                 sender_domain = tldextract.extract(sender_domain).domain + '.' + tldextract.extract(sender_domain).suffix
 
-        recipient_domains = ["monkey.org"]  # hardcode for this Nazario dataset
+        if sender_domain is not None:
+            recipient_domains = ["monkey.org"]  # hardcode for this Nazario dataset
 
-        is_inconsistent, _ = matcher_cls(identities=sender_identities,
-                                    actions=required_actions,
-                                    relations=sender_relation,
-                                    sender_domain=sender_domain,
-                                    recipient_domains=recipient_domains)
+            is_inconsistent, matched_target, matching_time = matcher_cls(identities=sender_identities,
+                                        actions=required_actions,
+                                        relations=sender_relation,
+                                        sender_domains=set(sender_domain),
+                                        recipient_domains=set(recipient_domains))
+            time_list.append(matching_time)
+        else:
+            is_inconsistent = True
 
         if is_inconsistent:
             reported_ct += 1
@@ -80,6 +86,7 @@ def results_calculation(df_cleaned,
 
     print(f'Total = {len(df_cleaned)}')
     print(f'Reported = {reported_ct}, % = {reported_ct / len(df_cleaned)}')
+    print(f'Median matching time = {np.median(time_list)}')
     print(f'Failed due to no prediction = {no_pred_ct}, % = {no_pred_ct / len(df_cleaned)}')
 
     return reported, failed_list, reported_ct/len(df_cleaned)
@@ -100,9 +107,9 @@ if __name__ == '__main__':
     #     model="gpt-4-turbo",
     # )
 
-    dataset_name = "nazario"
+    # dataset_name = "nazario"
     # dataset_name = "CSDMC2010_benign"
-    # dataset_name = 'GPT'
+    dataset_name = 'GPT'
     csv_file_path = f'./datasets/{dataset_name}_results_augmented.csv'
     df = pd.read_csv(csv_file_path)
     df = df.drop_duplicates(subset='email_file_path')
@@ -116,41 +123,47 @@ if __name__ == '__main__':
     df_cleaned = df[~df['email_file_path'].isin(noisy_email_files)]
 
     ### some fake organizations
-    df_cleaned = df_cleaned[~df_cleaned['sender_name'].isin(["Cyberdefense College",
-                                                             "Cyberdefense Consortium",
-                                                             "Cybersecurity Innovation Center",
-                                                             "DDoS Clear"])]
+    emails_info = pd.read_csv('./datasets/senders_v6.csv')
+    fake_emails_df = emails_info[emails_info['is_real'] == False]
+    emails_with_fake_org = fake_emails_df['generated_file'].dropna().unique().tolist()
 
+    escaped_fake_files = [re.escape(file) for file in emails_with_fake_org]
+    pattern = '|'.join(escaped_fake_files)
+    regex = re.compile(pattern)
+
+    mask = df_cleaned['email_file_path'].str.contains(regex, regex=True, na=False)
+    df_cleaned = df_cleaned[~mask].copy()
     df_cleaned = df_cleaned.reset_index(drop=True)
     print(f'Clean # Emails = {len(df_cleaned)}') #
 
     ## Observe the classification results
-    brand_domain_map_path = './datasets/company_database.json'
+    brand_domain_map_path = './datasets/company_database_knowphish_v2.json'
     with open(brand_domain_map_path, 'r') as file:
         brand_domain_map = json.load(file)
 
-    with open('./datasets/internal_relations.txt', 'r') as file:
-        internal_relation_list = file.read().splitlines()
 
     ### CharacterBert model
+    embed_model = CharacterBERT("./checkpoints/characterbert-typos-st")
+
     ref_embed_list = np.load('./datasets/company_database_reps.npy')
     ref_tag_list = np.load('./datasets/company_database_names.npy').tolist()
     brand_index_db = BaseFaissIPRetriever(init_reps=ref_embed_list,
-                                          tags=ref_tag_list)
+                                          tags=ref_tag_list,
+                                          embed_model=embed_model)
 
     relation_embed_list = np.load('./datasets/internal_relation_reps.npy')
     relation_tag_list = np.load('./datasets/internal_relation_names.npy').tolist()
     internal_relation_index_db = BaseFaissIPRetriever(init_reps=relation_embed_list,
-                                                      tags=relation_tag_list)
+                                                      tags=relation_tag_list,
+                                                      embed_model=embed_model)
 
-    CharacterBert_MODEL = CharacterBERT()
 
     benchmarking_txt = f'./datasets/{dataset_name}_benchmarking.txt'
     for thre in np.linspace(0.9, 0.99, 30):
         reported, failed_list, recall = results_calculation(df_cleaned,
                                                             brand_index_db=brand_index_db,
                                                             internal_relation_index_db=internal_relation_index_db,
-                                                            embed_model=CharacterBert_MODEL,
+                                                            embed_model=embed_model,
                                                             brand_domain_map_path=brand_domain_map_path,
                                                             knowledge_base_expansion = False,
                                                             gpt_client = None,

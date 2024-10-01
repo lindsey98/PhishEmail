@@ -10,7 +10,7 @@ class IdentityBert:
 
     def __init__(self,
                  identity_checkpoint_path: str,
-                 aggregation_strategy="simple"):
+                 aggregation_strategy="first"):
         self.device = 0 if torch.cuda.is_available() else 'cpu'
         self.model = AutoModelForTokenClassification.from_pretrained(identity_checkpoint_path)
         self.tokenizer = AutoTokenizer.from_pretrained(identity_checkpoint_path)
@@ -88,7 +88,27 @@ class IdentityBert:
             else:
                 actions.add(ent_text)
 
-        Logger.spit(f"Recognized identities = {identities}, recognized actions = {actions}", debug=True, caller_prefix=IdentityBert._CallerPrefix)
+        # Adhoc fix for special identity: admin or domain address claimed in the sender name part
+        if not identities:
+            pattern = r'^\s*From:\s*(admin[\w-]*)'
+            regex = re.compile(pattern, re.IGNORECASE | re.MULTILINE)
+            matches = regex.findall(raw_text)
+            if matches:
+                identities.update(matches)
+
+        if not identities:
+            pattern = r'^\s*From:\s*([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+' \
+                      r'|[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+)'
+            # Compile the regex with case-insensitive and multiline flags
+            regex = re.compile(pattern, re.IGNORECASE | re.MULTILINE)
+            matches = regex.findall(raw_text)
+            if matches:
+                identities.update(matches)
+
+        Logger.spit(f"Recognized identities = {identities}, "
+                    f"recognized actions = {actions}, "
+                    f"potential relations to the sender = {relations}",
+                    debug=True, caller_prefix=IdentityBert._CallerPrefix)
         ## Beta: get next-step-of-engagement
         urls_after_actions = self.get_next_step_of_engagement(raw_text, actions)
 

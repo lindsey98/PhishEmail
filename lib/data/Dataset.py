@@ -9,6 +9,11 @@ from email.message import Message
 from typing import Union, Optional, Tuple, List, Set
 from tldextract import tldextract
 import mailbox
+from deep_translator import GoogleTranslator
+import functools
+import langdetect
+from langdetect import detect_langs
+import time
 
 class EmailDataset(Dataset):
     _CallerPrefix = ".eml/.txt email files Loader"
@@ -23,6 +28,17 @@ class EmailDataset(Dataset):
                     file_list.append(full_path)
 
         self.file_list = file_list
+
+        proxy_set = os.getenv("http_proxy", None)
+        if proxy_set is not None:
+            self.translator = GoogleTranslator(source="auto", target="en",
+                                               proxies={
+                                                   "https": proxy_set,
+                                                   "http": proxy_set
+                                               })
+        else:
+            self.translator = GoogleTranslator(source="auto", target="en")
+
 
     def __len__(self):
         return len(self.file_list)
@@ -84,12 +100,6 @@ class EmailDataset(Dataset):
         # Deal with invisible hyphen
         text_content = re.sub(r'\xad', '', text_content)
         text_content = re.sub(r'&shy;', '', text_content)
-        # Deal with ZWSP, ESC etc
-        text_content = re.sub(r'\u200B', '', text_content)
-        text_content = re.sub(r'\x1b\[[0-?]*[ -/]*[@-~]', '', text_content)
-        text_content = re.sub(re.compile(r'[\u0090\u200C\u009F\u008F\uFEFF]'), '', text_content)
-        # Removes non-printable characters
-        text_content = re.sub(r'[^\x20-\x7E]', ' ', text_content)
         return text_content
 
     @staticmethod
@@ -112,6 +122,35 @@ class EmailDataset(Dataset):
             text_content = reply_parts[0].strip()
 
         return text_content
+
+    @functools.lru_cache(maxsize=1000)
+    def auto_translate(self, text):
+        is_in_english = True
+        try:
+            detected_langs = detect_langs(text)
+            for lang in detected_langs:
+                if lang.lang != 'en':
+                    is_in_english = False
+                    break
+        except langdetect.lang_detect_exception.LangDetectException:
+            is_in_english = False
+
+        max_retries = 3  # Number of times to retry the translation
+        retry_delay = 2  # Seconds to wait before retrying
+
+        if not is_in_english:
+            for attempt in range(1, max_retries + 1):
+                try:
+                    return self.translator.translate(text, source='auto', target='english')
+                except Exception as e:
+                    print(f"Attempt {attempt} - Error translating '{text}': {e}")
+                    if attempt < max_retries:
+                        time.sleep(retry_delay)
+                        retry_delay *= 2  # Exponential backoff
+                    else:
+                        print("Max retries reached. Returning original text.")
+                        return text  # Return the original text if translation fails after retries
+        return text
 
     def extract_subject(self, email_content: Message) -> str:
         subject = email_content.get('subject', '')
@@ -226,16 +265,20 @@ class EmailDataset(Dataset):
         headers = str(email_content._headers)
 
         sender_name, sender_address = self.extract_sender(email_content)
+        sender_name = self.auto_translate(sender_name)
+
         to_names, to_addresses = self.extract_recipients(email_content)
         reply_to_address = self.extract_reply_to_address(email_content)
         if reply_to_address is None:
             reply_to_address = sender_address
 
         subject = self.extract_subject(email_content)
+        subject = self.auto_translate(subject)
 
         text_content = self.extract_text_content(email_content)
         text_content = self.remove_prev_messages(text_content)
         text_content = self.clean_text_content(text_content)
+        text_content = self.auto_translate(text_content)
 
         return email_file_path, \
                (sender_name, sender_address), \

@@ -210,7 +210,8 @@ class IdentityMatcher:
                 filtered.append(string)
         return filtered
 
-    def find_closest_match(self, query: str, value_index_db: BaseFaissIPRetriever) -> Tuple[Optional[float], Optional[str]]:
+    def find_closest_match(self, query: str, value_index_db: BaseFaissIPRetriever,
+                           thre: float) -> Tuple[Optional[float], Optional[str]]:
 
         query_embed, embedding_time = self.embed_model([query.lower()])
         query_embed = query_embed.cpu().numpy() # 1 x Embed_dim
@@ -218,8 +219,6 @@ class IdentityMatcher:
 
         score = score.tolist()[0][0]
         tag = tag.tolist()[0][0]
-
-        thre = self.threshold
 
         if len(query) <= 3: # require exact match, because I observe a FP case where 'pay' is matched to 'pay now'
             thre = 1
@@ -281,7 +280,8 @@ class IdentityMatcher:
                 continue
 
             # Match against known brands or directly extract domains
-            matched_score, closest_match = self.find_closest_match(query=potential_organization, value_index_db=self.brand_index_db)
+            matched_score, closest_match = self.find_closest_match(query=potential_organization, value_index_db=self.brand_index_db,
+                                                                   thre=self.threshold)
             contains_a_domain, extracted_domains = self.contains_domain(potential_organization)
 
             if closest_match:
@@ -290,7 +290,7 @@ class IdentityMatcher:
                 return closest_match, official_domains
 
             elif contains_a_domain:
-                return potential_organization, extracted_domains
+                return list(extracted_domains)[0], extracted_domains
 
             elif self.knowledge_expansion:
                 updated_emails, searching_time = self.expand_knowledge_base(potential_organization)
@@ -301,7 +301,9 @@ class IdentityMatcher:
 
     def handle_internal_emails(self, relations: Set[str]) -> Tuple[bool, Optional[str]]:
         for relation in relations:
-            matched_score, closest_match = self.find_closest_match(query=relation, value_index_db=self.internal_relation_index_db)
+            matched_score, closest_match = self.find_closest_match(query=relation,
+                                                                   value_index_db=self.internal_relation_index_db,
+                                                                   thre=self.threshold - 0.01) # fixme: relax the threshold a bit
             if closest_match:  # internal
                 return True, closest_match
         return False, None
@@ -327,13 +329,16 @@ class IdentityMatcher:
         if official_email_domains and (not sender_domains.intersection(official_email_domains)):
             if self.check_action:
                 if len(actions) > 0:
-                    Logger.spit(f'[!] Matched brand = "{matched_brand}", inconsistent identity-address found, and contains at least 1 instruction', caller_prefix=IdentityMatcher._CallerPrefix, debug=True)
+                    Logger.spit(f'[!] Matched brand = "{matched_brand}", '
+                                f'inconsistent identity-address found, and contains at least 1 instruction', caller_prefix=IdentityMatcher._CallerPrefix, debug=True)
                     return True, matched_brand, total_time
                 else:
-                    Logger.spit(f'Matched brand = "{matched_brand}", inconsistent identity-address found, but does not contain any instruction => Benign', caller_prefix=IdentityMatcher._CallerPrefix, debug=True)
+                    Logger.spit(f'Matched brand = "{matched_brand}",'
+                                f' inconsistent identity-address found, but does not contain any instruction => Benign', caller_prefix=IdentityMatcher._CallerPrefix, debug=True)
                     return False, matched_brand, total_time
             else:
-                Logger.spit(f'[!] Matched brand = "{matched_brand}", inconsistent identity-address found', caller_prefix=IdentityMatcher._CallerPrefix, debug=True)
+                Logger.spit(f'[!] Matched brand = "{matched_brand}", '
+                            f'inconsistent identity-address found', caller_prefix=IdentityMatcher._CallerPrefix, debug=True)
                 return True, matched_brand, total_time
 
         if official_email_domains:  # do not further check the internal relations
@@ -362,13 +367,11 @@ class IdentityMatcher:
         return False, 'No Matched Brand', total_time
 
 
-
 if __name__ == '__main__':
+    '''Build database'''
+    model = CharacterBERT("./checkpoints/characterbert-typos-st")
 
-    ## Build database
-    model = CharacterBERT()
-
-    brand_domain_map_path = './datasets/company_database.json'
+    brand_domain_map_path = './checkpoints/company_database_knowphish_v2.json'
     with open(brand_domain_map_path, 'r') as file:
         brand_domain_map = json.load(file)
 
@@ -378,72 +381,77 @@ if __name__ == '__main__':
     brand_name_list = list(brand_domain_map.keys())
     for i in tqdm(range(0, len(brand_name_list), batch_size)):
         batch = brand_name_list[i:min(i + batch_size, len(brand_name_list))]  # Get the next batch of brand names
-        batch_embeddings = model(batch).cpu().numpy()  # Predict embeddings for the batch
+        batch_embeddings, _ = model(batch)
+        batch_embeddings = batch_embeddings.cpu().numpy()  # Predict embeddings for the batch
         index_reps = np.concatenate((index_reps, batch_embeddings), axis=0)  # Append new embeddings
         tags.extend(batch)  # Collect tags
 
-    np.save('./datasets/company_database_names.npy', np.asarray(tags))
-    np.save('./datasets/company_database_reps.npy', index_reps)
+    np.save('./checkpoints/company_database_names.npy', np.asarray(tags))
+    np.save('./checkpoints/company_database_reps.npy', index_reps)
 
     Internal_Relations = ['admin',
-                             'mail admin',
+                          'mail admin',
                           'admin portal',
-                             'administrator',
-                             'mail team',
-                             'mail service',
+                          'administrator',
+                          'mail team',
+                          'mail service',
                           'mail server administrator',
-                             'mail desk',
-                             'webmail service',
-                             'mail delivery system',
-                             'employee',
-                             'staff',
-                             'colleague',
-                             'e-mail',
-                             'email',
-                             'mailbox',
-                             'server',
-                             'faculty',
-                             'manager',
-                             'student',
-                             'human resource',
-                             'human resource team',
-                             'HR team',
-                             'Finance',
-                             'it department',
-                             'it support',
-                             'it service support',
-                             'Payroll',
-                             'helpdesk',
-                             'help desk',
-                             'support desk',
-                             'technical support',
-                             'desk support',
-                             'help center',
-                             'support team',
-                             'administration',
-                             'administrative',
-                             'supervisor',
-                             'tech support',
-                             'mail notification',
-                             'it maintenance services',
-                             'webmail panel',
-                             'it report',
-                             'itdesk',
-                             'system support',
-                             'tech team',
-                             'mail security',
-                             'webmaster',
-                             'webmailservice',
-                             'technical assistance',
-                             'webmail team'
-                             ]
+                          'mail desk',
+                          'webmail service',
+                          'mail delivery system',
+                          'employee',
+                          'staff',
+                          'colleague',
+                          'e-mail',
+                          'email',
+                          'mailbox',
+                          'server',
+                          'faculty',
+                          'manager',
+                          'student',
+                          'human resource',
+                          'human resource team',
+                          'HR team',
+                          'HR',
+                          'Finance',
+                          'it department',
+                          'it support',
+                          'it service support',
+                          'Payroll',
+                          'helpdesk',
+                          'help desk',
+                          'support desk',
+                          'technical support',
+                          'desk support',
+                          'help center',
+                          'support team',
+                          'mail support',
+                          'email storage',
+                          'administration',
+                          'administrative',
+                          'supervisor',
+                          'tech support',
+                          'mail notification',
+                          'it maintenance services',
+                          'webmail panel',
+                          'it report',
+                          'itdesk',
+                          'system support',
+                          'tech team',
+                          'mail security',
+                          'webmaster',
+                          'webmailservice',
+                          'technical assistance',
+                          'webmail team',
+                          'internal company',
+                          'human resources department',
+                          'webmail mail service team'
+                          ]
 
-    index_reps = np.empty((0, 768))
-    tags = []
-    for internal_relation in tqdm(Internal_Relations):
-        embed = model([internal_relation.lower()]).cpu().numpy()
-        index_reps = np.concatenate((index_reps, embed), axis=0)
-        tags.append(internal_relation)
+    tags = [x.lower() for x in Internal_Relations]
+    embed, _ = model(tags)
+    embed = embed.cpu().numpy()
 
-    np.save('./datasets/internal_relation_names.npy', np.asarray(tags))
-    np.save('./datasets/internal_relation_reps.npy', index_reps)
+    np.save('./checkpoints/internal_relation_names.npy', np.asarray(tags))
+    np.save('./checkpoints/internal_relation_reps.npy', embed)
+

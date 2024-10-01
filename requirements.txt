@@ -16,3 +16,7 @@ protobuf
 OpenAttack
 accelerate
 bitsandbytes
+langdetect
+deep-translator
+gdown
+tldextract

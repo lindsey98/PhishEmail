@@ -21,17 +21,17 @@ def get_existing_paths(csv_file_path):
 if __name__ == '__main__':
 
     '''Load identity detection model'''
-    IdentityBert_MODEL = IdentityBert("checkpoints/identity_adversarial_training/checkpoint-435")
+    IdentityBert_MODEL = IdentityBert("checkpoints/identity-model")
 
     ''''''
-    desc_folder = './datasets/nazario-recent'
+    # desc_folder = './datasets/nazario-recent'
     # desc_folder = './datasets/CSDMC2010/Ham'
-    # desc_folder = './datasets/GPT_Dataset'
+    desc_folder = './datasets/GPT_V6/v6'
     dataset = EmailDataset(desc_folder)
-    csv_file_path = './datasets/nazario_results_augmented.csv'
+    # csv_file_path = './datasets/nazario_results_augmented.csv'
     # csv_file_path = './datasets/CSDMC2010_benign_results.csv'
     # csv_file_path = './datasets/CSDMC2010_benign_results_augmented.csv'
-    # csv_file_path = './datasets/GPT_results_augmented.csv'
+    csv_file_path = './datasets/GPT_results_augmented.csv'
 
     # dataset = EmailBoxDataset("./datasets/All mail Including Spam and Trash.mbox")
     # csv_file_path = './datasets/sjtu_phish_results.csv'
@@ -57,8 +57,8 @@ if __name__ == '__main__':
             continue
 
         email_file_path, (sender_name, sender_address), \
-        (to_names, to_addresses), reply_to_address, \
-        subject, email_body_text, header = dataset[it]
+            (to_names, to_addresses), reply_to_address, \
+            subject, email_body_text, header = dataset[it]
 
         # if email_file_path != './datasets/GPT_Dataset/Giancarlo Pellegrino_Web_Zero_Gemini.eml':
         #     continue
