@@ -27,6 +27,8 @@ Then unzip the download file
 unzip checkpoints.zip -d checkpoints/
 ```
 
+4. I am using proxy (to connect to Google translator and HuggingFace services) and have set the http_proxy as http://127.0.0.1:7890.
+
 # Dataset format
 
 ---
