@@ -180,7 +180,7 @@ class IdentityMatcher:
             # Remove leading "##"
             string = re.sub(r'^\s*#+', '', string)
             string = string.strip()
-            if len(string) <= 2:
+            if len(string) <= 1:
                 continue
 
             # Check similarity with already filtered strings
@@ -312,11 +312,12 @@ class IdentityMatcher:
         identities = self.filter_duplicates(identities)  # Returns a list in desired order
 
         identities_set = set([item for cluster in identities for item in cluster]) # Converts to set, preserving order
+        first_cluster_identities = set(identities[0]) if len(identities) else set()
         relations_set = set(relations)  # Assuming relations are already a set
         combined_set = identities_set.union(relations_set)  # Identities first, then relations
 
         with Timer() as timer:
-            matched_brand, official_email_domains = self.handle_external_emails(set(identities[0]))
+            matched_brand, official_email_domains = self.handle_external_emails(first_cluster_identities)
         total_time += timer.interval
 
         # Report mismatches or missing email specifications
@@ -359,6 +360,10 @@ class IdentityMatcher:
                 Logger.spit(f'[!Phish] Imitating an internal role "{imitated_role}" but from an external domain',
                             caller_prefix=IdentityMatcher._CallerPrefix, debug=True)
                 return True, 'Internal', total_time
+
+        if is_internal_emails:  # do not further check the internal relations
+            Logger.spit('Consistent sender-recipient-address => Benign', caller_prefix=IdentityMatcher._CallerPrefix, debug=True)
+            return False, 'Consistent', total_time
 
         Logger.spit('Does not match to any known identity or internal role => Benign',
                     caller_prefix=IdentityMatcher._CallerPrefix, debug=True)
