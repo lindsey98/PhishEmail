@@ -142,11 +142,20 @@ The CSV file has the following columns:
 - **identity_matching_runtime**: Time taken for imitated brand matching
 
 Results interpretation:
-- Scenario 1: is_inconsistent = True: The email is reported as **phishing**, and the matched_identity field returns the target brand, if matched_identity = 'Internal', the email is imitating an internal role such as colleague.
-- Scenario 2: is_inconsistent = False, matched_identity = No Prediction: The email is reported as benign because we **didnt recognize any claimed identity** in the email.
-- Scenario 3: is_inconsistent = False, matched_identity = No Matched Brand: The email is reported as benign because the recognized sender identity is an **unknown brand**.
-- Scenario 4: is_inconsistent = False, matched_identity = Consistent: The email is reported as benign because the sender claimed identity and his sender email address are consistent.
-- Sceanrio 5: is_inconsistent = False, matched_identity = target brand: The email is reported as benign because there is **no required action** found in the email.
+- Case 1: **is_inconsistent = True**: 
+  - **Phishing**, and the matched_identity field returns the target brand, if matched_identity = 'Internal', the email is imitating an internal role such as colleague.
+
+- Case 2: **is_inconsistent = False, matched_identity = No Prediction**: 
+  - Benign because we **didnt recognize any claimed identity** in the email.
+  
+- Case 3: **is_inconsistent = False, matched_identity = No Matched Brand**: 
+  - The email is reported as benign because the recognized sender identity is an **unknown brand**.
+  
+- Case 4: **is_inconsistent = False, matched_identity = Consistent**: 
+  - The email is reported as benign because the sender claimed identity and his sender email address are consistent.
+  
+- Case 5: **is_inconsistent = False, matched_identity = target brand**: 
+  - The email is reported as benign because there is **no required action** found in the email.
 
 For example, if we have the following entry, it indicates that the email is imitating DHL Express because we have detected the sender identity as DHL, but its sender address is not from the official contacts of DHL. 
 In addition, it has a required instruction for the recipients to "confirm the delivery details," which suggests the email is a phishing attempt.
