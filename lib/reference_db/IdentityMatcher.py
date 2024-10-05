@@ -13,7 +13,7 @@ import re
 from tldextract import tldextract
 ext = tldextract.TLDExtract(cache_dir='./lib/reference_db')
 from ..utilities.gpt_utils import chat_completion
-from ..utilities.data_utils import clean_string
+from ..utilities.data_utils import clean_string, DomainUtils
 from ..utilities import Logger, Timer
 from typing import Union, List, Set
 import difflib
@@ -170,34 +170,6 @@ class IdentityMatcher:
         self.gpt_client = gpt_client
         self.gpt_assistant = gpt_assistant
 
-    @staticmethod
-    def contains_domain(text: str) -> Tuple[bool, Optional[Set[str]]]:
-
-        # Search for potential domain patterns in the given text
-        matches = re.findall(r'\b(?:[a-zA-Z0-9-]+\s?\.\s?)+[a-zA-Z]{2,}\b', text)
-
-        # Initialize tldextract with the latest TLDs list
-        tld_extract = tldextract.TLDExtract(cache_dir=True,
-                                            suffix_list_urls=tldextract.PUBLIC_SUFFIX_LIST_URLS)
-
-        # Clean up the matches by removing any spaces and checking if the TLD is valid
-        cleaned_matches = set()
-        for match in matches:
-            # Remove any spaces within the domain
-            cleaned_match = match.replace(' ', '')
-            # Extract the subdomain, domain, and suffix (TLD)
-            ext = tld_extract(cleaned_match)
-            tld = ext.suffix
-
-            # Check if the TLD is valid (non-empty and recognized)
-            if tld:
-                # Reconstruct the full domain (excluding subdomains if needed)
-                full_domain = '.'.join(part for part in [ext.domain, tld] if part)
-                cleaned_matches.add(full_domain)
-
-        # Return True if a domain name with a valid TLD is found, otherwise False
-        return bool(cleaned_matches), cleaned_matches if cleaned_matches else None
-
 
     @staticmethod
     def filter_duplicates(strings: Union[List[str], Set[str]], threshold: float=0.5) -> List[List[str]]:
@@ -208,7 +180,7 @@ class IdentityMatcher:
             # Remove leading "##"
             string = re.sub(r'^\s*#+', '', string)
             string = string.strip()
-            if len(string) == 0:
+            if len(string) <= 2:
                 continue
 
             # Check similarity with already filtered strings
@@ -297,7 +269,7 @@ class IdentityMatcher:
             matched_score, closest_match = self.find_closest_match(query=potential_organization,
                                                                    value_index_db=self.brand_index_db,
                                                                    thre=self.threshold)
-            # contains_a_domain, extracted_domains = self.contains_domain(potential_organization)
+            # contains_a_domain, extracted_domains = DomainUtils.contains_domain(potential_organization)
             # todo: I remove the contains domain checking, because this may introduce FP (pte.ltd or matches to a domain but the official email address doesnt use this domain)
 
             if closest_match:
@@ -348,7 +320,7 @@ class IdentityMatcher:
         total_time += timer.interval
 
         # Report mismatches or missing email specifications
-        if official_email_domains and (not sender_domains.intersection(official_email_domains)):
+        if official_email_domains and (not DomainUtils.domain_set_overlap(sender_domains, official_email_domains)):
             if self.check_action:
                 if len(actions) > 0:
                     Logger.spit(f'[!Phish] Matched brand = "{matched_brand}", inconsistent identity-address found, and contains at least 1 instruction',
@@ -373,7 +345,7 @@ class IdentityMatcher:
             is_internal_emails, imitated_role = self.handle_internal_emails(combined_set)
         total_time += timer.interval
 
-        if is_internal_emails and (not sender_domains.intersection(recipient_domains)):
+        if is_internal_emails and (not DomainUtils.domain_set_overlap(sender_domains, recipient_domains)):
             if self.check_action:
                 if len(actions) > 0:
                     Logger.spit(f'[!Phish] Imitating an internal role "{imitated_role}" but from an external domain, and contains at least 1 instruction',
