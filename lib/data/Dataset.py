@@ -141,9 +141,12 @@ class EmailDataset(Dataset):
         if not is_in_english:
             for attempt in range(1, max_retries + 1):
                 try:
-                    return self.translator.translate(text, source='auto', target='english')
+                    # Deeptranslator has a character limit of 5000
+                    return self.translator.translate(text[:min(5000, len(text))],
+                                                     source='auto',
+                                                     target='english')
                 except Exception as e:
-                    print(f"Attempt {attempt} - Error translating '{text}': {e}")
+                    print(f"Attempt {attempt} - Error translating: {e}")
                     if attempt < max_retries:
                         time.sleep(retry_delay)
                         retry_delay *= 2  # Exponential backoff
@@ -304,6 +307,16 @@ class EmailBoxDataset(EmailDataset):
         self.message_list = messages
         self.file_list = file_list
 
+        proxy_set = os.getenv("http_proxy", None)
+        if proxy_set is not None:
+            self.translator = GoogleTranslator(source="auto", target="en",
+                                               proxies={
+                                                   "https": proxy_set,
+                                                   "http": proxy_set
+                                               })
+        else:
+            self.translator = GoogleTranslator(source="auto", target="en")
+
     def __len__(self):
         return len(self.file_list)
 
@@ -314,26 +327,28 @@ class EmailBoxDataset(EmailDataset):
         headers = str(email_content._headers)
 
         sender_name, sender_address = self.extract_sender(email_content)
+        sender_name = self.auto_translate(sender_name)
+
         to_names, to_addresses = self.extract_recipients(email_content)
         reply_to_address = self.extract_reply_to_address(email_content)
-
         if reply_to_address is None:
             reply_to_address = sender_address
 
         subject = self.extract_subject(email_content)
+        subject = self.auto_translate(subject)
 
         text_content = self.extract_text_content(email_content)
         text_content = self.remove_prev_messages(text_content)
         text_content = self.clean_text_content(text_content)
+        text_content = self.auto_translate(text_content)
 
         return email_file_path, \
                (sender_name, sender_address), \
-                (to_names, to_addresses), \
-                reply_to_address, \
-                subject, \
-                text_content, \
-                headers
-
+               (to_names, to_addresses), \
+               reply_to_address, \
+               subject, \
+               text_content, \
+               headers
 
 
 if __name__ == '__main__':

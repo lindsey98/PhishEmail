@@ -3,8 +3,8 @@ import os
 import re
 import torch
 from ...utilities.data_utils import preserve_case
-os.environ['http_proxy'] = 'http://127.0.0.1:7890'
-os.environ['https_proxy'] = 'http://127.0.0.1:7890'
+# os.environ['http_proxy'] = 'http://127.0.0.1:7890'
+# os.environ['https_proxy'] = 'http://127.0.0.1:7890'
 
 class T5SpellFixer:
 

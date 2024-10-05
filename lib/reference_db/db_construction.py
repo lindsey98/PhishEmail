@@ -7,8 +7,8 @@ import difflib
 import pandas as pd
 import numpy as np
 ext = tldextract.TLDExtract(cache_dir='./lib/reference_db')
-os.environ['http_proxy'] = 'http://127.0.0.1:7890'
-os.environ['https_proxy'] = 'http://127.0.0.1:7890'
+# os.environ['http_proxy'] = 'http://127.0.0.1:7890'
+# os.environ['https_proxy'] = 'http://127.0.0.1:7890'
 # Function to validate the domain name
 
 
@@ -97,6 +97,9 @@ if __name__ == "__main__":
     with open('./datasets/company_database.json', 'r') as json_file:
         company_database = json.load(json_file)
     ## manually add some?
+    company_database["Skype"] = ["skype.com"]
+    company_database["DropBox Inc."] = ["dropbox.com", "dropboxmail.com"]
+    company_database["Dropbox"] = ["dropbox.com", "dropboxmail.com"]
     company_database['Xiaomi'] = ["xiaomi.com", "mi.com"]
     company_database['State Technical College of Missouri'] = ["statetechmo.edu"]
     company_database['Epos Card Co.,Ltd.'] = ['0101.co.jp']
@@ -154,18 +157,18 @@ if __name__ == "__main__":
     with open('./datasets/company_database_knowphish.json', 'w') as json_file:
         json.dump(company_database, json_file)
     #
-    # '''Those official emails are pre-collected'''
-    with open('./datasets/company_database_knowphish.json', 'r') as json_file:
-        company_database = json.load(json_file)
-
-    df = pd.read_csv('./datasets/senders_v6.csv')
-    for it, row in df.iterrows():
-        org_name = row['name']
-        email = row['official_email']
-        if isinstance(email, str) and '@' in email:
-            company_database[org_name] = [tldextract.extract(email).domain + '.' + tldextract.extract(email).suffix]
-
-    with open('./datasets/company_database_knowphish_v2.json', 'w') as json_file:
-        json.dump(company_database, json_file)
+    '''Those official emails are pre-collected => Only for the LLM benchmark'''
+    # with open('./datasets/company_database_knowphish.json', 'r') as json_file:
+    #     company_database = json.load(json_file)
+    #
+    # df = pd.read_csv('./datasets/senders_v6.csv')
+    # for it, row in df.iterrows():
+    #     org_name = row['name']
+    #     email = row['official_email']
+    #     if isinstance(email, str) and '@' in email:
+    #         company_database[org_name] = [tldextract.extract(email).domain + '.' + tldextract.extract(email).suffix]
+    #
+    # with open('./datasets/company_database_knowphish_v2.json', 'w') as json_file:
+    #     json.dump(company_database, json_file)
 
 

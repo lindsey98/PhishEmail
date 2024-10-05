@@ -13,11 +13,15 @@ import re
 from tldextract import tldextract
 ext = tldextract.TLDExtract(cache_dir='./lib/reference_db')
 from ..utilities.gpt_utils import chat_completion
+from ..utilities.data_utils import clean_string
 from ..utilities import Logger, Timer
+from typing import Union, List, Set
 import difflib
-os.environ['http_proxy'] = 'http://127.0.0.1:7890'
-os.environ['https_proxy'] = 'http://127.0.0.1:7890'
 
+# fixme: several things to adjust:
+#  1. Whether to check contains domain or not? => FP, do not check
+#  2. What's the threshold used to group the reported identities into clusters? => higher would produce more clusters, lower would produce bigger clusters
+#  3. What's the threshold used for internal keywords matching?
 
 class CharacterBERT:
     _CallerPrefix = "CharacterBert"
@@ -169,24 +173,35 @@ class IdentityMatcher:
     @staticmethod
     def contains_domain(text: str) -> Tuple[bool, Optional[Set[str]]]:
 
-        # Search for the pattern in the given text
+        # Search for potential domain patterns in the given text
         matches = re.findall(r'\b(?:[a-zA-Z0-9-]+\s?\.\s?)+[a-zA-Z]{2,}\b', text)
 
-        # Clean up the matches by removing any spaces and checking if the TLD is valid
-        cleaned_matches = []
-        for match in matches:
-            cleaned_match = match.replace(' ', '')
-            # Extract the TLD and check if it's valid
-            tld = tldextract.extract(cleaned_match).suffix
-            if tld:
-                cleaned_matches.append(cleaned_match)
+        # Initialize tldextract with the latest TLDs list
+        tld_extract = tldextract.TLDExtract(cache_dir=True,
+                                            suffix_list_urls=tldextract.PUBLIC_SUFFIX_LIST_URLS)
 
-        # Return True if a domain name is found, otherwise False
-        return bool(cleaned_matches), set(cleaned_matches) if cleaned_matches else set()
+        # Clean up the matches by removing any spaces and checking if the TLD is valid
+        cleaned_matches = set()
+        for match in matches:
+            # Remove any spaces within the domain
+            cleaned_match = match.replace(' ', '')
+            # Extract the subdomain, domain, and suffix (TLD)
+            ext = tld_extract(cleaned_match)
+            tld = ext.suffix
+
+            # Check if the TLD is valid (non-empty and recognized)
+            if tld:
+                # Reconstruct the full domain (excluding subdomains if needed)
+                full_domain = '.'.join(part for part in [ext.domain, tld] if part)
+                cleaned_matches.add(full_domain)
+
+        # Return True if a domain name with a valid TLD is found, otherwise False
+        return bool(cleaned_matches), cleaned_matches if cleaned_matches else None
+
 
     @staticmethod
-    def filter_duplicates(strings: Union[List[str], Set[str]], threshold: float=0.8) -> List[str]:
-        filtered = []
+    def filter_duplicates(strings: Union[List[str], Set[str]], threshold: float=0.5) -> List[List[str]]:
+        clusters = []
         for string in strings:
             # Remove "from:" or any case variation with optional spaces
             string = re.sub(r'(?i)from\s*:?', '', string)
@@ -195,32 +210,31 @@ class IdentityMatcher:
             string = string.strip()
             if len(string) == 0:
                 continue
+
             # Check similarity with already filtered strings
             similar_found = False
-            for i, f in enumerate(filtered):
-                if len(f) == 0:
-                    continue
-                if difflib.SequenceMatcher(None, string, f).ratio() > threshold: # sequence matching
+            for i, f in enumerate(clusters):
+                if difflib.SequenceMatcher(None, string, f[0]).ratio() > threshold: # group into a cluster
                     similar_found = True
-                    # Keep the longer string
-                    if len(string) > len(f):
-                        filtered[i] = string
+                    # Add the string to the existing cluster
+                    clusters[i].append(string)
                     break
             if not similar_found:
-                filtered.append(string)
-        return filtered
+                clusters.append([string])
+
+        return clusters
 
     def find_closest_match(self, query: str, value_index_db: BaseFaissIPRetriever,
                            thre: float) -> Tuple[Optional[float], Optional[str]]:
 
         query_embed, embedding_time = self.embed_model([query.lower()])
-        query_embed = query_embed.cpu().numpy() # 1 x Embed_dim
+        query_embed = query_embed.cpu().numpy().astype('float32') # use float32 to speed up?
         score, index, tag, searching_time = value_index_db.search(query_embed, 1) # 1-NN
 
         score = score.tolist()[0][0]
         tag = tag.tolist()[0][0]
 
-        if len(query) <= 3: # require exact match, because I observe a FP case where 'pay' is matched to 'pay now'
+        if len(query) <= 3: # require exact match if query is too short, because I observe a FP case where 'pay' is matched to 'pay now'
             thre = 1
 
         if score >= thre:
@@ -280,17 +294,20 @@ class IdentityMatcher:
                 continue
 
             # Match against known brands or directly extract domains
-            matched_score, closest_match = self.find_closest_match(query=potential_organization, value_index_db=self.brand_index_db,
+            matched_score, closest_match = self.find_closest_match(query=potential_organization,
+                                                                   value_index_db=self.brand_index_db,
                                                                    thre=self.threshold)
-            contains_a_domain, extracted_domains = self.contains_domain(potential_organization)
+            # contains_a_domain, extracted_domains = self.contains_domain(potential_organization)
+            # todo: I remove the contains domain checking, because this may introduce FP (pte.ltd or matches to a domain but the official email address doesnt use this domain)
 
             if closest_match:
                 official_emails = self.brand_domain_map[closest_match]
-                official_domains = set([tldextract.extract(x).domain + '.' + tldextract.extract(x).suffix for x in official_emails])
+                official_domains = set([tldextract.extract(x).domain + '.' +
+                                        tldextract.extract(x).suffix for x in official_emails])
                 return closest_match, official_domains
 
-            elif contains_a_domain:
-                return list(extracted_domains)[0], extracted_domains
+            # elif contains_a_domain:
+            #     return list(extracted_domains)[0], extracted_domains
 
             elif self.knowledge_expansion:
                 updated_emails, searching_time = self.expand_knowledge_base(potential_organization)
@@ -303,14 +320,14 @@ class IdentityMatcher:
         for relation in relations:
             matched_score, closest_match = self.find_closest_match(query=relation,
                                                                    value_index_db=self.internal_relation_index_db,
-                                                                   thre=self.threshold - 0.01) # fixme: relax the threshold a bit
+                                                                   thre=self.threshold - 0.05) # fixme: relax the threshold a bit
             if closest_match:  # internal
                 return True, closest_match
         return False, None
 
-
     def __call__(self, identities: Set[str], actions: Set[str], relations: Set[str],
-                 sender_domains: Set[str], recipient_domains: Set[str]) -> Tuple[Optional[bool], str, float]:
+                 sender_domains: Set[str], recipient_domains: Set[str],
+                 top_k_identities: int = 1) -> Tuple[Optional[bool], str, float]:
 
         total_time = 0
         # Check sender organization or relation
@@ -318,27 +335,32 @@ class IdentityMatcher:
             Logger.spit('No predicted identity', caller_prefix=IdentityMatcher._CallerPrefix, debug=True)
             return None, 'No Prediction', total_time
 
-        identities = set(self.filter_duplicates(identities))
-        sender_org_rel_combined = identities.union(relations)
+        identities = [clean_string(x) for x in identities]
+        relations = [clean_string(x) for x in relations]
+        identities = self.filter_duplicates(identities)  # Returns a list in desired order
+
+        identities_set = set([item for cluster in identities for item in cluster]) # Converts to set, preserving order
+        relations_set = set(relations)  # Assuming relations are already a set
+        combined_set = identities_set.union(relations_set)  # Identities first, then relations
 
         with Timer() as timer:
-            matched_brand, official_email_domains = self.handle_external_emails(identities)
+            matched_brand, official_email_domains = self.handle_external_emails(set(identities[0]))
         total_time += timer.interval
 
         # Report mismatches or missing email specifications
         if official_email_domains and (not sender_domains.intersection(official_email_domains)):
             if self.check_action:
                 if len(actions) > 0:
-                    Logger.spit(f'[!] Matched brand = "{matched_brand}", '
-                                f'inconsistent identity-address found, and contains at least 1 instruction', caller_prefix=IdentityMatcher._CallerPrefix, debug=True)
+                    Logger.spit(f'[!Phish] Matched brand = "{matched_brand}", inconsistent identity-address found, and contains at least 1 instruction',
+                                caller_prefix=IdentityMatcher._CallerPrefix, debug=True)
                     return True, matched_brand, total_time
                 else:
-                    Logger.spit(f'Matched brand = "{matched_brand}",'
-                                f' inconsistent identity-address found, but does not contain any instruction => Benign', caller_prefix=IdentityMatcher._CallerPrefix, debug=True)
+                    Logger.spit(f'Matched brand = "{matched_brand}", inconsistent identity-address found, but does not contain any instruction => Benign',
+                                caller_prefix=IdentityMatcher._CallerPrefix, debug=True)
                     return False, matched_brand, total_time
             else:
-                Logger.spit(f'[!] Matched brand = "{matched_brand}", '
-                            f'inconsistent identity-address found', caller_prefix=IdentityMatcher._CallerPrefix, debug=True)
+                Logger.spit(f'[!Phish] Matched brand = "{matched_brand}", inconsistent identity-address found',
+                            caller_prefix=IdentityMatcher._CallerPrefix, debug=True)
                 return True, matched_brand, total_time
 
         if official_email_domains:  # do not further check the internal relations
@@ -348,22 +370,26 @@ class IdentityMatcher:
         # Check internal relations
 
         with Timer() as timer:
-            is_internal_emails, imitated_role = self.handle_internal_emails(sender_org_rel_combined)
+            is_internal_emails, imitated_role = self.handle_internal_emails(combined_set)
         total_time += timer.interval
 
         if is_internal_emails and (not sender_domains.intersection(recipient_domains)):
             if self.check_action:
                 if len(actions) > 0:
-                    Logger.spit(f'[!] Imitating an internal role "{imitated_role}" but from an external domain, and contains at least 1 instruction', caller_prefix=IdentityMatcher._CallerPrefix, debug=True)
+                    Logger.spit(f'[!Phish] Imitating an internal role "{imitated_role}" but from an external domain, and contains at least 1 instruction',
+                                caller_prefix=IdentityMatcher._CallerPrefix, debug=True)
                     return True, 'Internal', total_time
                 else:
-                    Logger.spit(f'Imitating an internal role "{imitated_role}" but from an external domain, but does not contain any instruction => Benign', caller_prefix=IdentityMatcher._CallerPrefix, debug=True)
+                    Logger.spit(f'Imitating an internal role "{imitated_role}" but from an external domain, but does not contain any instruction => Benign',
+                                caller_prefix=IdentityMatcher._CallerPrefix, debug=True)
                     return False, 'Internal', total_time
             else:
-                Logger.spit(f'[!] Imitating an internal role "{imitated_role}" but from an external domain', caller_prefix=IdentityMatcher._CallerPrefix, debug=True)
+                Logger.spit(f'[!Phish] Imitating an internal role "{imitated_role}" but from an external domain',
+                            caller_prefix=IdentityMatcher._CallerPrefix, debug=True)
                 return True, 'Internal', total_time
 
-        Logger.spit('Does not match to any known identity or internal role => Benign', caller_prefix=IdentityMatcher._CallerPrefix, debug=True)
+        Logger.spit('Does not match to any known identity or internal role => Benign',
+                    caller_prefix=IdentityMatcher._CallerPrefix, debug=True)
         return False, 'No Matched Brand', total_time
 
 
@@ -371,7 +397,7 @@ if __name__ == '__main__':
     '''Build database'''
     model = CharacterBERT("./checkpoints/characterbert-typos-st")
 
-    brand_domain_map_path = './checkpoints/company_database_knowphish_v2.json'
+    brand_domain_map_path = './checkpoints/company_database_knowphish.json'
     with open(brand_domain_map_path, 'r') as file:
         brand_domain_map = json.load(file)
 
@@ -393,59 +419,52 @@ if __name__ == '__main__':
                           'mail admin',
                           'admin portal',
                           'administrator',
+                          'administration',
+                          'administrative',
+
                           'mail team',
                           'mail service',
                           'mail server administrator',
                           'mail desk',
                           'webmail service',
                           'mail delivery system',
-                          'employee',
-                          'staff',
-                          'colleague',
                           'e-mail',
                           'email',
                           'mailbox',
-                          'server',
+                          'mail support',
+                          'email storage',
+                          'mail notification',
+                          'webmail panel',
+                          'mail security',
+                          'webmaster',
+                          'webmailservice',
+                          'webmail team',
+                          'webmail mail service team'
+
+                          'employee',
+                          'staff',
+                          'colleague',
                           'faculty',
                           'manager',
                           'student',
+                          'supervisor',
+
                           'human resource',
                           'human resource team',
                           'HR team',
                           'HR',
-                          'Finance',
-                          'it department',
-                          'it support',
-                          'it service support',
-                          'Payroll',
-                          'helpdesk',
-                          'help desk',
-                          'support desk',
-                          'technical support',
-                          'desk support',
-                          'help center',
-                          'support team',
-                          'mail support',
-                          'email storage',
-                          'administration',
-                          'administrative',
-                          'supervisor',
-                          'tech support',
-                          'mail notification',
-                          'it maintenance services',
-                          'webmail panel',
-                          'it report',
-                          'itdesk',
-                          'system support',
-                          'tech team',
-                          'mail security',
-                          'webmaster',
-                          'webmailservice',
-                          'technical assistance',
-                          'webmail team',
-                          'internal company',
                           'human resources department',
-                          'webmail mail service team'
+
+                          'Finance team'
+                          'IT department',
+                          'IT support',
+                          'IT service support',
+                          'Payroll',
+                          'IT maintenance services',
+                          'IT report',
+                          'IT Desk',
+
+                          'internal company',
                           ]
 
     tags = [x.lower() for x in Internal_Relations]

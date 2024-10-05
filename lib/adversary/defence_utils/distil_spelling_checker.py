@@ -16,7 +16,7 @@ from transformers import (
 )
 from datasets import load_dataset
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "3,2,1,0"
+# os.environ["CUDA_VISIBLE_DEVICES"] = "3,2,1,0"
 
 import random
 import numpy as np

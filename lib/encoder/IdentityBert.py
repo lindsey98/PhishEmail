@@ -1,9 +1,14 @@
 from transformers import pipeline, AutoTokenizer, AutoModelForTokenClassification
-from typing import Tuple, Set
+from typing import Tuple, Set, List
 import torch
 from ..utilities import Timer, Logger
 import re
 import numpy as np
+
+# fixme: several things to adjust:
+#  1. What kind of aggregation strategy to use?
+#  2. Whether to do tokenization first before the pipeline? By right, pipeline should handle the tokenization internally, however I find this extra pre-tokenization step can affect the final results.
+#  3. How to rank the reported entities?
 
 class IdentityBert:
     _CallerPrefix = "IdentityBert"
@@ -65,28 +70,60 @@ class IdentityBert:
 
         return urls_after_actions
 
+    # Optimized rank_entities function
+    def rank_entities(self, temp_entities: List[Tuple[str, float]], text: str) -> List[Tuple[str, float]]:
+        if not temp_entities:
+            return []
+
+        text_lower = text.lower()
+        frequencies = {}
+        max_freq = 5
+        entities_with_avg = []
+
+        # Count frequencies and find max frequency
+        for entity, confidence in temp_entities:
+            freq = text_lower.count(entity.lower())
+            frequencies[entity] = freq
+            avg_score = (confidence + freq/max(freq, max_freq)) / 2
+            entities_with_avg.append((entity, avg_score))
+
+        # Sort by average score descending
+        entities_with_avg.sort(key=lambda x: x[1], reverse=True)
+        return entities_with_avg
 
     @torch.inference_mode()
     def __call__(self, raw_text: str) -> Tuple[Set[str], Set[str], Set[str], Set[str], float]:
 
         # fixme: I dont want the URL during prediction
         processed_text = self.remove_urls(raw_text)
+        # processed_text = self._tokenize(processed_text) # fixme: I find the results will be different if I do tokenization here
         with Timer() as timer:
             entities = self.classifier_pipeline(processed_text)
 
-        identities = set()
-        relations = set()
-        actions = set()
+        # Temporary lists to store entities with their confidence scores
+        temp_identities: List[Tuple[str, float]] = []
+        relations: Set[str] = set()
+        actions: Set[str] = set()
 
         for ent in entities:
             ent_label = ent['entity_group']
             ent_text = ent['word']
+            ent_score = ent.get('score', 0.0)  # Get the confidence score
             if ent_label == 'identity':
-                identities.add(ent_text)
+                if ent_text not in ['[CLS]', '[UNK]']: # cannot be CLS token
+                    temp_identities.append((ent_text, ent_score))
             elif ent_label == 'relation':
                 relations.add(ent_text)
             else:
                 actions.add(ent_text)
+
+        # Rank entities
+        ranked_identities = self.rank_entities(temp_identities, processed_text)
+
+        # Initialize sets
+        identities: Set[str] = set()
+        for entity, avg_score in ranked_identities:
+            identities.add(entity)
 
         # Adhoc fix for special identity: admin or domain address claimed in the sender name part
         if not identities:
@@ -94,21 +131,25 @@ class IdentityBert:
             regex = re.compile(pattern, re.IGNORECASE | re.MULTILINE)
             matches = regex.findall(raw_text)
             if matches:
-                identities.update(matches)
+                # Adding in order of matches; since sets preserve insertion order in Python 3.7+
+                for match in matches:
+                    identities.add(match)
 
         if not identities:
-            pattern = r'^\s*From:\s*([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+' \
-                      r'|[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+)'
+            pattern = r'^\s*From:\s*([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+|[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+)'
             # Compile the regex with case-insensitive and multiline flags
             regex = re.compile(pattern, re.IGNORECASE | re.MULTILINE)
             matches = regex.findall(raw_text)
             if matches:
-                identities.update(matches)
+                for match in matches:
+                    identities.add(match)
 
         Logger.spit(f"Recognized identities = {identities}, "
                     f"recognized actions = {actions}, "
                     f"potential relations to the sender = {relations}",
-                    debug=True, caller_prefix=IdentityBert._CallerPrefix)
+                    debug=True,
+                    caller_prefix=IdentityBert._CallerPrefix)
+
         ## Beta: get next-step-of-engagement
         urls_after_actions = self.get_next_step_of_engagement(raw_text, actions)
 

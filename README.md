@@ -65,17 +65,23 @@ PhishEmail/
         |_ identity-model/
         |_ company_database_names.npy
         |_ company_database_reps.npy
-        |_ company_database_knowphish_v2.json
+        |_ company_database_knowphish.json
         |_ internal_relation_names.npy
         |_ internal_relation_reps.npy
 ```
 
-4. I am using proxy (to connect to Google translator and HuggingFace services) and have set the http_proxy as http://127.0.0.1:7890.
+4. (Optional) I am using Clash (to connect to VPN), which runs a proxy server on port 7890, 
+so I need to set the http_proxy environment variable to http://127.0.0.1:7890.
+```commandline
+export http_proxy="http://127.0.0.1:7890"
+export https_proxy="http://127.0.0.1:7890"
+```
 
 # Dataset format
 
 ---
-Prepare a folder of emails in .eml or .txt format. The .eml/.txt contains the raw email with headers and content.
+Prepare a folder of emails in .eml or .txt format. 
+The .eml/.txt contains the raw email with headers and content.
 E.g.
 ```commandline
 maildir/
@@ -84,13 +90,19 @@ maildir/
  |_ 3.txt
  ....
 ```
+Alternatively, you can also export your mailbox into the .mbox format.
 
 # Run inference
 
 ---
 
+For a email folder, e.g.:
 ```commandline
 python inference.py --email_dir maildir/
+```
+or for .mbox, e.g.:
+```commandline
+python inference.py --email_dir inbox.mbox
 ```
 
 # Output format
@@ -101,9 +113,40 @@ The output will be a CSV file saved as ``{today's date in YYYY-MM-DD}_results.cs
 
 The CSV file has the following columns:
 
-|    email_file_path     |           sender_name            |            sender_address             |               to_names               |               to_addresses               |    subject    |     email_body_text      | sender_identities |        sender_relations                        |           required_actions           |                                            is_inconsistent                                            |               matched_identity                |               identity_recog_runtime               |       identity_matching_runtime        |
-|:----------------------:|:--------------------------------:|:-------------------------------------:|:------------------------------------:|:----------------------------------------:|:-------------:|:------------------------:|:-----------------:|:----------------------------------------------:|:------------------------------------:|:-----------------------------------------------------------------------------------------------------:|:---------------------------------------------:|:--------------------------------------------------:|:--------------------------------------:|
-| Path to the email file | sender name from the "From" header | sender address from the "From" header | recipient names from the "To" header | recipient addresses from the "To" header | email subject | email body in plain text | recognized claimed sender identities | recognized sender-recipient potential relation | next-step instruction from the email | If True, we have detected the sender-address inconsistency and an instruction from the email => Phish | The imitated brand if is_inconsistent is True | Time taken for identities, instructions extraction | Time taken for imitated brand matching |
+- **email_file_path**: Path to the email file
+
+- **sender_name**: sender name
+
+- **sender_address**: sender email address
+
+- **to_names**: recipient names
+
+- **to_addresses**: recipient email addresses
+
+- **subject**: email subject
+
+- **email_body_text**: email body in plain text
+
+- **sender_identities**: recognized sender identity in email
+
+- **sender_relations**: recognized sender-recipient potential relation 
+
+- **required_actions**: next-step instruction from the email
+
+- **is_inconsistent**: if ``True`` => Found sender identity-address inconsistency => Phish
+
+- **matched_identity**: Imitated target brand | No Prediction | No Matched Brand | Consistent
+
+- **identity_recog_runtime**: Time taken for identities, instructions extraction 
+
+- **identity_matching_runtime**: Time taken for imitated brand matching
+
+Results interpretation:
+- Scenario 1: is_inconsistent = True: The email is reported as **phishing**, and the matched_identity field returns the target brand, if matched_identity = 'Internal', the email is imitating an internal role such as colleague.
+- Scenario 2: is_inconsistent = False, matched_identity = No Prediction: The email is reported as benign because we **didnt recognize any claimed identity** in the email.
+- Scenario 3: is_inconsistent = False, matched_identity = No Matched Brand: The email is reported as benign because the recognized sender identity is an **unknown brand**.
+- Scenario 4: is_inconsistent = False, matched_identity = Consistent: The email is reported as benign because the sender claimed identity and his sender email address are consistent.
+- Sceanrio 5: is_inconsistent = False, matched_identity = target brand: The email is reported as benign because there is **no required action** found in the email.
 
 For example, if we have the following entry, it indicates that the email is imitating DHL Express because we have detected the sender identity as DHL, but its sender address is not from the official contacts of DHL. 
 In addition, it has a required instruction for the recipients to "confirm the delivery details," which suggests the email is a phishing attempt.

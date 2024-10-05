@@ -6,8 +6,8 @@ from .attack_utils import MySCPNAttacker, MyBAEAttacker, MyDeepWordBugAttacker, 
     MyViperAttacker, MyBartParaphraseAttacker, MyT5ParaphraseAttacker, MyConcatSentAttacker, MyTextFoolerAttacker
 import os
 import json
-os.environ['http_proxy'] = 'http://127.0.0.1:7890'
-os.environ['https_proxy'] = 'http://127.0.0.1:7890'
+# os.environ['http_proxy'] = 'http://127.0.0.1:7890'
+# os.environ['https_proxy'] = 'http://127.0.0.1:7890'
 os.environ['OPENAI_API_KEY'] = open('./datasets/openai_key.txt').read()
 
 def pick_attacker(attacker_name, typo_type):

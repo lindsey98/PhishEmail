@@ -5,8 +5,8 @@ import os
 from sklearn.model_selection import train_test_split
 from ...utilities.data_utils import process_entries
 from transformers import AutoTokenizer
-os.environ['http_proxy'] = 'http://127.0.0.1:7890'
-os.environ['https_proxy'] = 'http://127.0.0.1:7890'
+# os.environ['http_proxy'] = 'http://127.0.0.1:7890'
+# os.environ['https_proxy'] = 'http://127.0.0.1:7890'
 nltk.download('punkt')
 
 if __name__ == '__main__':

@@ -16,8 +16,8 @@ import json
 import re
 from ..utilities.data_utils import remove_trailing_digits, check_lang
 import os
-os.environ['http_proxy'] = 'http://127.0.0.1:7890'
-os.environ['https_proxy'] = 'http://127.0.0.1:7890'
+# os.environ['http_proxy'] = 'http://127.0.0.1:7890'
+# os.environ['https_proxy'] = 'http://127.0.0.1:7890'
 
 class MyAttackEvaluator():
     def __init__(self, correction_method=Optional[str]):
