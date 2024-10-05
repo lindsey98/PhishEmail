@@ -303,7 +303,7 @@ class IdentityMatcher:
 
         total_time = 0
         # Check sender organization or relation
-        if len(identities) == 0:
+        if len(identities) == 0 and len(relations) == 0:
             Logger.spit('No predicted identity', caller_prefix=IdentityMatcher._CallerPrefix, debug=True)
             return None, 'No Prediction', total_time
 
