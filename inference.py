@@ -92,11 +92,11 @@ def main(email_dir, save_vis, vis_dir, output_csv):
 
     for it in tqdm(range(len(dataset))):
 
-        # if it <= 8023:
+        # if it <= 9173:
         #     continue
         if os.path.exists(csv_file_path) and dataset.file_list[it] in [x.split(',')[0] for x in open(csv_file_path).readlines()]:
             continue
-        # if dataset.file_list[it] != 'datasets/Takeout/benign_gmail/inbox.mbox_7042':
+        # if dataset.file_list[it] != 'datasets/sjtu_phish/email_59.eml':
         #     continue
 
         email_file_path, (sender_name, sender_address), \
