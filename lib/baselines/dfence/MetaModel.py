@@ -37,14 +37,12 @@ class MetaModel(object):
     def make_model(self):
         """Make a model
         """
-        print("Making the model...")
         if self.model_type == 'xgb':
             self.model = xgb.XGBClassifier()
 
     def load_trained_model(self):
         """ Load the trained model and scaler
         """
-        print("Loading the model...")
         self.model = pickle.load(open(self.model_file_path, 'rb'))
         self.scaler = pickle.load(open(self.scaler_file_path, 'rb'))
 
@@ -52,7 +50,6 @@ class MetaModel(object):
         """ Fit the model
         Assuming train_data is in format ['ID', 'xxx_pred'..., 'label']
         """
-        print("Fitting the model...")
         features_col = [col for col in train_data if col.endswith('_pred')]
 
         self.scaler = StandardScaler()
@@ -66,8 +63,7 @@ class MetaModel(object):
         with open(self.scaler_file_path, 'wb') as f_write:
             pickle.dump(self.scaler, f_write, protocol=pickle.HIGHEST_PROTOCOL)
         
-        print("Meta classifier training done!")
-            
+
     def __get_class(self, prediction):
         """
         helper function: get class label based on prediction proba value
@@ -84,8 +80,7 @@ class MetaModel(object):
         """ Use the model to make prediction on given input data
            Assuming test_data is in format ['ID', features..., 'label']
         """
-        print('Final Meta Module: Prediction starts...')   
-        
+
         test_data_col = test_data.columns
         features_col = [col for col in test_data if col.endswith('_pred')]
         

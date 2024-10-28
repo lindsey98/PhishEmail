@@ -20,18 +20,11 @@ URL_ENCODING_MODE = cfg.get('env', 'urldeep_encoding_mode')
 DEBUG_LEVEL = int(cfg.get('env', 'debug_level'))
 
 
-def console_log(*args, level=1):
-    if level <= DEBUG_LEVEL:
-        dt_now = datetime.now()
-        str_now = dt_now.strftime("%Y-%m-%d/%H:%M:%S")    
-        print('[{}]{}'.format(str_now, ' '*level), *args)
-
 def read_pkl(str_file_path):
     with open(str_file_path, 'rb') as f_read:
         df_dest = pickle.load(f_read)
         
     return df_dest
-
 
 def extract_encoding(url_data, tokenizer, truncate_len,
                      label_mode, encoding_mode='default'):

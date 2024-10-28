@@ -79,7 +79,6 @@ def processEmails(dataset, batch_size):
     num_batches = (total_samples + batch_size - 1) // batch_size  # Calculate number of batches
 
     for batch_num in range(num_batches):
-        console_log(f'Processing batch {batch_num + 1}/{num_batches}...')
 
         # Determine start and end indices for the current batch
         start_idx = batch_num * batch_size
@@ -169,15 +168,12 @@ def processEmails(dataset, batch_size):
         all_text_features.append(text_features_df)
         all_urls.append(URLs_df)
 
-        console_log(f'Batch {batch_num + 1}/{num_batches} processed.')
-
     # Concatenate all batches into full DataFrames
     full_header_features_df = pd.concat(all_header_features, ignore_index=True)
     full_html_features_df = pd.concat(all_html_features, ignore_index=True)
     full_text_features_df = pd.concat(all_text_features, ignore_index=True)
     full_URLs_df = pd.concat(all_urls, ignore_index=True)
 
-    console_log('Feature extraction completed for all batches.')
 
     return full_header_features_df, full_html_features_df, full_text_features_df, full_URLs_df
 

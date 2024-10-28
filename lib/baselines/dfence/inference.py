@@ -25,43 +25,44 @@ STRUCTURAL_MODEL_TYPE = cfg.get('env', 'structural_model_type')
 TEXT_MODEL_TYPE = cfg.get('env', 'text_model_type')
 URL_MODEL_TYPE = cfg.get('env', 'url_model_type')
 META_MODEL_TYPE = cfg.get('env', 'meta_model_type')
+## Load baseline models
+model_directory = os.path.join(MODEL_DIR_PATH)
+STRUCTURAL_MODEL = StructuralModel("", STRUCTURAL_MODEL_TYPE, model_directory, REPORT_DIR_PATH)
+STRUCTURAL_MODEL.load_trained_model()
 
+TEXT_MODEL = TextModel("", TEXT_MODEL_TYPE, model_directory, REPORT_DIR_PATH)
+TEXT_MODEL.load_trained_model()
 
-def test(email_dir, model_name=''):
+URL_MODEL = URLDeep("", URL_MODEL_TYPE, model_directory, REPORT_DIR_PATH)
+URL_MODEL.load_trained_model()
+URL_MODEL.load_tokenizer()
+
+META_MODEL = MetaModel("", META_MODEL_TYPE, model_directory, REPORT_DIR_PATH)
+META_MODEL.load_trained_model()
+
+def test(email_dir):
     """test with labeled files, it can be: 1 mal and 1 benign, 1 benign only or 1 mal only
     """
-    console_log('Start testing...')
     test_dataset = EmailDataset(email_dir)
-    model_directory = os.path.join(MODEL_DIR_PATH, model_name)
-
-    console_log("Start extracting features from emails...")
+    total_time = 0
+    start_time = time.time()
     df_header_full, df_html_full, df_text_full, df_URL_full= \
         processEmails(test_dataset, int(FEATURE_EXTRACTION_BATCH_SIZE))
+    total_time += time.time() - start_time
 
     df_structural_full = df_header_full.merge(df_html_full, on='ID', how='left')
 
-    ## Load pretrained models
-    structural_model = StructuralModel(model_name, STRUCTURAL_MODEL_TYPE, model_directory, REPORT_DIR_PATH)
-    structural_model.load_trained_model()
-
-    text_model = TextModel(model_name, TEXT_MODEL_TYPE, model_directory, REPORT_DIR_PATH)
-    text_model.load_trained_model()
-
-    url_model = URLDeep(model_name, URL_MODEL_TYPE, model_directory, REPORT_DIR_PATH)
-    url_model.load_trained_model()
-    url_model.load_tokenizer()
-
-    structural_pred = structural_model.predict(df_structural_full)
-    text_pred = text_model.predict(df_text_full)
-    url_pred = url_model.predict(df_URL_full)
-
+    start_time = time.time()
+    structural_pred = STRUCTURAL_MODEL.predict(df_structural_full)
+    text_pred = TEXT_MODEL.predict(df_text_full)
+    url_pred = URL_MODEL.predict(df_URL_full)
     meta_test_data = prepMetaFeatures(structural_pred, text_pred, url_pred)
-    meta_model = MetaModel(model_name, META_MODEL_TYPE, model_directory, REPORT_DIR_PATH)
-    meta_model.load_trained_model()
-    res = meta_model.predict(meta_test_data)
-    pred_confidence, pred_class = res['Predicted Score'].tolist(), res['Predicted Class'].tolist()
+    res = META_MODEL.predict(meta_test_data)
+    total_time += time.time() - start_time
 
-    return pred_confidence, pred_class
+    pred_confidence, pred_class = res['Predicted Score'].tolist(), res['Predicted Class']
+
+    return pred_confidence, pred_class, total_time
 
 if __name__ == '__main__':
     desc_folder = './datasets/sjtu_phish/email_195.eml'

@@ -10,7 +10,7 @@ import pandas as pd
 import numpy as np
 import pickle
 from sklearn.preprocessing import LabelEncoder
-
+import time
 '''
 Main function
 '''
@@ -18,6 +18,18 @@ cfg = configparser.ConfigParser()
 cfg.read('./lib/baselines/helphed/conf.cfg')
 
 MODEL_DIR_PATH = os.path.abspath(cfg.get('env', 'model_dir_path'))
+## Method 1: stacking model
+with open(f'{MODEL_DIR_PATH}/stacking_model.pkl', 'rb') as file:
+    STACKING_MODEL = pickle.load(file)
+
+### Method 2: ensemble model
+with open(f'{MODEL_DIR_PATH}/dt_model.pkl', 'rb') as file:
+    dt_model = pickle.load(file)
+with open(f'{MODEL_DIR_PATH}/knn_model.pkl', 'rb') as file:
+    knn_model = pickle.load(file)
+INDIVIDUAL_ESTIMATORS = [dt_model, knn_model]
+with open(f'{MODEL_DIR_PATH}/label_encoder.pkl', 'rb') as file:
+    LABEL_ENCODER = pickle.load(file)
 
 def predict_from_multiple_estimator(estimators, label_encoder, X_list, weights = None):
     pred1 = np.asarray([clf.predict_proba(X) for clf, X in zip(estimators, X_list)])
@@ -25,15 +37,17 @@ def predict_from_multiple_estimator(estimators, label_encoder, X_list, weights =
     pred = np.argmax(pred2, axis=1)
     return label_encoder.inverse_transform(pred)
 
-def test(email_dir, model_name=''):
+def test(email_dir):
     """test with labeled files, it can be: 1 mal and 1 benign, 1 benign only or 1 mal only
     """
     test_dataset = EmailDataset(email_dir)
-
+    total_time = 0
     result_list = []
     for it in tqdm(range(len(test_dataset))):
         email_file_path = test_dataset.file_list[it]
+        start_time = time.time()
         result = parse_email_parts(email_file_path, 0)
+        total_time += time.time() - start_time
         result_list.append(result)
 
     df = pd.DataFrame(result_list)
@@ -50,36 +64,22 @@ def test(email_dir, model_name=''):
     enc_encode = LabelEncoder()
     # Integer encoding the 'encoding' column
     df['encoding'] = enc_encode.fit_transform(df.encoding)
+
     #########################################
     # Concat word2vec with content-based features TRAINING
     X_test = pd.concat([df, df_new], axis=1)
     X_test.columns = X_test.columns.astype(str)
-
-    ## Method 1: stacking model
-    model_path = f'{MODEL_DIR_PATH}/stacking_model.pkl'
-    with open(model_path, 'rb') as file:
-        sclf = pickle.load(file)
-
-    y_pred_stacked = sclf.predict(X_test).tolist()
-
-    ### Method 2: ensemble model
-    model_path = f'{MODEL_DIR_PATH}/dt_model.pkl'  # name[0] should contain the identifier of the classifier
-    with open(model_path, 'rb') as file:
-        dt_model = pickle.load(file)
-    model_path = f'{MODEL_DIR_PATH}/knn_model.pkl'  # name[0] should contain the identifier of the classifier
-    with open(model_path, 'rb') as file:
-        knn_model = pickle.load(file)
-    fitted_estimators = [dt_model, knn_model]
-
-    model_path = f'{MODEL_DIR_PATH}/label_encoder.pkl'  # name[0] should contain the identifier of the classifier
-    with open(model_path, 'rb') as file:
-        label_encoder = pickle.load(file)
+    start_time = time.time()
+    y_pred_stacked = STACKING_MODEL.predict(X_test).tolist()
+    total_time1 = time.time() - start_time + total_time
 
     X_test1, X_test2 = X_test.iloc[:, 0:18], X_test.iloc[:, 18:]
     X_test_list = [X_test1, X_test2]
-    y_pred_voting = predict_from_multiple_estimator(fitted_estimators, label_encoder, X_test_list).tolist()
+    start_time = time.time()
+    y_pred_voting = predict_from_multiple_estimator(INDIVIDUAL_ESTIMATORS, LABEL_ENCODER, X_test_list).tolist()
+    total_time2 = time.time() - start_time + total_time
 
-    return y_pred_stacked, y_pred_voting
+    return y_pred_stacked, y_pred_voting, total_time1, total_time2
 
 
 if __name__ == '__main__':

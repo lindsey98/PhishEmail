@@ -13,7 +13,7 @@ import argparse
 from datetime import datetime
 from pathlib import Path
 import click
-
+from lib.baselines import dfence, helphed, rspamd
 
 class Config:
     IDENTITY_MODEL_CHECKPOINT = os.getenv("IDENTITY_MODEL_CHECKPOINT", "./checkpoints/identity-model")
@@ -21,7 +21,7 @@ class Config:
 
     REF_IDENTITY_REPS = os.getenv("REF_IDENTITY_REPS", "./checkpoints/company_database_reps.npy")
     REF_IDENTITY_NAMES = os.getenv("REF_IDENTITY_NAMES", "./checkpoints/company_database_names.npy")
-    REF_IDENTITY_MAP = os.getenv("REF_IDENTITY_MAP", "./checkpoints/company_database_knowphish.json")
+    REF_IDENTITY_MAP = os.getenv("REF_IDENTITY_MAP", "./checkpoints/company_database_knowphish.json") # todo
 
     REF_RELATION_REPS = os.getenv("REF_RELATION_REPS", "./checkpoints/internal_relation_reps.npy")
     REF_RELATION_NAMES = os.getenv("REF_RELATION_NAMES", "./checkpoints/internal_relation_names.npy")
@@ -43,7 +43,7 @@ class Config:
     internal_relation_index_db = BaseFaissIPRetriever(init_reps=relation_embed_list, tags=relation_tag_list, embed_model=matching_model)
 
     thre = 0.95
-    
+
     
 today = datetime.today()
 today_date = today.strftime("%Y-%m-%d")
@@ -52,7 +52,10 @@ today_date = today.strftime("%Y-%m-%d")
 @click.option("--save_vis", help="Save the visualized results or not", is_flag=True, show_default=True, default=False, )
 @click.option("--vis_dir", help="Where to save the visualized result", default='./datasets/vis', type=str)
 @click.option("--output_csv", default=f'{today_date}_results.csv', help="Output txt path")
-def main(email_dir, save_vis, vis_dir, output_csv):
+@click.option("--dfence", is_flag=True)
+@click.option("--helphed", is_flag=True)
+@click.option("--rspamd", is_flag=True)
+def main(email_dir, save_vis, vis_dir, output_csv, dfence, helphed, rspamd):
     matcher_cls = IdentityMatcher(brand_index_db=Config.brand_index_db,
                                   internal_relation_index_db=Config.internal_relation_index_db,
                                   embed_model=Config.matching_model,
@@ -80,29 +83,56 @@ def main(email_dir, save_vis, vis_dir, output_csv):
                              'to_names',
                              'to_addresses',
                              'subject',
-                             'email_body_text',
                              'sender_identities',
-                             'sender_relations',
+                             'sender_relation',
                              'required_actions',
                              'next_step_of_engagement',
-                             'is_inconsistent',
                              'matched_identity',
-                             'identity_recog_runtime',
-                             'identity_matching_runtime'])
+                             'our_pred',
+                             'our_runtime',
+                             'dfence_pred',
+                             'dfence_runtime',
+                             'helphed_stacking_pred',
+                             'helphed_stacking_runtime',
+                             'helphed_voting_pred',
+                             'helphed_voting_runtime',
+                             'rspamd_pred',
+                             'rspamd_score',
+                             'rspamd_metadata',
+                             'rspamd_runtime'
+                             ])
 
     for it in tqdm(range(len(dataset))):
 
         # if it <= 9173:
         #     continue
-        # if os.path.exists(csv_file_path) and dataset.file_list[it] in [x.split(',')[0] for x in open(csv_file_path).readlines()]:
-        #     continue
-        if dataset.file_list[it] != 'datasets/sjtu_phish/email_154.eml':
+        if os.path.exists(csv_file_path) and dataset.file_list[it] in [x.split(',')[0] for x in open(csv_file_path).readlines()]:
             continue
+        # if dataset.file_list[it] != 'datasets/sjtu_phish/email_154.eml':
+        #     continue
 
         email_file_path, (sender_name, sender_address), \
             (to_names, to_addresses), reply_to_address, \
             subject, email_body_text, header = dataset[it] ## fixme: the GoogleTranslator takes time
 
+        '''Baseline: D-Fence, HelpHed'''
+        if dfence:
+            _, dfence_pred, dfence_runtime = dfence.inference.test(email_file_path)
+            dfence_pred = dfence_pred[0]
+        else:
+            dfence_pred, dfence_runtime = None, None
+        if helphed:
+            helphed_stacking_pred, helphed_voting_pred, helphed_stacking_runtime, helphed_voting_runtime = helphed.inference.test(email_file_path)
+            helphed_stacking_pred = helphed_stacking_pred[0]
+            helphed_voting_pred = helphed_voting_pred[0]
+        else:
+            helphed_stacking_pred, helphed_voting_pred, helphed_stacking_runtime, helphed_voting_runtime = None, None, None, None
+        if rspamd:
+            rspamd_pred, rspamd_score, rspamd_metadata, rspamd_runtime = rspamd.inference.test(email_file_path)
+        else:
+            rspamd_pred, rspamd_score, rspamd_metadata, rspamd_runtime = None, None, None, None
+
+        '''Our method'''
         # Identity recognition
         parsed_email = f'Subject: {subject} \n  From: {sender_name} \n Body: {email_body_text}'
         identities, actions, relations, urls_after_actions, identity_recog_runtime = Config.identity_model(parsed_email)
@@ -133,6 +163,7 @@ def main(email_dir, save_vis, vis_dir, output_csv):
                                                                                    relations=relations,
                                                                                    sender_domains=sender_domains,
                                                                                    recipient_domains=recipient_domains)
+
         # Append the new row to the CSV file
         with open(csv_file_path, mode='a', newline='', encoding='utf-8', errors='ignore') as file:
             writer = csv.writer(file)
@@ -140,15 +171,24 @@ def main(email_dir, save_vis, vis_dir, output_csv):
                 writer.writerow([email_file_path,
                                  sender_name, sender_address,
                                  to_names, to_addresses,
-                                 subject, email_body_text,
+                                 subject,
                                  identities,
                                  relations,
                                  actions,
                                  next_step_of_engagement,
-                                 is_inconsistent,
                                  matched_identity,
-                                 identity_recog_runtime,
-                                 identity_matching_runtime
+                                 is_inconsistent,
+                                 identity_recog_runtime + identity_matching_runtime,
+                                 dfence_pred,
+                                 dfence_runtime,
+                                 helphed_stacking_pred,
+                                 helphed_stacking_runtime,
+                                 helphed_voting_pred,
+                                 helphed_voting_runtime,
+                                 rspamd_pred,
+                                 rspamd_score,
+                                 rspamd_metadata,
+                                 rspamd_runtime
                                  ])
             except:
                 continue

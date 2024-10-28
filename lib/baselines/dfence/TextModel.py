@@ -38,14 +38,12 @@ class TextModel(object):
     def make_model(self):
         """Make a model
         """
-        print("Making the model...")
         if self.model_type == 'xgb':
             self.model = xgb.XGBClassifier()
 
     def load_trained_model(self):
         """ Load the trained model
         """
-        print("Loading the model...")
         self.model = pickle.load(open(self.model_file_path, 'rb'))
         self.scaler = pickle.load(open(self.scaler_file_path, 'rb'))
 
@@ -53,7 +51,6 @@ class TextModel(object):
         """ Fit the model
         Assuming train_data is in format ['ID', features..., 'label']
         """
-        print("Fitting the model...")
         features_col = [col for col in train_data if col.startswith('features')]
 
         self.scaler = StandardScaler()
@@ -67,7 +64,6 @@ class TextModel(object):
         with open(self.scaler_file_path, 'wb') as f_write:
             pickle.dump(self.scaler, f_write, protocol=pickle.HIGHEST_PROTOCOL)
             
-        print("Training model on text embeddings done!")
 
     def __get_class(self, prediction):
         #helper function: get class label based on prediction proba value
@@ -83,8 +79,7 @@ class TextModel(object):
         """ Use the model to make prediction on given input data
            Assuming test_data is in format ['ID', features..., 'label']
         """
-        print('Text Module: Prediction starts...')   
-        
+
         features_col = [col for col in test_data if col.startswith('features')]
         
         Xtest = test_data[features_col]

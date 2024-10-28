@@ -4,7 +4,7 @@ from sklearn.metrics import roc_curve, precision_recall_curve, roc_auc_score, au
 import pandas as pd
 import pickle
 # from beautifultable import BeautifulTable
-from utils import extract_encoding
+from lib.baselines.dfence.utils import extract_encoding
 import configparser
 from sklearn.model_selection import train_test_split
 from tensorflow.keras import Sequential
@@ -84,13 +84,11 @@ class URLDeep(object):
     def load_trained_model(self):
         """ Load the trained model
         """
-        print("Loading the model...")
         self.model = load_model(self.model_file_path)
     
     def load_tokenizer(self):
         """ Load tokenizer information
         """
-        print("Loading the tokenizer...")
         with open(os.path.join(self.model_dir_path, 'url_tokenizer.pkl'), 'rb') as handle:
             extracted = pickle.load(handle)
         self.tokenizer = extracted['tokenizer']
