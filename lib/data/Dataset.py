@@ -19,15 +19,17 @@ class EmailDataset(Dataset):
     _CallerPrefix = ".eml/.txt email files Loader"
 
     def __init__(self, root_path):
-        file_list = []
+        self.file_list = []
 
-        for root, dirs, files in os.walk(root_path):
-            for filename in files:
-                if filename.endswith('.eml') or filename.endswith('.txt'):
-                    full_path = os.path.join(root, filename)  # Join root with filename
-                    file_list.append(full_path)
-
-        self.file_list = file_list
+        if os.path.isdir(root_path):  # Check if root_path is a directory
+            for root, dirs, files in os.walk(root_path):
+                for filename in files:
+                    if filename.endswith('.eml') or filename.endswith('.txt'):
+                        full_path = os.path.join(root, filename)  # Join root with filename
+                        self.file_list.append(full_path)
+        elif os.path.isfile(root_path):  # Check if root_path is a file
+            if root_path.endswith('.eml') or root_path.endswith('.txt'):
+                self.file_list.append(root_path)  # Add the file directly if it ends with .eml or .txt
 
         proxy_set = os.getenv("http_proxy", None)
         if proxy_set is not None:
@@ -198,18 +200,21 @@ class EmailDataset(Dataset):
             return reply_to_addresses[0][1]  # Return the first parsed email address
         return None
 
-    def extract_text_content(self, part: Message) -> str:
+    def extract_text_content(self, part: Message) -> Tuple[str, str]:
         """
         Recursively extracts text content from an email part,
         including handling nested multiparts.
         """
         text_content = ""
-        unwanted_extensions = {'.css', '.js', '.ico', '.png', '.jpg', '.jpeg', '.gif', '.pdf', '.doc', '.docx', '.xls',
-                               '.xlsx'}
+        html_content = ""
+        unwanted_extensions = {'.css', '.js', '.ico', '.png', '.jpg', '.jpeg', '.gif', '.pdf', '.doc', '.docx', '.xls', '.xlsx'}
+
         # Check if the part is a multipart
         if part.is_multipart():
             for subpart in part.get_payload():
-                text_content += self.extract_text_content(subpart)
+                content = self.extract_text_content(subpart)
+                text_content += content[0]
+                html_content += content[1]
         else:
             # Process single part (leaf node)
             content_type = part.get_content_type()
@@ -226,10 +231,7 @@ class EmailDataset(Dataset):
                 decoded_content = raw_email_content  # handle cases where payload is not encoded
 
             if 'html' in content_type:
-                # soup = BeautifulSoup(decoded_content, 'html.parser')
-                # text_content = ' '.join(soup.stripped_strings)
                 soup = BeautifulSoup(decoded_content, 'html.parser')
-                # Remove script and style elements
                 for script_or_style in soup(['script', 'style']):
                     script_or_style.decompose()
 
@@ -255,11 +257,12 @@ class EmailDataset(Dataset):
                                 link_text = f"{element.get_text()} ({href})"
                                 text_parts.append(link_text)
                 text_content = ' '.join(text_parts)  # Join all parts into a single string
+                html_content = decoded_content
 
             elif 'text' in content_type:
                 text_content = decoded_content.strip()
 
-        return str(text_content)
+        return str(text_content), str(html_content)
 
     def __getitem__(self, idx):
         email_file_path = self.file_list[idx]
@@ -278,7 +281,7 @@ class EmailDataset(Dataset):
         subject = self.extract_subject(email_content)
         subject = self.auto_translate(subject)
 
-        text_content = self.extract_text_content(email_content)
+        text_content, html_content = self.extract_text_content(email_content)
         text_content = self.remove_prev_messages(text_content)
         text_content = self.clean_text_content(text_content)
         text_content = self.auto_translate(text_content)
@@ -337,7 +340,7 @@ class EmailBoxDataset(EmailDataset):
         subject = self.extract_subject(email_content)
         subject = self.auto_translate(subject)
 
-        text_content = self.extract_text_content(email_content)
+        text_content, html_content = self.extract_text_content(email_content)
         text_content = self.remove_prev_messages(text_content)
         text_content = self.clean_text_content(text_content)
         text_content = self.auto_translate(text_content)

@@ -20,3 +20,6 @@ langdetect
 deep-translator
 gdown
 tldextract
+xgboost
+mlxtend
+

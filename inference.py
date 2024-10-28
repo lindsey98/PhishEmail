@@ -94,10 +94,10 @@ def main(email_dir, save_vis, vis_dir, output_csv):
 
         # if it <= 9173:
         #     continue
-        if os.path.exists(csv_file_path) and dataset.file_list[it] in [x.split(',')[0] for x in open(csv_file_path).readlines()]:
-            continue
-        # if dataset.file_list[it] != 'datasets/sjtu_phish/email_59.eml':
+        # if os.path.exists(csv_file_path) and dataset.file_list[it] in [x.split(',')[0] for x in open(csv_file_path).readlines()]:
         #     continue
+        if dataset.file_list[it] != 'datasets/sjtu_phish/email_154.eml':
+            continue
 
         email_file_path, (sender_name, sender_address), \
             (to_names, to_addresses), reply_to_address, \

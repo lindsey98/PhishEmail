@@ -312,7 +312,12 @@ class IdentityMatcher:
         identities = self.filter_duplicates(identities)  # Returns a list in desired order
 
         identities_set = set([item for cluster in identities for item in cluster]) # Converts to set, preserving order
-        first_cluster_identities = set(identities[0]) if len(identities) else set()
+        first_cluster_identities = set()
+        for this_set in identities:
+            first_cluster_identities = first_cluster_identities.union(this_set)
+            clean_this_set_representative_str = re.sub(r'[@!:;.]', '', this_set[0]).strip()
+            if len(clean_this_set_representative_str) > 3:
+                break
         relations_set = set(relations)  # Assuming relations are already a set
         combined_set = identities_set.union(relations_set)  # Identities first, then relations
 
