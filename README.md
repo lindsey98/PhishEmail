@@ -63,11 +63,28 @@ PhishEmail/
     |_ checkpoints/
         |_ characterbert-typos-st/
         |_ identity-model/
-        |_ company_database_names.npy
+        
+        |_ company_database_names.npy # this is a compact version of knowledge base, the brands inside have been manually cleaned
         |_ company_database_reps.npy
         |_ company_database_knowphish.json
-        |_ internal_relation_names.npy
+        
+        |_ internal_relation_names.npy 
         |_ internal_relation_reps.npy
+        
+        |_ company_database_names_v2.npy # this is an extended version of knowledge base, the brands have been partially verified
+        |_ company_database_reps_v2.npy
+        |_ company_database_knowphish_v2.json
+        
+        |_ dfence_models/
+            |_ meta/
+            |_ struct/
+            |_ text/
+            |_ url/
+        
+        |_ helphed_models/
+            |_ dt_model.pkl
+            |_ word2vec_model.kv
+            |_ ......
 ```
 
 4. (Optional) I am using Clash (to connect to VPN), which runs a proxy server on port 7890, 
@@ -105,6 +122,11 @@ or for .mbox, e.g.:
 python inference.py --email_dir inbox.mbox
 ```
 
+To run the baselines as well, e.g.:
+```commandline
+python inference.py --email_dir maildir/ --run_dfence --run_helphed
+```
+
 # Output format
 
 ---
@@ -133,98 +155,35 @@ The CSV file has the following columns:
 
 - **required_actions**: next-step instruction from the email
 
-- **is_inconsistent**: if ``True`` => Found sender identity-address inconsistency => Phish
-
 - **matched_identity**: Imitated target brand | No Prediction | No Matched Brand | Consistent
 
-- **identity_recog_runtime**: Time taken for identities, instructions extraction 
+- **our_pred**: if ``True`` => Found sender identity-address inconsistency => Phish
 
-- **identity_matching_runtime**: Time taken for imitated brand matching
+- **our_runtime**: Time taken for identities extraction and identity matching
+
 
 Results interpretation:
-- Case 1: **is_inconsistent = True**: 
+- Case 1: **our_pred = True**: 
   - **Phishing**, and the matched_identity field returns the target brand, if matched_identity = 'Internal', the email is imitating an internal role such as colleague.
 
-- Case 2: **is_inconsistent = False, matched_identity = No Prediction**: 
+- Case 2: **our_pred = False, matched_identity = No Prediction**: 
   - Benign because we **didnt recognize any claimed identity** in the email.
   
-- Case 3: **is_inconsistent = False, matched_identity = No Matched Brand**: 
+- Case 3: **our_pred = False, matched_identity = No Matched Brand**: 
   - The email is reported as benign because the recognized sender identity is an **unknown brand**.
   
-- Case 4: **is_inconsistent = False, matched_identity = Consistent**: 
+- Case 4: **our_pred = False, matched_identity = Consistent**: 
   - The email is reported as benign because the sender claimed identity and his sender email address are consistent.
   
-- Case 5: **is_inconsistent = False, matched_identity = target brand**: 
+- Case 5: **our_pred = False, matched_identity = target brand**: 
   - The email is reported as benign because there is **no required action** found in the email.
 
 For example, if we have the following entry, it indicates that the email is imitating DHL Express because we have detected the sender identity as DHL, but its sender address is not from the official contacts of DHL. 
 In addition, it has a required instruction for the recipients to "confirm the delivery details," which suggests the email is a phishing attempt.
 
-| email_file_path | sender_name |            sender_address             | to_names | to_addresses | subject | email_body_text | sender_identities |        sender_relations                        |           required_actions           | is_inconsistent |               matched_identity                |               identity_recog_runtime               |       identity_matching_runtime        |
-|:---------------:|:-----------:|:-------------------------------------:|:--------:|:------------:|:-------:|:---------------:|:-----------------:|:----------------------------------------------:|:------------------------------------:|:---------------:|:---------------------------------------------:|:--------------------------------------------------:|:--------------------------------------:|
-|       ...       |     DHL Shp     | sanjiv.bahl@rgnau.ac.in |   ...    |     ...      |   ...   |       ...       |       {'dhl shp'}       | set() | {'kindly find attached to track shp and confirm delivery details.'} |      True       | DHL Express | 0.014865398406982422 |0.00941777229309082|
+| email_file_path | sender_name |            sender_address             | to_names | to_addresses | subject | email_body_text | sender_identities |        sender_relations                        |           required_actions           | our_pred |               matched_identity                | our_runtime |
+|:---------------:|:-----------:|:-------------------------------------:|:--------:|:------------:|:-------:|:---------------:|:-----------------:|:----------------------------------------------:|:------------------------------------:|:---------------:|:---------------------------------------------:|:-----------:|
+|       ...       |     DHL Shp     | sanjiv.bahl@rgnau.ac.in |   ...    |     ...      |   ...   |       ...       |       {'dhl shp'}       | set() | {'kindly find attached to track shp and confirm delivery details.'} |      True       | DHL Express |    0.023 |
 
 
-[//]: # (---)
-
-[//]: # (## Setup the Docker container)
-
-[//]: # (1. Build the docker image &#40;This may take some time&#41;)
-
-[//]: # (```commandline)
-
-[//]: # (sudo docker compose build)
-
-[//]: # (```)
-
-[//]: # (Make sure the docker image has been successfully built by verifying whether the image 'lindsey98/email' is listed in ``sudo docker images``.)
-
-[//]: # ()
-[//]: # (2. Run the docker container)
-
-[//]: # (For Interactive mode &#40;suppose we use a proxy&#41;)
-
-[//]: # (```commandline)
-
-[//]: # (sudo docker compose up)
-
-[//]: # (```)
-
-[//]: # ()
-[//]: # (For Detached mode)
-
-[//]: # (```commandline)
-
-[//]: # (sudo docker compose up -d)
-
-[//]: # (```)
-
-[//]: # ()
-[//]: # (## Other useful commands)
-
-[//]: # (# View contents even if the container has been exited for some reasons)
-
-[//]: # (```commandline)
-
-[//]: # (sudo docker run --rm -it --entrypoint /bin/bash lindsey98/email)
-
-[//]: # (```)
-
-[//]: # ()
-[//]: # (# Stop the container)
-
-[//]: # (```commandline)
-
-[//]: # (sudo docker stop lindsey98/email)
-
-[//]: # (```)
-
-[//]: # ()
-[//]: # (# Prune unused docker images)
-
-[//]: # (```commandline)
-
-[//]: # (sudo docker system prune)
-
-[//]: # (```)
 
