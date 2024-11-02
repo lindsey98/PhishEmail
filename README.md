@@ -41,12 +41,16 @@ Otherwise, we consider the email to be benign.
 git clone https://github.com/lindsey98/PhishEmail.git
 ```
 
-2. Create a conda environment and install the requirements
+2. Create a conda environment and install the requirements (pypff is not available via pip, so you need to build it from source.)
 ```commandline
 conda create -n emailenv python=3.10
 conda activate emailenv 
 pip install -r requirements.txt
+sudo apt-get update
+sudo apt-get install libpff-dev
+sudo apt install git autoconf automake autopoint libtool pkg-config
 ```
+
 3. Go to the project dir, download the models
 First download from Google drive
 ```commandline
@@ -57,6 +61,7 @@ Then unzip the download file
 ```commandline
 unzip checkpoints.zip -d checkpoints/
 ```
+
 Make sure the directory structure is:
 ```
 PhishEmail/
@@ -107,7 +112,8 @@ maildir/
  |_ 3.txt
  ....
 ```
-Alternatively, you can also export your mailbox into the .mbox format.
+
+Alternatively, you can also export your mailbox directly to the **.mbox** or **.pst** format.
 
 # Run inference
 
@@ -120,6 +126,10 @@ python inference.py --email_dir maildir/
 or for .mbox, e.g.:
 ```commandline
 python inference.py --email_dir inbox.mbox
+```
+or for .pst, e.g.:
+```commandline
+python inference.py --email_dir inbox.pst
 ```
 
 To run the baselines as well, e.g.:

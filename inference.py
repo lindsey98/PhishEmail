@@ -8,6 +8,7 @@ from lib.encoder import IdentityBert, Visualizer
 from lib.reference_db import CharacterBERT, IdentityMatcher, BaseFaissIPRetriever
 from lib.utilities import Logger
 from lib.data import EmailDataset, EmailBoxDataset
+from lib.data.pst_conversion import extract_emails
 import numpy as np
 import argparse
 from datetime import datetime
@@ -72,9 +73,9 @@ today_date = today.strftime("%Y-%m-%d")
 @click.option("--save_vis", help="Save the visualized results or not", is_flag=True, show_default=True, default=False)
 @click.option("--vis_dir", help="Where to save the visualized result", default='./datasets/vis', type=str)
 @click.option("--output_csv", default=f'{today_date}_results.csv', help="Output txt path")
-@click.option("--run_dfence", is_flag=True)
-@click.option("--run_helphed", is_flag=True)
-@click.option("--run_rspamd", is_flag=True)
+@click.option("--run_dfence", is_flag=True, default=False)
+@click.option("--run_helphed", is_flag=True, default=False)
+@click.option("--run_rspamd", is_flag=True, default=False)
 def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed, run_rspamd):
     matcher_cls = IdentityMatcher(brand_index_db=Config.brand_index_db,
                                   internal_relation_index_db=Config.internal_relation_index_db,
@@ -87,6 +88,9 @@ def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed, run_
 
     if email_dir.endswith('.mbox'):
         dataset = EmailBoxDataset(email_dir)
+    elif email_dir.endswith('.pst'):
+        extract_emails(email_dir, email_dir.replace('.pst', ''))
+        dataset = EmailDataset(email_dir.replace('.pst', ''))
     else:
         dataset = EmailDataset(email_dir)
     csv_file_path = output_csv
@@ -94,6 +98,8 @@ def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed, run_
         os.makedirs(vis_dir, exist_ok=True)
     Logger.set_debug_on()
     Logger.spit('Loaded the testing dataset into memory', caller_prefix="Main", debug=True)
+
+    seen_subjects = set()
     # Check if we're writing to a new file, and write the header if so
     if not os.path.exists(csv_file_path):
         with open(csv_file_path, mode='a', newline='', encoding='utf-8') as file:
@@ -120,6 +126,14 @@ def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed, run_
                              'rspamd_metadata',
                              'rspamd_runtime'
                              ])
+    else:
+        # If it exists, load existing subjects to avoid duplicates
+        with open(csv_file_path, mode='r', encoding='utf-8') as file:
+            reader = csv.reader(file)
+            next(reader)  # Skip header
+            for row in reader:
+                if row:
+                    seen_subjects.add(row[5])  # Assuming 'subject' is the 6th column (index 5)
 
     for it in tqdm(range(len(dataset))):
 
@@ -133,6 +147,12 @@ def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed, run_
         email_file_path, (sender_name, sender_address), \
             (to_names, to_addresses), reply_to_address, \
             subject, email_body_text, header = dataset[it] ## fixme: the GoogleTranslator takes time
+
+        # Check if the subject has been seen before
+        if subject in seen_subjects:
+            continue  # Skip
+
+        seen_subjects.add(subject)
 
         '''Baseline: D-Fence, HelpHed, Rspamd'''
         if run_dfence:
