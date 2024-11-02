@@ -1,5 +1,6 @@
 numpy
 requests
+tensorflow-cpu==2.13.1
 transformers
 scikit_learn
 spacy==3.7.5

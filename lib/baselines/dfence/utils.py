@@ -32,7 +32,6 @@ def extract_encoding(url_data, tokenizer, truncate_len,
       There are two possible ways to encode characters by specifying emb_mode parameter.
       By default we use 'embedding' mode as we are using Embedding for top layer of the neural network
     """
-    print("Extracting encoding...")
 
     if label_mode:
         url_data = url_data[['url', 'label']]

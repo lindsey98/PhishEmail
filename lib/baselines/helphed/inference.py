@@ -43,7 +43,7 @@ def test(email_dir):
     test_dataset = EmailDataset(email_dir)
     total_time = 0
     result_list = []
-    for it in tqdm(range(len(test_dataset))):
+    for it in range(len(test_dataset)):
         email_file_path = test_dataset.file_list[it]
         start_time = time.time()
         result = parse_email_parts(email_file_path, 0)

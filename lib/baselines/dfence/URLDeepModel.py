@@ -1,3 +1,5 @@
+import time
+
 import numpy as np
 import os
 from sklearn.metrics import roc_curve, precision_recall_curve, roc_auc_score, auc
@@ -182,8 +184,10 @@ class URLDeep(object):
         })
 
         # Batch encode
+        start_time = time.time()
         X_encoded = extract_encoding(df_url_data, self.tokenizer, self.truncate_len, False, URL_ENCODING_MODE)
-        Ypred_url = self.model.predict(X_encoded)
+        Ypred_url = self.model.predict(X_encoded, verbose=0)
+        total_time = time.time() - start_time
         Ypred_class_url = self.__get_class(Ypred_url)
 
         # Combine predictions
@@ -197,4 +201,4 @@ class URLDeep(object):
         res_agg = df_url_data.loc[idx, ['ID', 'Predicted Score', 'Predicted Class']].reset_index(drop=True)
         res_agg['Predicted Class'] = res_agg['Predicted Class'].astype(int)
 
-        return res_agg
+        return res_agg, total_time

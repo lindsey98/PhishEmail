@@ -92,83 +92,83 @@ if __name__ == "__main__":
     #             json.dump(company_database, json_file)
 
     '''We can also use Knowphish database to expand the existing brand name alias and domain alias'''
-    Knowphish_bkb = './datasets/KnowPhish_BKB/cat_and_pop_20240125_tld/targetlist'
-    tranco_top_1m_domains = [x.strip().split(',')[-1] for x in open('./datasets/tranco-top-1m.csv').readlines()]
-    with open('./datasets/company_database.json', 'r') as json_file:
-        company_database = json.load(json_file)
-    ## manually add some?
-    company_database["Skype"] = ["skype.com"]
-    company_database["DropBox Inc."] = ["dropbox.com", "dropboxmail.com"]
-    company_database["Dropbox"] = ["dropbox.com", "dropboxmail.com"]
-    company_database['Xiaomi'] = ["xiaomi.com", "mi.com"]
-    company_database['State Technical College of Missouri'] = ["statetechmo.edu"]
-    company_database['Epos Card Co.,Ltd.'] = ['0101.co.jp']
-    company_database['MARUI GROUP CO.,LTD.'] = ['0101.co.jp']
-    company_database['Royal Bank Of Scotland'] = ['rbs.com']
-    company_database['Tepco Energy'] = ['tepco.co.jp']
-    company_database['GPC Cumbria'] = ['gpccumbria.co.uk']
-    company_database['Resona Bank'] = ['e.resonabank.co.jp']
-    company_database['ALL CITY GLOBAL LIMITED'] = ['allcitygloballtd.com']
-    company_database['FBI'] = ['ic.fbi.gov']
-    company_database['aeon financial services co., ltd'] = ['aeoncredit.com.my', 'aeonfinancialservices.com']
-    company_database['Stork Technical Services UK Limited'] = ['stork.com']
-    company_database['Ernst & Young'] = ['ey.com']
-    company_database['Bank of China'] = ['bank-of-china.com']
-    company_database['Credit Saison'] = ['creditsaison-in.com', 'creditsaison.in']
-    company_database['Swiss National Bank'] = ['snb.ch']
-    company_database['Cummins Inc'] = ['cummins.com']
-    company_database['O.P. Jindal Global University'] = ['jgu.edu']
-    company_database['Sagawa express'] = ['sagawa-exp.co.jp']
-
-    for brand in tqdm(os.listdir(Knowphish_bkb)):
-        for file in os.listdir(os.path.join(Knowphish_bkb, brand)):
-            if file.endswith('.png'):
-                os.remove(os.path.join(Knowphish_bkb, brand, file))
-
-            if file == 'brand_info.json':
-                with open(os.path.join(Knowphish_bkb, brand, file), 'r') as json_file:
-                    brand_info = json.load(json_file)
-
-                wiki_entity_name = [brand_info["entity_name"]] if (not brand_info["entity_name"].startswith('Q')) else []
-                brand_names = wiki_entity_name # just the official names
-                brand_names = list(set({v.casefold(): v for v in brand_names}.values()))
-                brand_names = [x for x in brand_names if len(x) > 3 and is_english_or_allowed_symbols(x)]
-                if len(brand_names) == 0:
-                    continue
-
-                knowledge_needed = False
-                for x in brand_names:
-                    matched_brand = difflib.get_close_matches(x, company_database.keys(), n=1, cutoff=0.95)
-                    if matched_brand:
-                        print(x, matched_brand)
-                        brand_domains = company_database[matched_brand[0]]
-                        knowledge_needed = True
-                        break
-                if not knowledge_needed:
-                    continue
-
-                brand_domains += [tldextract.extract(x).domain + '.' + tldextract.extract(x).suffix for x in brand_info["urls"]]
-                brand_domains = list(set({v.lower(): v for v in brand_domains}.values()))
-                brand_domains = [x for x in brand_domains if is_valid_domain(x)]
-
-                for brand_alias in brand_names:
-                    company_database[brand_alias] = brand_domains
-
-    with open('./datasets/company_database_knowphish.json', 'w') as json_file:
-        json.dump(company_database, json_file)
+    # Knowphish_bkb = './datasets/KnowPhish_BKB/cat_and_pop_20240125_tld/targetlist'
+    # tranco_top_1m_domains = [x.strip().split(',')[-1] for x in open('./datasets/tranco-top-1m.csv').readlines()]
+    # with open('./checkpoints/company_database.json', 'r') as json_file:
+    #     company_database = json.load(json_file)
+    # ## manually add some?
+    # company_database["Skype"] = ["skype.com"]
+    # company_database["DropBox Inc."] = ["dropbox.com", "dropboxmail.com"]
+    # company_database["Dropbox"] = ["dropbox.com", "dropboxmail.com"]
+    # company_database['Xiaomi'] = ["xiaomi.com", "mi.com"]
+    # company_database['State Technical College of Missouri'] = ["statetechmo.edu"]
+    # company_database['Epos Card Co.,Ltd.'] = ['0101.co.jp']
+    # company_database['MARUI GROUP CO.,LTD.'] = ['0101.co.jp']
+    # company_database['Royal Bank Of Scotland'] = ['rbs.com']
+    # company_database['Tepco Energy'] = ['tepco.co.jp']
+    # company_database['GPC Cumbria'] = ['gpccumbria.co.uk']
+    # company_database['Resona Bank'] = ['e.resonabank.co.jp']
+    # company_database['ALL CITY GLOBAL LIMITED'] = ['allcitygloballtd.com']
+    # company_database['FBI'] = ['ic.fbi.gov']
+    # company_database['aeon financial services co., ltd'] = ['aeoncredit.com.my', 'aeonfinancialservices.com']
+    # company_database['Stork Technical Services UK Limited'] = ['stork.com']
+    # company_database['Ernst & Young'] = ['ey.com']
+    # company_database['Bank of China'] = ['bank-of-china.com']
+    # company_database['Credit Saison'] = ['creditsaison-in.com', 'creditsaison.in']
+    # company_database['Swiss National Bank'] = ['snb.ch']
+    # company_database['Cummins Inc'] = ['cummins.com']
+    # company_database['O.P. Jindal Global University'] = ['jgu.edu']
+    # company_database['Sagawa express'] = ['sagawa-exp.co.jp']
+    #
+    # for brand in tqdm(os.listdir(Knowphish_bkb)):
+    #     for file in os.listdir(os.path.join(Knowphish_bkb, brand)):
+    #         if file.endswith('.png'):
+    #             os.remove(os.path.join(Knowphish_bkb, brand, file))
+    #
+    #         if file == 'brand_info.json':
+    #             with open(os.path.join(Knowphish_bkb, brand, file), 'r') as json_file:
+    #                 brand_info = json.load(json_file)
+    #
+    #             wiki_entity_name = [brand_info["entity_name"]] if (not brand_info["entity_name"].startswith('Q')) else []
+    #             brand_names = wiki_entity_name # just the official names
+    #             brand_names = list(set({v.casefold(): v for v in brand_names}.values()))
+    #             brand_names = [x for x in brand_names if len(x) > 3 and is_english_or_allowed_symbols(x)]
+    #             if len(brand_names) == 0:
+    #                 continue
+    #
+    #             knowledge_needed = False
+    #             for x in brand_names:
+    #                 matched_brand = difflib.get_close_matches(x, company_database.keys(), n=1, cutoff=0.95)
+    #                 if matched_brand:
+    #                     print(x, matched_brand)
+    #                     brand_domains = company_database[matched_brand[0]]
+    #                     knowledge_needed = True
+    #                     break
+    #             if not knowledge_needed:
+    #                 continue
+    #
+    #             brand_domains += [tldextract.extract(x).domain + '.' + tldextract.extract(x).suffix for x in brand_info["urls"]]
+    #             brand_domains = list(set({v.lower(): v for v in brand_domains}.values()))
+    #             brand_domains = [x for x in brand_domains if is_valid_domain(x)]
+    #
+    #             for brand_alias in brand_names:
+    #                 company_database[brand_alias] = brand_domains
+    #
+    # with open('./checkpoints/company_database_knowphish.json', 'w') as json_file:
+    #     json.dump(company_database, json_file)
     #
     '''Those official emails are pre-collected => Only for the LLM benchmark'''
-    # with open('./datasets/company_database_knowphish.json', 'r') as json_file:
-    #     company_database = json.load(json_file)
-    #
-    # df = pd.read_csv('./datasets/senders_v6.csv')
-    # for it, row in df.iterrows():
-    #     org_name = row['name']
-    #     email = row['official_email']
-    #     if isinstance(email, str) and '@' in email:
-    #         company_database[org_name] = [tldextract.extract(email).domain + '.' + tldextract.extract(email).suffix]
-    #
-    # with open('./datasets/company_database_knowphish_v2.json', 'w') as json_file:
-    #     json.dump(company_database, json_file)
+    with open('./checkpoints/company_database_knowphish.json', 'r') as json_file:
+        company_database = json.load(json_file)
+
+    df = pd.read_csv('./datasets/senders_v6.csv')
+    for it, row in df.iterrows():
+        org_name = row['name']
+        email = row['official_email']
+        if isinstance(email, str) and '@' in email:
+            company_database[org_name] = [tldextract.extract(email).domain + '.' + tldextract.extract(email).suffix]
+
+    with open('./checkpoints/company_database_knowphish_v2.json', 'w') as json_file:
+        json.dump(company_database, json_file)
 
 

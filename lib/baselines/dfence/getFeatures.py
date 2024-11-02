@@ -53,6 +53,7 @@ def processEmails(dataset, batch_size):
     all_html_features = []
     all_text_features = []
     all_urls = []
+    total_time = 0
 
     # Initialize feature usage dictionary
     dict_feature_use = {
@@ -92,7 +93,7 @@ def processEmails(dataset, batch_size):
         filename_list = []
 
         # Process emails in the current batch
-        for it in tqdm(range(start_idx, end_idx)):
+        for it in range(start_idx, end_idx):
             email_file_path = dataset.file_list[it]
 
             try:
@@ -127,11 +128,13 @@ def processEmails(dataset, batch_size):
             plain_text_data = ' '.join(plain_text_data)
             html_data = ' '.join(html_data)
 
+            start_time = time.time()
             filename_list.append(email_file_path)
             batch_header_features.append(processHeader(header_data, dict_feature_use))
             batch_html_features.append(processHTML(html_data))
             batch_text_features.append(processText(plain_text_data, html_data, tokenizer, model, NUM_OF_FEATURES))
             batch_urls.append(processURL(plain_text_data, html_data))
+            total_time += time.time() - start_time
 
         # Create DataFrames for the current batch
         header_features_df = pd.DataFrame(batch_header_features, columns=header_colnames)
@@ -175,7 +178,7 @@ def processEmails(dataset, batch_size):
     full_URLs_df = pd.concat(all_urls, ignore_index=True)
 
 
-    return full_header_features_df, full_html_features_df, full_text_features_df, full_URLs_df
+    return full_header_features_df, full_html_features_df, full_text_features_df, full_URLs_df, total_time
 
 
 

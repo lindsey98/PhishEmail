@@ -31,7 +31,6 @@ Existing fields:
        'link_images', 'named_urls']
 need to check: script encoding
 '''
-nltk.download('stopwords')
 nlp = spacy.load('en_core_web_sm')
 stop_words = set(stopwords.words('english'))
 cfg = configparser.ConfigParser()
@@ -193,7 +192,6 @@ def preprocess_text(text: str):
         w_lemmatized = [token.lemma_ for token in w_doc]
     except Exception as e:
         w_lemmatized = w_normal
-        print(e)
 
     return w_normal, w_lemmatized
 

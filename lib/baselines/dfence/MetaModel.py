@@ -1,3 +1,5 @@
+import time
+
 from sklearn.preprocessing import StandardScaler
 import xgboost as xgb
 import os
@@ -85,9 +87,11 @@ class MetaModel(object):
         features_col = [col for col in test_data if col.endswith('_pred')]
         
         Xtest = test_data[features_col]
+        start_time = time.time()
         Xtest = self.scaler.transform(Xtest)
 
         Ypred = self.model.predict_proba(Xtest)
+        total_time = time.time() - start_time
         Ypred_class = self.__get_class(Ypred)
         Ypred = Ypred[:, 1]
 
@@ -97,4 +101,4 @@ class MetaModel(object):
         res.set_index(keys=['ID'], inplace=True)
         res = res.astype({"Predicted Class": int})
 
-        return res
+        return res, total_time

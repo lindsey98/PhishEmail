@@ -45,20 +45,20 @@ def test(email_dir):
     """
     test_dataset = EmailDataset(email_dir)
     total_time = 0
-    start_time = time.time()
-    df_header_full, df_html_full, df_text_full, df_URL_full= \
+    df_header_full, df_html_full, df_text_full, df_URL_full, extraction_time = \
         processEmails(test_dataset, int(FEATURE_EXTRACTION_BATCH_SIZE))
-    total_time += time.time() - start_time
+    total_time += extraction_time
 
     df_structural_full = df_header_full.merge(df_html_full, on='ID', how='left')
 
-    start_time = time.time()
-    structural_pred = STRUCTURAL_MODEL.predict(df_structural_full)
-    text_pred = TEXT_MODEL.predict(df_text_full)
-    url_pred = URL_MODEL.predict(df_URL_full)
+    structural_pred, structural_time = STRUCTURAL_MODEL.predict(df_structural_full)
+    text_pred, text_time = TEXT_MODEL.predict(df_text_full)
+    url_pred, url_time = URL_MODEL.predict(df_URL_full)
+    total_time += structural_time + text_time + url_time
+
     meta_test_data = prepMetaFeatures(structural_pred, text_pred, url_pred)
-    res = META_MODEL.predict(meta_test_data)
-    total_time += time.time() - start_time
+    res, meta_time = META_MODEL.predict(meta_test_data)
+    total_time += meta_time
 
     pred_confidence, pred_class = res['Predicted Score'].tolist(), res['Predicted Class']
 

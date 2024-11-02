@@ -14,6 +14,7 @@ from datetime import datetime
 from pathlib import Path
 import click
 from lib.baselines import dfence, helphed, rspamd
+import json
 
 class Config:
     IDENTITY_MODEL_CHECKPOINT = os.getenv("IDENTITY_MODEL_CHECKPOINT", "./checkpoints/identity-model")
@@ -21,7 +22,7 @@ class Config:
 
     REF_IDENTITY_REPS = os.getenv("REF_IDENTITY_REPS", "./checkpoints/company_database_reps.npy")
     REF_IDENTITY_NAMES = os.getenv("REF_IDENTITY_NAMES", "./checkpoints/company_database_names.npy")
-    REF_IDENTITY_MAP = os.getenv("REF_IDENTITY_MAP", "./checkpoints/company_database_knowphish.json") # todo
+    REF_IDENTITY_MAP = os.getenv("REF_IDENTITY_MAP", "./checkpoints/company_database_knowphish.json") # todo: this is the compact version of knowledge base (manually cleaned) with <1k brands
 
     REF_RELATION_REPS = os.getenv("REF_RELATION_REPS", "./checkpoints/internal_relation_reps.npy")
     REF_RELATION_NAMES = os.getenv("REF_RELATION_NAMES", "./checkpoints/internal_relation_names.npy")
@@ -31,6 +32,25 @@ class Config:
     matching_model = CharacterBERT(MATCHING_MODEL_CHECKPOINT)
 
     Logger.spit('Loaded the identity recognition model and identity matching model into memory', caller_prefix="Main", debug=True)
+
+    with open(REF_IDENTITY_MAP, 'r') as file:
+        brand_domain_map = json.load(file)
+    ref_embed_list = np.load(REF_IDENTITY_REPS) if os.path.exists(REF_IDENTITY_REPS) else None
+
+    if ref_embed_list is None or len(ref_embed_list) != len(list(brand_domain_map.keys())):
+        Logger.spit('Cache the knowledge base embeddings...', caller_prefix="Main", debug=True)
+        index_reps = np.empty((0, 768))
+        batch_size = 128
+        tags = []
+        brand_name_list = list(brand_domain_map.keys())
+        for i in tqdm(range(0, len(brand_name_list), batch_size)):
+            batch = brand_name_list[i:min(i + batch_size, len(brand_name_list))]  # Get the next batch of brand names
+            batch_embeddings, _ = matching_model(batch)
+            batch_embeddings = batch_embeddings.cpu().numpy()  # Predict embeddings for the batch
+            index_reps = np.concatenate((index_reps, batch_embeddings), axis=0)  # Append new embeddings
+            tags.extend(batch)  # Collect tags
+        np.save(REF_IDENTITY_NAMES, np.asarray(tags))
+        np.save(REF_IDENTITY_REPS, index_reps)
 
     ref_embed_list = np.load(REF_IDENTITY_REPS) if REF_IDENTITY_REPS else None
     ref_tag_list = np.load(REF_IDENTITY_NAMES).tolist()
@@ -49,13 +69,13 @@ today = datetime.today()
 today_date = today.strftime("%Y-%m-%d")
 @click.command()
 @click.option("--email_dir", help="Dir containing all the .eml files", required=True, type=str)
-@click.option("--save_vis", help="Save the visualized results or not", is_flag=True, show_default=True, default=False, )
+@click.option("--save_vis", help="Save the visualized results or not", is_flag=True, show_default=True, default=False)
 @click.option("--vis_dir", help="Where to save the visualized result", default='./datasets/vis', type=str)
 @click.option("--output_csv", default=f'{today_date}_results.csv', help="Output txt path")
-@click.option("--dfence", is_flag=True)
-@click.option("--helphed", is_flag=True)
-@click.option("--rspamd", is_flag=True)
-def main(email_dir, save_vis, vis_dir, output_csv, dfence, helphed, rspamd):
+@click.option("--run_dfence", is_flag=True)
+@click.option("--run_helphed", is_flag=True)
+@click.option("--run_rspamd", is_flag=True)
+def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed, run_rspamd):
     matcher_cls = IdentityMatcher(brand_index_db=Config.brand_index_db,
                                   internal_relation_index_db=Config.internal_relation_index_db,
                                   embed_model=Config.matching_model,
@@ -72,16 +92,15 @@ def main(email_dir, save_vis, vis_dir, output_csv, dfence, helphed, rspamd):
     csv_file_path = output_csv
     if save_vis:
         os.makedirs(vis_dir, exist_ok=True)
+    Logger.set_debug_on()
     Logger.spit('Loaded the testing dataset into memory', caller_prefix="Main", debug=True)
     # Check if we're writing to a new file, and write the header if so
     if not os.path.exists(csv_file_path):
         with open(csv_file_path, mode='a', newline='', encoding='utf-8') as file:
             writer = csv.writer(file)
             writer.writerow(['email_file_path',
-                             'sender_name',
-                             'sender_address',
-                             'to_names',
-                             'to_addresses',
+                             'sender_name', 'sender_address',
+                             'to_names', 'to_addresses',
                              'subject',
                              'sender_identities',
                              'sender_relation',
@@ -115,20 +134,36 @@ def main(email_dir, save_vis, vis_dir, output_csv, dfence, helphed, rspamd):
             (to_names, to_addresses), reply_to_address, \
             subject, email_body_text, header = dataset[it] ## fixme: the GoogleTranslator takes time
 
-        '''Baseline: D-Fence, HelpHed'''
-        if dfence:
+        '''Baseline: D-Fence, HelpHed, Rspamd'''
+        if run_dfence:
             _, dfence_pred, dfence_runtime = dfence.inference.test(email_file_path)
             dfence_pred = dfence_pred[0]
+            Logger.spit(f"D-Fence prediction = {dfence_pred} with runtime = {dfence_runtime}", debug=True,
+                        caller_prefix='D-Fence')
+
         else:
             dfence_pred, dfence_runtime = None, None
-        if helphed:
+
+        if run_helphed:
             helphed_stacking_pred, helphed_voting_pred, helphed_stacking_runtime, helphed_voting_runtime = helphed.inference.test(email_file_path)
             helphed_stacking_pred = helphed_stacking_pred[0]
             helphed_voting_pred = helphed_voting_pred[0]
+            Logger.spit(
+                f"HelpHed stacking prediction = {helphed_stacking_pred} with runtime = {helphed_stacking_runtime} \t"
+                f"HelpHed voting prediction = {helphed_voting_pred} with runtime = {helphed_voting_runtime}",
+                debug=True, caller_prefix='HelpHed')
         else:
             helphed_stacking_pred, helphed_voting_pred, helphed_stacking_runtime, helphed_voting_runtime = None, None, None, None
-        if rspamd:
+
+        if run_rspamd:
             rspamd_pred, rspamd_score, rspamd_metadata, rspamd_runtime = rspamd.inference.test(email_file_path)
+            rspamd_pred = rspamd_pred[0]
+            rspamd_score = rspamd_score[0]
+            rspamd_metadata = rspamd_metadata[0]
+            rspamd_runtime = rspamd_runtime[0]
+            Logger.spit(f"Rspamd prediction = {rspamd_pred}, score = {rspamd_score} with runtime = {rspamd_runtime}",
+                        debug=True, caller_prefix='Rspamd')
+
         else:
             rspamd_pred, rspamd_score, rspamd_metadata, rspamd_runtime = None, None, None, None
 
