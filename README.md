@@ -1,39 +1,64 @@
 # PhishEmail
 
-# Idea
+# Introduction
 
----
-There are two primary approaches in phishing email detection research:
+[//]: # ()
+[//]: # (---)
 
-- Email Header Analysis: 
-This line of research focuses on identifying spoofing signs within the email header. 
-While such methods can detect certain phishing attempts, we believe the ultimate solution is to design robust email authentication protocols, such as SPF (Sender Policy Framework) and DKIM (DomainKeys Identified Mail). 
-These protocols address spoofing at its root, eliminating the need for complicated heuristics.
+[//]: # (There are two primary approaches in phishing email detection research:)
 
-- Content-Based Classification: 
-The second approach involves classifying emails based on their content. 
-Traditional methods rely on feature-engineering-based techniques which, despite achieving promising results on benchmark datasets, often lack explainability and transferability to new waves of phishing attacks. 
-This limitation is especially significant in the current era of AI-generated content, where phishing emails can appear highly professional and personalized.
-In recent years, researchers have also explored the capability of Large Language Models (LLMs) in classifying phishing emails. 
-However, decoder-based LLMs introduce impractical runtime overheads—approximately 8 seconds per email—and can produce hallucinated answers, reducing their effectiveness in real-world applications.
+[//]: # ()
+[//]: # (- Email Header Analysis: )
 
-In our work, we propose an explainable and efficient detection approach based on the concept of verifiable claims in phishing emails.
-We posit that phishing emails often imitate official organizations of which the recipient may be a customer or member, or they impersonate internal roles within the recipient's own organization.
-This imitation creates an information inconsistency between the claimed identity and the true identity (as indicated by the sender's address). 
-Such inconsistencies serve as strong indicators for phishing alerts and provide clear explanations for the detection.
+[//]: # (This line of research focuses on identifying spoofing signs within the email header. )
 
-Furthermore, phishing emails typically include a call to action, such as prompting the recipient to visit a suspicious link, in an attempt to trick victims into financial loss or data breaches. 
-Therefore, we also highlight potential instructions within the email when reporting a phishing alert.
+[//]: # (While such methods can detect certain phishing attempts, we believe the ultimate solution is to design robust email authentication protocols, such as SPF &#40;Sender Policy Framework&#41; and DKIM &#40;DomainKeys Identified Mail&#41;. )
 
-Building on these intuitions, we formulate phishing email detection as a Named Entity Recognition (NER) task. 
-Our approach involves extracting the claimed identity and instructions from the email content. 
-With the claimed identity identified, we cross-reference the sender's address against the official email addresses associated with this identity in our knowledge base. 
-If an inconsistency is discovered and at least one instruction is present, we classify the email as phishing. 
-Otherwise, we consider the email to be benign.
+[//]: # (These protocols address spoofing at its root, eliminating the need for complicated heuristics.)
+
+[//]: # ()
+[//]: # (- Content-Based Classification: )
+
+[//]: # (The second approach involves classifying emails based on their content. )
+
+[//]: # (Traditional methods rely on feature-engineering-based techniques which, despite achieving promising results on benchmark datasets, often lack explainability and transferability to new waves of phishing attacks. )
+
+[//]: # (This limitation is especially significant in the current era of AI-generated content, where phishing emails can appear highly professional and personalized.)
+
+[//]: # (In recent years, researchers have also explored the capability of Large Language Models &#40;LLMs&#41; in classifying phishing emails. )
+
+[//]: # (However, decoder-based LLMs introduce impractical runtime overheads—approximately 8 seconds per email—and can produce hallucinated answers, reducing their effectiveness in real-world applications.)
+
+[//]: # ()
+[//]: # (In our work, we propose an explainable and efficient detection approach based on the concept of verifiable claims in phishing emails.)
+
+[//]: # (We posit that phishing emails often imitate official organizations of which the recipient may be a customer or member, or they impersonate internal roles within the recipient's own organization.)
+
+[//]: # (This imitation creates an information inconsistency between the claimed identity and the true identity &#40;as indicated by the sender's address&#41;. )
+
+[//]: # (Such inconsistencies serve as strong indicators for phishing alerts and provide clear explanations for the detection.)
+
+[//]: # ()
+[//]: # (Furthermore, phishing emails typically include a call to action, such as prompting the recipient to visit a suspicious link, in an attempt to trick victims into financial loss or data breaches. )
+
+[//]: # (Therefore, we also highlight potential instructions within the email when reporting a phishing alert.)
+
+[//]: # ()
+[//]: # (Building on these intuitions, we formulate phishing email detection as a Named Entity Recognition &#40;NER&#41; task. )
+
+[//]: # (Our approach involves extracting the claimed identity and instructions from the email content. )
+
+[//]: # (With the claimed identity identified, we cross-reference the sender's address against the official email addresses associated with this identity in our knowledge base. )
+
+[//]: # (If an inconsistency is discovered and at least one instruction is present, we classify the email as phishing. )
+
+[//]: # (Otherwise, we consider the email to be benign.)
 
 # Setup
 
 ---
+
+For **Ubuntu**
 
 ## Preparing the ingredients
 1. Clone the repo
