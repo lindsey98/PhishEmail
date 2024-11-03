@@ -90,6 +90,7 @@ unzip checkpoints.zip -d checkpoints/
 Make sure the directory structure is:
 ```
 PhishEmail/
+    |_ lib/
     |_ checkpoints/
         |_ characterbert-typos-st/
         |_ identity-model/

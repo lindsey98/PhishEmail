@@ -5,6 +5,7 @@ import os
 import json
 from tqdm import tqdm
 from lib.reference_db import CharacterBERT, IdentityMatcher, BaseFaissIPRetriever
+from lib.data.Dataset import EmailDataset
 from tldextract import tldextract
 import matplotlib.pyplot as plt
 from typing import List
@@ -13,6 +14,55 @@ os.environ['http_proxy'] = 'http://127.0.0.1:7890'
 os.environ['https_proxy'] = 'http://127.0.0.1:7890'
 os.environ['OPENAI_API_KEY'] = open('./datasets/openai_key.txt').read()
 
+def results_calculation_wo_match(
+        df_cleaned
+):
+    reported_ct = 0
+    dfence_ct = 0
+    helphed_stacking_ct = 0
+    helphed_voting_ct = 0
+
+    time_list = []
+    dfence_time_list = []
+    helphed_stacking_time_list = []
+    helphed_voting_time_list = []
+
+    for it, row in tqdm(df_cleaned.iterrows()):
+        email_file_path = row['email_file_path']
+        our_pred = row['our_pred']
+        our_runtime = row['our_runtime']
+        dfence_pred = row['dfence_pred']
+        dfence_runtime = row['dfence_runtime']
+        helphed_stacking_pred = row['helphed_stacking_pred']
+        helphed_stacking_runtime = row['helphed_stacking_runtime']
+        helphed_voting_pred = row['helphed_voting_pred']
+        helphed_voting_runtime = row['helphed_voting_runtime']
+
+        if our_pred:
+            reported_ct += 1
+        if dfence_pred:
+            dfence_ct += 1
+        if helphed_stacking_pred:
+            helphed_stacking_ct += 1
+        if helphed_voting_pred:
+            helphed_voting_ct += 1
+
+        time_list.append(our_runtime)
+        dfence_time_list.append(dfence_runtime)
+        helphed_stacking_time_list.append(helphed_stacking_runtime)
+        helphed_voting_time_list.append(helphed_voting_runtime)
+
+    print(f'Our Reported = {reported_ct}, % = {reported_ct / len(df_cleaned)}')
+    print(f'Median time = {np.median(time_list)}')
+
+    print(f'Dfence Reported = {dfence_ct}, % = {dfence_ct / len(df_cleaned)}')
+    print(f'Dfence Median time = {np.median(dfence_time_list)}')
+
+    print(f'HelpHed Stacking Reported = {helphed_stacking_ct}, % = {helphed_stacking_ct / len(df_cleaned)}')
+    print(f'HelpHed Stacking time = {np.median(helphed_stacking_time_list)}')
+
+    print(f'HelpHed Voting Reported = {helphed_voting_ct}, % = {helphed_voting_ct / len(df_cleaned)}')
+    print(f'HelpHed Voting time = {np.median(helphed_voting_time_list)}')
 
 def results_calculation(df_cleaned,
                         brand_index_db: BaseFaissIPRetriever,
@@ -34,7 +84,8 @@ def results_calculation(df_cleaned,
                                   knowledge_base_expansion=knowledge_base_expansion,
                                   gpt_client=gpt_client, gpt_assistant=gpt_assistant,
                                   check_action=check_action,
-                                  threshold=sim_threshold)
+                                  threshold=sim_threshold,
+                                  relax_match=True)
 
     reported_ct = 0
     no_pred_ct = 0
@@ -46,9 +97,9 @@ def results_calculation(df_cleaned,
     for it, row in tqdm(df_cleaned.iterrows()):
         email_file_path = row['email_file_path']
         sender_address = row['sender_address']
-        sender_identities = eval(row['sender_identity'])
+        sender_identities = eval(row['sender_identities'])
         sender_relation = eval(row['sender_relation'])
-        required_actions = eval(row['required_action'])
+        required_actions = eval(row['required_actions'])
 
         # Skip entries that are in the ignore list
         if email_file_path in ignore_entries:
@@ -65,7 +116,9 @@ def results_calculation(df_cleaned,
                 sender_domain = tldextract.extract(sender_domain).domain + '.' + tldextract.extract(sender_domain).suffix
 
         if sender_domain is not None:
-            recipient_domains = ["monkey.org"]  # hardcode for this Nazario dataset
+            # recipient_domains = ["monkey.org"]  # hardcode for this Nazario dataset
+            to_addresses = row['to_addresses']
+            recipient_domains = EmailDataset.domain_parsing(to_addresses)
 
             is_inconsistent, matched_target, matching_time = matcher_cls(identities=sender_identities,
                                         actions=required_actions,
@@ -114,7 +167,6 @@ if __name__ == '__main__':
     df = pd.read_csv(csv_file_path)
     df = df.drop_duplicates(subset='email_file_path')
     print(f'Original # Emails = {len(df)}') # 2584
-    print(f"Median runtime = {np.median(df['pred_time'])}")
 
     if os.path.exists(f'./datasets/{dataset_name}_noisy_list.txt'):
         noisy_email_files = [x.strip() for x in open(f'./datasets/{dataset_name}_noisy_list.txt').readlines()]
@@ -158,8 +210,10 @@ if __name__ == '__main__':
                                                       embed_model=embed_model)
 
 
+    # results_calculation_wo_match(df_cleaned)
     benchmarking_txt = f'./datasets/{dataset_name}_benchmarking.txt'
-    for thre in np.linspace(0.9, 0.99, 30):
+    for thre in np.linspace(0.78, 0.99, 10):
+        #
         reported, failed_list, recall = results_calculation(df_cleaned,
                                                             brand_index_db=brand_index_db,
                                                             internal_relation_index_db=internal_relation_index_db,
@@ -170,11 +224,12 @@ if __name__ == '__main__':
                                                             gpt_assistant = None,
                                                             check_action = True,
                                                             sim_threshold = thre)
+        break
 
-        if os.path.exists(benchmarking_txt) and str(thre)+'\t' in open(benchmarking_txt).read():
-            continue
-        with open(benchmarking_txt, 'a+') as f:
-            f.write(str(thre) + '\t' + str(recall) + '\n')
+        # if os.path.exists(benchmarking_txt) and str(thre)+'\t' in open(benchmarking_txt).read():
+        #     continue
+        # with open(benchmarking_txt, 'a+') as f:
+        #     f.write(str(thre) + '\t' + str(recall) + '\n')
 
     exit()
     #############

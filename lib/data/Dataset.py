@@ -45,7 +45,8 @@ class EmailDataset(Dataset):
     def __len__(self):
         return len(self.file_list)
 
-    def domain_parsing(self, address: Union[None, float, str, Set[str], List[str]]) -> Set[str]:
+    @staticmethod
+    def domain_parsing(address: Union[None, float, str, Set[str], List[str]]) -> Set[str]:
 
         url_pattern = re.compile(r'(https?://[^)]+)')
         parsed_domains = set()
@@ -69,7 +70,7 @@ class EmailDataset(Dataset):
 
         else:
             for add in address:
-                ind_domain = self.domain_parsing(add)
+                ind_domain = EmailDataset.domain_parsing(add)
                 parsed_domains = parsed_domains.union(ind_domain)
 
         return parsed_domains

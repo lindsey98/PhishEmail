@@ -154,7 +154,8 @@ class IdentityMatcher:
                 knowledge_base_expansion: bool=False,
                 gpt_client: Optional[Any]=None, gpt_assistant: Optional[Any]=None,
                 check_action: bool=True,
-                threshold: float=0.95):
+                threshold: float=0.95,
+                relax_match: bool=False):
 
         self.brand_index_db = brand_index_db
         self.internal_relation_index_db = internal_relation_index_db
@@ -169,6 +170,9 @@ class IdentityMatcher:
         self.threshold = threshold
         self.gpt_client = gpt_client
         self.gpt_assistant = gpt_assistant
+        self.relax_match = relax_match
+        # if relax match is set, the matcher will try to match all reported identities.
+        # Otherwise, the matcher will only match the most common, most confident identity.
 
 
     @staticmethod
@@ -309,21 +313,27 @@ class IdentityMatcher:
 
         identities = [clean_string(x) for x in identities]
         relations = [clean_string(x) for x in relations]
-        identities = self.filter_duplicates(identities)  # Returns a list in desired order
-
-        identities_set = set([item for cluster in identities for item in cluster]) # Converts to set, preserving order
-        first_cluster_identities = set()
-        for this_set in identities:
-            first_cluster_identities = first_cluster_identities.union(this_set)
-            clean_this_set_representative_str = re.sub(r'[@!:;.]', '', this_set[0]).strip()
-            if len(clean_this_set_representative_str) > 3:
-                break
+        identities_set = set(identities)
         relations_set = set(relations)  # Assuming relations are already a set
         combined_set = identities_set.union(relations_set)  # Identities first, then relations
 
-        with Timer() as timer:
-            matched_brand, official_email_domains = self.handle_external_emails(first_cluster_identities)
-        total_time += timer.interval
+        if not self.relax_match:
+            identities = self.filter_duplicates(identities)  # Returns a list in desired order
+            identities_set = set([item for cluster in identities for item in cluster]) # Converts to set, preserving order
+            first_cluster_identities = set()
+            for this_set in identities:
+                first_cluster_identities = first_cluster_identities.union(this_set)
+                clean_this_set_representative_str = re.sub(r'[@!:;.]', '', this_set[0]).strip()
+                if len(clean_this_set_representative_str) > 3:
+                    break
+
+            with Timer() as timer:
+                matched_brand, official_email_domains = self.handle_external_emails(first_cluster_identities)
+            total_time += timer.interval
+        else:
+            with Timer() as timer:
+                matched_brand, official_email_domains = self.handle_external_emails(identities_set)
+            total_time += timer.interval
 
         # Report mismatches or missing email specifications
         if official_email_domains and (not DomainUtils.domain_set_overlap(sender_domains, official_email_domains)):
