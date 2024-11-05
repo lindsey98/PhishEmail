@@ -14,7 +14,7 @@ import argparse
 from datetime import datetime
 from pathlib import Path
 import click
-from lib.baselines import dfence, helphed, rspamd
+from lib.baselines import dfence, helphed
 import json
 
 class Config:
@@ -75,7 +75,6 @@ today_date = today.strftime("%Y-%m-%d")
 @click.option("--output_csv", default=f'{today_date}_results.csv', help="Output txt path")
 @click.option("--run_dfence", is_flag=True, default=False)
 @click.option("--run_helphed", is_flag=True, default=False)
-@click.option("--run_rspamd", is_flag=True, default=False)
 def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed, run_rspamd):
     matcher_cls = IdentityMatcher(brand_index_db=Config.brand_index_db,
                                   internal_relation_index_db=Config.internal_relation_index_db,
@@ -120,11 +119,7 @@ def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed, run_
                              'helphed_stacking_pred',
                              'helphed_stacking_runtime',
                              'helphed_voting_pred',
-                             'helphed_voting_runtime',
-                             'rspamd_pred',
-                             'rspamd_score',
-                             'rspamd_metadata',
-                             'rspamd_runtime'
+                             'helphed_voting_runtime'
                              ])
     else:
         # If it exists, load existing subjects to avoid duplicates
@@ -175,17 +170,6 @@ def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed, run_
         else:
             helphed_stacking_pred, helphed_voting_pred, helphed_stacking_runtime, helphed_voting_runtime = None, None, None, None
 
-        if run_rspamd:
-            rspamd_pred, rspamd_score, rspamd_metadata, rspamd_runtime = rspamd.inference.test(email_file_path)
-            rspamd_pred = rspamd_pred[0]
-            rspamd_score = rspamd_score[0]
-            rspamd_metadata = rspamd_metadata[0]
-            rspamd_runtime = rspamd_runtime[0]
-            Logger.spit(f"Rspamd prediction = {rspamd_pred}, score = {rspamd_score} with runtime = {rspamd_runtime}",
-                        debug=True, caller_prefix='Rspamd')
-
-        else:
-            rspamd_pred, rspamd_score, rspamd_metadata, rspamd_runtime = None, None, None, None
 
         '''Our method'''
         # Identity recognition
@@ -240,10 +224,6 @@ def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed, run_
                                  helphed_stacking_runtime,
                                  helphed_voting_pred,
                                  helphed_voting_runtime,
-                                 rspamd_pred,
-                                 rspamd_score,
-                                 rspamd_metadata,
-                                 rspamd_runtime
                                  ])
             except:
                 continue
