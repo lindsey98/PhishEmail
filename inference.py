@@ -75,7 +75,7 @@ today_date = today.strftime("%Y-%m-%d")
 @click.option("--output_csv", default=f'{today_date}_results.csv', help="Output txt path")
 @click.option("--run_dfence", is_flag=True, default=False)
 @click.option("--run_helphed", is_flag=True, default=False)
-def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed, run_rspamd):
+def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed):
     matcher_cls = IdentityMatcher(brand_index_db=Config.brand_index_db,
                                   internal_relation_index_db=Config.internal_relation_index_db,
                                   embed_model=Config.matching_model,
@@ -96,7 +96,7 @@ def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed, run_
     if save_vis:
         os.makedirs(vis_dir, exist_ok=True)
     Logger.set_debug_on()
-    Logger.spit('Loaded the testing dataset into memory', caller_prefix="Main", debug=True)
+    Logger.spit(f'Loaded the testing dataset = {len(dataset)} emails', caller_prefix="Main", debug=True)
 
     seen_subjects = set()
     # Check if we're writing to a new file, and write the header if so
@@ -134,8 +134,8 @@ def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed, run_
 
         # if it <= 9173:
         #     continue
-        if os.path.exists(csv_file_path) and dataset.file_list[it] in [x.split(',')[0] for x in open(csv_file_path).readlines()]:
-            continue
+        # if os.path.exists(csv_file_path) and dataset.file_list[it] in [x.split(',')[0] for x in open(csv_file_path).readlines()]:
+        #     continue
         # if dataset.file_list[it] != 'datasets/sjtu_phish/email_154.eml':
         #     continue
 
@@ -169,7 +169,6 @@ def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed, run_
                 debug=True, caller_prefix='HelpHed')
         else:
             helphed_stacking_pred, helphed_voting_pred, helphed_stacking_runtime, helphed_voting_runtime = None, None, None, None
-
 
         '''Our method'''
         # Identity recognition
