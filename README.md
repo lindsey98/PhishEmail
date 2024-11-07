@@ -96,16 +96,7 @@ PhishEmail/
         |_ identity-model/
         
         |_ company_database_names_field_study.npy # this is a compact version of knowledge base, the brands inside have been manually cleaned
-        |_ company_database_reps_field_study.npy
-        |_ company_database_knowphish_field_study.json
-        
-        |_ internal_relation_names.npy 
-        |_ internal_relation_reps.npy
-        
-        |_ company_database_names_v2.npy # this is an extended version of knowledge base, the brands have been partially verified
-        |_ company_database_reps_v2.npy
-        |_ company_database_knowphish_v2.json
-        
+
         |_ dfence_models/
             |_ meta/
             |_ struct/
