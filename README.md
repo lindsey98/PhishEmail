@@ -71,9 +71,6 @@ git clone https://github.com/lindsey98/PhishEmail.git
 conda create -n emailenv python=3.10
 conda activate emailenv 
 pip install -r requirements.txt
-sudo apt-get update
-sudo apt-get install libpff-dev
-sudo apt install git autoconf automake autopoint libtool pkg-config
 ```
 
 3. Go to the project dir, download the models
