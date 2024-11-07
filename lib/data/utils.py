@@ -19,7 +19,6 @@ import re
 import mailbox
 import email
 import os
-import pypff
 
 
 def mbox_to_eml(mbox_path, output_dir):
@@ -31,9 +30,12 @@ def mbox_to_eml(mbox_path, output_dir):
     mbox = mailbox.mbox(mbox_path)
 
     # Loop through all messages in the MBOX file
-    for i, message in enumerate(mbox):
+    for i, message in tqdm(enumerate(mbox), desc="Exporting mbox to eml files"):
         # Extract the message as a string
-        msg_str = message.as_string()
+        try:
+            msg_str = message.as_string()
+        except UnicodeEncodeError:
+            continue
 
         # If no Message-ID, fall back to a fallback identifier (e.g., email index)
         safe_message_id = f"email_{i + 1}"
@@ -42,11 +44,12 @@ def mbox_to_eml(mbox_path, output_dir):
         eml_filename = os.path.join(output_dir, f"{safe_message_id}.eml")
 
         # Save the message to an .eml file
-        with open(eml_filename, 'w') as eml_file:
+        with open(eml_filename, 'w', encoding="utf-8") as eml_file:
             eml_file.write(msg_str)
 
 
 def pst_to_eml(pff_file_path, output_dir):
+    import pypff
 
     def process_email(email, output_dir):
         # Create .eml filename based on subject or a unique identifier
