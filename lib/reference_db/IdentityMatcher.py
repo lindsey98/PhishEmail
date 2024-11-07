@@ -263,8 +263,9 @@ class IdentityMatcher:
 
         return None, searching_time
 
-    def handle_external_emails(self, identities: Set[str]) -> Tuple[Union[None, str], Union[None, Set[str]]]:
-
+    def handle_external_emails(self, identities: Set[str]) -> Tuple[Union[None, Set[str]], Union[None, Set[str]]]:
+        closest_match_set = set()
+        official_domains_set = set()
         for potential_organization in identities:
             if potential_organization.startswith("##"): # noisy prediction
                 continue
@@ -280,7 +281,8 @@ class IdentityMatcher:
                 official_emails = self.brand_domain_map[closest_match]
                 official_domains = set([tldextract.extract(x).domain + '.' +
                                         tldextract.extract(x).suffix for x in official_emails])
-                return closest_match, official_domains
+                closest_match_set.add(closest_match)
+                official_domains_set = official_domains_set.union(official_domains)
 
             # elif contains_a_domain:
             #     return list(extracted_domains)[0], extracted_domains
@@ -288,9 +290,10 @@ class IdentityMatcher:
             elif self.knowledge_expansion:
                 updated_emails, searching_time = self.expand_knowledge_base(potential_organization)
                 if updated_emails:
-                    return potential_organization, set(updated_emails)
+                    closest_match_set.add(potential_organization)
+                    official_domains_set = official_domains_set.union(updated_emails)
 
-        return None, set()
+        return closest_match_set, official_domains_set
 
     def handle_internal_emails(self, relations: Set[str]) -> Tuple[bool, Optional[str]]:
         for relation in relations:
@@ -301,9 +304,9 @@ class IdentityMatcher:
                 return True, closest_match
         return False, None
 
-    def __call__(self, identities: Set[str], actions: Set[str], relations: Set[str],
+    def __call__(self, identities: List[str], actions: Set[str], relations: List[str],
                  sender_domains: Set[str], recipient_domains: Set[str],
-                 top_k_identities: int = 1) -> Tuple[Optional[bool], str, float]:
+                 top_k_identities: int = 1) -> Tuple[Optional[bool], Union[Set[str], str], float]:
 
         total_time = 0
         # Check sender organization or relation
@@ -313,13 +316,10 @@ class IdentityMatcher:
 
         identities = [clean_string(x) for x in identities]
         relations = [clean_string(x) for x in relations]
-        identities_set = set(identities)
-        relations_set = set(relations)  # Assuming relations are already a set
-        combined_set = identities_set.union(relations_set)  # Identities first, then relations
+        combined_set = identities + relations  # Identities first, then relations
 
-        if not self.relax_match:
+        if not self.relax_match: # if relax_match is False, match to the first recognized identity with the highest confidence. May introduce FNs when the NER didnt rank the true identity as top-1.
             identities = self.filter_duplicates(identities)  # Returns a list in desired order
-            identities_set = set([item for cluster in identities for item in cluster]) # Converts to set, preserving order
             first_cluster_identities = set()
             for this_set in identities:
                 first_cluster_identities = first_cluster_identities.union(this_set)
@@ -328,30 +328,30 @@ class IdentityMatcher:
                     break
 
             with Timer() as timer:
-                matched_brand, official_email_domains = self.handle_external_emails(first_cluster_identities)
+                matched_brand_set, official_email_domains_set = self.handle_external_emails(first_cluster_identities)
             total_time += timer.interval
-        else:
+        else: # if relax_match is True, match to ANY recognized identity. This has risk of FP, e.g. the true identity is outside knowledge base, but some other identities are inside.
             with Timer() as timer:
-                matched_brand, official_email_domains = self.handle_external_emails(identities_set)
+                matched_brand_set, official_email_domains_set = self.handle_external_emails(identities)
             total_time += timer.interval
 
         # Report mismatches or missing email specifications
-        if official_email_domains and (not DomainUtils.domain_set_overlap(sender_domains, official_email_domains)):
+        if official_email_domains_set and (not DomainUtils.domain_set_overlap(sender_domains, official_email_domains_set)):
             if self.check_action:
                 if len(actions) > 0:
-                    Logger.spit(f'[!Phish] Matched brand = "{matched_brand}", inconsistent identity-address found, and contains at least 1 instruction',
+                    Logger.spit(f'[!Phish] Matched brand = "{matched_brand_set}", inconsistent identity-address found with sender address as "{sender_domains}", and contains at least 1 instruction',
                                 caller_prefix=IdentityMatcher._CallerPrefix, debug=True)
-                    return True, matched_brand, total_time
+                    return True, matched_brand_set, total_time
                 else:
-                    Logger.spit(f'Matched brand = "{matched_brand}", inconsistent identity-address found, but does not contain any instruction => Benign',
+                    Logger.spit(f'Matched brand = "{matched_brand_set}", inconsistent identity-address found, but does not contain any instruction => Benign',
                                 caller_prefix=IdentityMatcher._CallerPrefix, debug=True)
-                    return False, matched_brand, total_time
+                    return False, matched_brand_set, total_time
             else:
-                Logger.spit(f'[!Phish] Matched brand = "{matched_brand}", inconsistent identity-address found',
+                Logger.spit(f'[!Phish] Matched brand = "{matched_brand_set}", inconsistent identity-address found with sender address as "{sender_domains}"',
                             caller_prefix=IdentityMatcher._CallerPrefix, debug=True)
-                return True, matched_brand, total_time
+                return True, matched_brand_set, total_time
 
-        if official_email_domains:  # do not further check the internal relations
+        if official_email_domains_set:  # do not further check the internal relations
             Logger.spit('Consistent identity-address => Benign', caller_prefix=IdentityMatcher._CallerPrefix, debug=True)
             return False, 'Consistent', total_time
 
@@ -361,10 +361,10 @@ class IdentityMatcher:
             is_internal_emails, imitated_role = self.handle_internal_emails(combined_set)
         total_time += timer.interval
 
-        if is_internal_emails and (not DomainUtils.domain_set_overlap(sender_domains, recipient_domains)):
+        if is_internal_emails and recipient_domains and (not DomainUtils.domain_set_overlap(sender_domains, recipient_domains)):
             if self.check_action:
                 if len(actions) > 0:
-                    Logger.spit(f'[!Phish] Imitating an internal role "{imitated_role}" but from an external domain, and contains at least 1 instruction',
+                    Logger.spit(f'[!Phish] Imitating an internal role "{imitated_role}" but from an external domain with sender address as "{sender_domains}", and contains at least 1 instruction',
                                 caller_prefix=IdentityMatcher._CallerPrefix, debug=True)
                     return True, 'Internal', total_time
                 else:
@@ -372,7 +372,7 @@ class IdentityMatcher:
                                 caller_prefix=IdentityMatcher._CallerPrefix, debug=True)
                     return False, 'Internal', total_time
             else:
-                Logger.spit(f'[!Phish] Imitating an internal role "{imitated_role}" but from an external domain',
+                Logger.spit(f'[!Phish] Imitating an internal role "{imitated_role}" but from an external domain with sender address as "{sender_domains}"',
                             caller_prefix=IdentityMatcher._CallerPrefix, debug=True)
                 return True, 'Internal', total_time
 
@@ -407,7 +407,8 @@ if __name__ == '__main__':
     np.save('./checkpoints/company_database_names.npy', np.asarray(tags))
     np.save('./checkpoints/company_database_reps.npy', index_reps)
 
-    Internal_Relations = ['admin',
+    Internal_Relations = [
+                          'admin',
                           'mail admin',
                           'admin portal',
                           'administrator',
@@ -420,8 +421,8 @@ if __name__ == '__main__':
                           'mail desk',
                           'webmail service',
                           'mail delivery system',
-                          'e-mail',
-                          'email',
+                          # 'e-mail',
+                          # 'email',
                           'mailbox',
                           'mail support',
                           'email storage',
@@ -437,11 +438,11 @@ if __name__ == '__main__':
                           'staff',
                           'colleague',
                           'faculty',
-                          'manager',
+                          # 'manager',
                           'student',
-                          'supervisor',
+                          # 'supervisor',
 
-                          'human resource',
+                          # 'human resource',
                           'human resource team',
                           'HR team',
                           'HR',

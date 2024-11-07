@@ -6,6 +6,7 @@ import langdetect
 from typing import *
 from transformers import AutoTokenizer
 from tldextract import tldextract
+import difflib
 
 class DomainUtils:
 
@@ -67,12 +68,14 @@ class DomainUtils:
 
         for domain1, suffix1 in extracted_set1:
             for domain2, suffix2 in extracted_set2:
-                if DomainUtils.is_regional_tld(suffix1):
-                    if domain1 == domain2:
-                        return True
-                else:
-                    if domain1 == domain2 and suffix1 == suffix2:
-                        return True
+                # if DomainUtils.is_regional_tld(suffix1): # fixme: I just check the domain for now
+                #     if domain1 == domain2:
+                #         return True
+                # else:
+                #     if domain1 == domain2 and suffix1 == suffix2:
+                #         return True
+                if domain1 == domain2:
+                    return True
         # If no overlap found
         return False
 
@@ -83,6 +86,29 @@ def find_all_token_indices(all_tokens: List[str], entity_tokens: List[str]):
     for i in range(len(all_tokens) - entity_len + 1):
         if [token.lower() for token in all_tokens[i:i + entity_len]] == entity_tokens:
             indices.append((i, i + entity_len))
+
+    return indices
+
+def find_first_last_indices(all_tokens: List[str], entity_tokens: List[str]):
+    entity_len = len(entity_tokens)
+    indices = []
+
+    # Track the first and last occurrence indices
+    first_index = None
+    last_index = None
+
+    for i in range(len(all_tokens) - entity_len + 1):
+        if [token.lower() for token in all_tokens[i:i + entity_len]] == entity_tokens:
+            if first_index is None:
+                first_index = (i, i + entity_len)
+            last_index = (i, i + entity_len)
+
+    # Check if the last occurrence is within the signatures
+    if last_index and last_index[0] >= len(all_tokens) - 30:
+        indices = [first_index, last_index] if first_index != last_index else [first_index]
+    elif first_index:
+        indices = [first_index]
+
     return indices
 
 def tokenize_and_map(text: str, annotations: List[Dict], tokenizer: AutoTokenizer, label_to_id: Dict):
@@ -97,7 +123,10 @@ def tokenize_and_map(text: str, annotations: List[Dict], tokenizer: AutoTokenize
         entity_cls = annot['labels'][0]
         entity_tokens = tokenizer.tokenize(entity)
 
-        all_indices = find_all_token_indices(tokens, entity_tokens)
+        if entity_cls == "identity":
+            all_indices = find_first_last_indices(tokens, entity_tokens)
+        else:
+            all_indices = find_all_token_indices(tokens, entity_tokens)
         for start_index, end_index in all_indices:
             # Check if the range already has a tag other than "O"
             if all(tag == label_to_id["O"] for tag in tags[start_index:end_index]) or entity_cls == "relation":
@@ -110,6 +139,29 @@ def tokenize_and_map(text: str, annotations: List[Dict], tokenizer: AutoTokenize
             continue
     return tokens, tags
 
+def filter_duplicates(strings: Union[List[str], Set[str]], threshold: float=0.5) -> List[List[str]]:
+    clusters = []
+    for string in strings:
+        # Remove "from:" or any case variation with optional spaces
+        string = re.sub(r'(?i)from\s*:?', '', string)
+        # Remove leading "##"
+        string = re.sub(r'^\s*#+', '', string)
+        string = string.strip()
+        if len(string) <= 1:
+            continue
+
+        # Check similarity with already filtered strings
+        similar_found = False
+        for i, f in enumerate(clusters):
+            if difflib.SequenceMatcher(None, string, f[0]).ratio() > threshold: # group into a cluster
+                similar_found = True
+                # Add the string to the existing cluster
+                clusters[i].append(string)
+                break
+        if not similar_found:
+            clusters.append([string])
+
+    return clusters
 
 def process_entries(data: List[Dict], tokenizer: AutoTokenizer, label_to_id: Dict):
     seen_texts = set()
@@ -124,12 +176,18 @@ def process_entries(data: List[Dict], tokenizer: AutoTokenizer, label_to_id: Dic
         if len(annotations) == 0:
             continue
 
+        entities = []
         for annot in annotations:
             entity_cls = annot['labels'][0]
             entity = annot['text']
             if entity_cls == 'identity':
                 if entity.startswith('From:'):
                     annot['text'] = re.sub(r"From:\s*", "", entity)
+                entities.append(annot['text'])
+
+        entity_clusters = filter_duplicates(entities, threshold=0.3)
+        if len(entity_clusters) > 2:
+            print()
 
         tokens, tags = tokenize_and_map(text, annotations, tokenizer, label_to_id)
 

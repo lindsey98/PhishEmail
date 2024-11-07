@@ -9,6 +9,7 @@ datasets/
 *expand_targetlist*
 *.pkl
 *__pycache__/
+lib/email_sending/*
 
 # C extensions
 *.so

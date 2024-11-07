@@ -116,7 +116,8 @@ if __name__ == '__main__':
     training_args = TrainingArguments(
         report_to="wandb",  # this tells the Trainer to log the metrics to W&B
         # output_dir="./checkpoints/output_ner",
-        output_dir="./checkpoints/output_ner_augmented",
+        # output_dir="./checkpoints/output_ner_augmented",
+        output_dir="./checkpoints/output_ner_augmented_corrected",
         learning_rate=2e-5,
         lr_scheduler_type="cosine",
         warmup_ratio=0.1,

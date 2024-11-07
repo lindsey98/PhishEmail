@@ -52,38 +52,25 @@ if __name__ == '__main__':
     df = pd.concat([df_benign_enron, df_phish_nazario], ignore_index=True)
 
     ##### Voting Model #####
-    #Word2Vec features
+    # Word2Vec features
     count = 0
     w2v = df['Word2vec']
     vec=np.array(w2v.to_list())
     df_new = pd.DataFrame(vec)
-
-    #add a new column with the label in the new df
-    df_new['label'] = df['label']
-
-    #training set only w2v features
-    df_new['dataset'] = df['dataset']
-    X_train = df_new[df_new['dataset'] == 'train'].drop(['label', 'dataset'], axis=1)
-    y_train = df_new[df_new['dataset'] == 'train']['label']
-
     ############# Word2Vec Feature selection ###################
-    features= []
-    for i in X_train:
-        features.append(i)
-
-    FS = []
-    df2 = []
-    X_train_fs, fs = ig_select_features(X_train, y_train)
-    for i in range(len(fs.scores_)):
-        if fs.scores_[i] > 0.01:
-            count += 1
-            FS.append(features[i])
-    for i in FS:
-        df2.append(df_new[i])
-
-    df2 = np.array(df2)
-    df2 = pd.DataFrame(df2)
-    df2 = df2.transpose()
+    # features = []
+    # for i in X_train:
+    #     features.append(i)
+    #
+    # FS = []
+    # df2 = []
+    # X_train_fs, fs = ig_select_features(X_train, y_train)
+    # for i in range(len(fs.scores_)):
+    #     # if fs.scores_[i] > 0.01:
+    #     #     count += 1
+    #     FS.append(features[i]) # todo: I disable feature selection
+    # for i in FS:
+    #     df2.append(df_new[i])
 
     ######################## Content-based features training remove text-based features and unwanted content-based features
     df = df.drop(['scripts', 'forms', 'nports', 'link_images', 'Word2vec'], axis =1) #Converting the encoding column to categorical - it assigns an int on each encoding-name
@@ -93,7 +80,7 @@ if __name__ == '__main__':
     #########################################
 
     #Concat word2vec with content-based features TRAINING
-    df2 = pd.concat([df, df2], axis=1)
+    df2 = pd.concat([df, df_new], axis=1)
 
     X_train = df2[df2['dataset'] == 'train'].drop(['label', 'dataset'], axis=1)
     y_train = df2[df2['dataset'] == 'train']['label']
@@ -127,14 +114,19 @@ if __name__ == '__main__':
     # y_pred_voting = predict_from_multiple_estimator(fitted_estimators, label_encoder, X_test_list)
 
     ##### Stacking Model #####
-    pipe1 = make_pipeline(ColumnSelector(cols=(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18)),
-                          DecisionTreeClassifier(criterion='entropy', max_depth=100, min_samples_leaf=3, min_samples_split=2, max_features='sqrt'))
+    pipe1 = make_pipeline(ColumnSelector(cols=(0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+                                               10, 11, 12, 13, 14, 15, 16, 17, 18)),
+                          DecisionTreeClassifier(criterion='entropy', max_depth=100,
+                                                 min_samples_leaf=3, min_samples_split=2,
+                                                 max_features='sqrt'))
 
     pipe2 = make_pipeline(ColumnSelector(cols=list(range(19, X_train.shape[1]))),
                           KNeighborsClassifier(n_neighbors=3))
 
     sclf = StackingClassifier(classifiers=[pipe1, pipe2],
-                              meta_classifier=MLPClassifier(activation='tanh', hidden_layer_sizes=(20, 40, 20), solver='adam', alpha=0.5, learning_rate='adaptive', max_iter=1000))
+                              meta_classifier=MLPClassifier(activation='tanh', hidden_layer_sizes=(20, 40, 20),
+                                                            solver='adam', alpha=0.5,
+                                                            learning_rate='adaptive', max_iter=1000))
 
     sclf = sclf.fit(X_train, y_train)
 

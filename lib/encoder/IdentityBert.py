@@ -4,6 +4,15 @@ import torch
 from ..utilities import Timer, Logger
 import re
 import numpy as np
+import torch
+import random
+import numpy as np
+
+# Set seeds for reproducibility
+seed = 42
+torch.manual_seed(seed)
+np.random.seed(seed)
+random.seed(seed)
 
 # fixme: several things to adjust:
 #  1. What kind of aggregation strategy to use?
@@ -75,24 +84,24 @@ class IdentityBert:
         if not temp_entities:
             return []
 
-        text_lower = text.lower()
-        frequencies = {}
-        max_freq = 5
-        entities_with_avg = []
+        # text_lower = text.lower()
+        # frequencies = {}
+        # max_freq = 5
+        # entities_with_avg = []
 
         # Count frequencies and find max frequency
-        for entity, confidence in temp_entities:
-            freq = text_lower.count(entity.lower())
-            frequencies[entity] = freq
-            avg_score = (confidence + freq/max(freq, max_freq)) / 2
-            entities_with_avg.append((entity, avg_score))
+        # for entity, confidence in temp_entities:
+            # freq = text_lower.count(entity.lower())
+            # frequencies[entity] = freq
+            # avg_score = (confidence + freq/max(freq, max_freq)) / 2
+            # entities_with_avg.append((entity, confidence))
 
         # Sort by average score descending
-        entities_with_avg.sort(key=lambda x: x[1], reverse=True)
-        return entities_with_avg
+        temp_entities.sort(key=lambda x: x[1], reverse=True)
+        return temp_entities
 
     @torch.inference_mode()
-    def __call__(self, raw_text: str) -> Tuple[Set[str], Set[str], Set[str], Set[str], float]:
+    def __call__(self, raw_text: str) -> Tuple[List[str], Set[str], List[str], Set[str], float]:
 
         # fixme: I dont want the URL during prediction
         processed_text = self.remove_urls(raw_text)
@@ -102,7 +111,7 @@ class IdentityBert:
 
         # Temporary lists to store entities with their confidence scores
         temp_identities: List[Tuple[str, float]] = []
-        relations: Set[str] = set()
+        relations: List[str] = []
         actions: Set[str] = set()
 
         for ent in entities:
@@ -113,17 +122,20 @@ class IdentityBert:
                 if ent_text not in ['[CLS]', '[UNK]']: # cannot be CLS token
                     temp_identities.append((ent_text, ent_score))
             elif ent_label == 'relation':
-                relations.add(ent_text)
+                relations.append(ent_text)
             else:
                 actions.add(ent_text)
 
         # Rank entities
         ranked_identities = self.rank_entities(temp_identities, processed_text)
 
-        # Initialize sets
-        identities: Set[str] = set()
+        # Initialize list for identities (to preserve order)
+        identities: List[str] = []
+
+        # Add entities to the list, preserving order and avoiding duplicates
         for entity, avg_score in ranked_identities:
-            identities.add(entity)
+            if entity not in identities:
+                identities.append(entity)
 
         # Adhoc fix for special identity: admin or domain address claimed in the sender name part
         if not identities:
@@ -131,9 +143,10 @@ class IdentityBert:
             regex = re.compile(pattern, re.IGNORECASE | re.MULTILINE)
             matches = regex.findall(raw_text)
             if matches:
-                # Adding in order of matches; since sets preserve insertion order in Python 3.7+
+                # Adding in order of matches; since lists preserve insertion order
                 for match in matches:
-                    identities.add(match)
+                    if match not in identities:
+                        identities.append(match)
 
         if not identities:
             pattern = r'^\s*From:\s*([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+|[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+)'
@@ -142,7 +155,8 @@ class IdentityBert:
             matches = regex.findall(raw_text)
             if matches:
                 for match in matches:
-                    identities.add(match)
+                    if match not in identities:
+                        identities.append(match)
 
         Logger.spit(f"Recognized identities = {identities}, "
                     f"recognized actions = {actions}, "

@@ -158,17 +158,30 @@ if __name__ == "__main__":
     #     json.dump(company_database, json_file)
     #
     '''Those official emails are pre-collected => Only for the LLM benchmark'''
+    # with open('./checkpoints/company_database_knowphish.json', 'r') as json_file:
+    #     company_database = json.load(json_file)
+    #
+    # df = pd.read_csv('./datasets/senders_v6.csv')
+    # for it, row in df.iterrows():
+    #     org_name = row['name']
+    #     email = row['official_email']
+    #     if isinstance(email, str) and '@' in email:
+    #         company_database[org_name] = [tldextract.extract(email).domain + '.' + tldextract.extract(email).suffix]
+    #
+    # with open('./checkpoints/company_database_knowphish_v2.json', 'w') as json_file:
+    #     json.dump(company_database, json_file)
+
+
+    '''Those official emails are pre-collected => Only for the field study'''
     with open('./checkpoints/company_database_knowphish.json', 'r') as json_file:
         company_database = json.load(json_file)
 
-    df = pd.read_csv('./datasets/senders_v6.csv')
+    df = pd.read_csv('./datasets/senders_field_study.csv')
     for it, row in df.iterrows():
         org_name = row['name']
         email = row['official_email']
         if isinstance(email, str) and '@' in email:
-            company_database[org_name] = [tldextract.extract(email).domain + '.' + tldextract.extract(email).suffix]
+            company_database[org_name] = [tldextract.extract(x).domain + '.' + tldextract.extract(x).suffix for x in email.split(',')]
 
-    with open('./checkpoints/company_database_knowphish_v2.json', 'w') as json_file:
+    with open('./checkpoints/company_database_field_study.json', 'w') as json_file:
         json.dump(company_database, json_file)
-
-

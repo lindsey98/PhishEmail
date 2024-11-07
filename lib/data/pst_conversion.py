@@ -45,7 +45,7 @@ def process_email(email, output_dir):
         eml_file.write(email_body)
 
 
-def extract_emails(pff_file_path, output_dir):
+def pst_to_eml(pff_file_path, output_dir):
     # Open the pst file
     pff_file = pypff.file()
     pff_file.open(pff_file_path)

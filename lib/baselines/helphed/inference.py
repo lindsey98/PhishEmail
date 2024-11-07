@@ -11,6 +11,8 @@ import numpy as np
 import pickle
 from sklearn.preprocessing import LabelEncoder
 import time
+import csv
+
 '''
 Main function
 '''
@@ -83,5 +85,72 @@ def test(email_dir):
 
 
 if __name__ == '__main__':
-    desc_folder = './datasets/sjtu_phish/'
-    test(desc_folder)
+    desc_folder = './datasets/GPT_V6/v6'
+    dataset = EmailDataset(desc_folder)
+    csv_file_path = './datasets/GPT_results_helphed_corrected.csv'
+
+    # # Check if we're writing to a new file, and write the header if so
+    # if not os.path.exists(csv_file_path):
+    #     with open(csv_file_path, mode='a', newline='', encoding='utf-8') as file:
+    #         writer = csv.writer(file)
+    #         writer.writerow(['email_file_path',
+    #                          'sender_name', 'sender_address',
+    #                          'to_names', 'to_addresses',
+    #                          'subject',
+    #                          'helphed_stacking_pred',
+    #                          'helphed_stacking_runtime',
+    #                          'helphed_voting_pred',
+    #                          'helphed_voting_runtime'])
+    #
+    # for it in tqdm(range(len(dataset))):
+    #     if dataset.file_list[it] in [x.split(',')[0] for x in open(csv_file_path).readlines()]:
+    #         continue
+    #
+    #     email_file_path, (sender_name, sender_address), \
+    #     (to_names, to_addresses), reply_to_address, \
+    #     subject, email_body_text, header = dataset[it]
+    #
+    #     # if email_file_path != './datasets/GPT_Dataset/Giancarlo Pellegrino_Web_Zero_Gemini.eml':
+    #     #     continue
+    #
+    #     helphed_stacking_pred, helphed_voting_pred, helphed_stacking_runtime, helphed_voting_runtime = test(email_file_path)
+    #     helphed_stacking_pred = helphed_stacking_pred[0]
+    #     helphed_voting_pred = helphed_voting_pred[0]
+    #     print(
+    #         f"HelpHed stacking prediction = {helphed_stacking_pred} with runtime = {helphed_stacking_runtime} \t"
+    #         f"HelpHed voting prediction = {helphed_voting_pred} with runtime = {helphed_voting_runtime}")
+    #
+    #     # Append the new row to the CSV file
+    #     with open(csv_file_path, mode='a', newline='', encoding='utf-8', errors='ignore') as file:
+    #         writer = csv.writer(file)
+    #         writer.writerow([email_file_path,
+    #                          sender_name, sender_address,
+    #                          to_names, to_addresses,
+    #                          subject,
+    #                          helphed_stacking_pred,
+    #                          helphed_stacking_runtime,
+    #                          helphed_voting_pred,
+    #                          helphed_voting_runtime,
+    #                          ])
+
+    df_helphed = pd.read_csv(csv_file_path)
+    csv_file_path = f'./datasets/GPT_results_augmented.csv'
+    df = pd.read_csv(csv_file_path)
+    df = df.drop([
+                  'helphed_stacking_pred',
+                 'helphed_stacking_runtime',
+                 'helphed_voting_pred',
+                 'helphed_voting_runtime'], axis=1)
+
+    df_new = df.merge(df_helphed[['email_file_path',
+                                  'sender_name', 'sender_address',
+                                   'to_names', 'to_addresses',
+                                  'subject',
+                                  'helphed_stacking_pred',
+                             'helphed_stacking_runtime',
+                             'helphed_voting_pred',
+                             'helphed_voting_runtime']], on='email_file_path', how='left')
+
+    df_new.to_csv(f'./datasets/GPT_results_augmented.csv', index=False)
+
+

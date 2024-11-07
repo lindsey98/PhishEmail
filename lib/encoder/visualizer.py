@@ -1,3 +1,5 @@
+import os
+
 from .IdentityBert import IdentityBert
 from transformers import pipeline
 from spacy import displacy
@@ -188,13 +190,9 @@ class Visualizer(IdentityBert):
             # Obtain NER predictions
             output = self.classifier_pipeline(raw_text)
 
-        # Function to count entity frequency in text
-        def count_entity_frequency(entity: str, text: str) -> int:
-            pattern = re.compile(r'\b' + re.escape(entity) + r'\b', re.IGNORECASE)
-            return len(pattern.findall(text))
-
         # Temporary lists to store entities with their confidence scores
-        temp_identities: List[Tuple[str, float, int]] = []
+        temp_identities: List[Tuple[str, float]] = []
+        temp_relation: List[Tuple[str, float]] = []
         seen_identities = set()
 
         for ent in output:
@@ -203,15 +201,20 @@ class Visualizer(IdentityBert):
             ent_score = ent.get('score', 0.0)  # Get the confidence score
             if ent_label == 'identity':
                 if ent_text not in seen_identities:
-                    temp_identities.append((ent_text, ent_score, count_entity_frequency(ent_text, raw_text)))
+                    temp_identities.append((ent_text, ent_score))
                     seen_identities.add(ent_text)
+            elif ent_label == 'relation':
+                temp_relation.append(ent_text)
+
+        temp_identities.sort(key=lambda x: x[1], reverse=True)
 
         # Logging: Convert entities with scores to strings for better readability
         identities_str = '\n'.join(
-            [f"{entity}, confidence = {score:.2f}, frequency = {freq:.0f}"
-             for entity, score, freq in temp_identities])
+            [f"{entity}, confidence = {score:.2f}"
+             for entity, score in temp_identities])
+        relation_str = f"{temp_relation}"
 
-        metadata += '\nReported identities: ' + '\n' + identities_str
+        metadata += '\nReported identities: ' + '\n' + identities_str + '\nReported relation: ' + '\n' + relation_str
 
         # Clean the predictions
         cleaned_output = self.ner_clean_predictions(output, raw_text)
@@ -230,3 +233,30 @@ class Visualizer(IdentityBert):
         )
 
         return html
+
+
+if __name__ == '__main__':
+
+    from lib.data import EmailDataset
+    visualizer_model = Visualizer("checkpoints/identity-model")
+
+    dataset = EmailDataset("datasets/field/ruofan/inbox/mbox/")
+    for it in range(len(dataset)):
+
+        if dataset.file_list[it] != 'datasets/field/ruofan/inbox/mbox/email_877.eml':
+            continue
+        # if dataset.file_list[it] != 'datasets/field/ruofan/inbox/mbox/email_3977.eml':
+        #     continue
+        # if dataset.file_list[it] != "datasets/field/ruofan/inbox/mbox/email_5168.eml":
+        #     continue
+
+        email_file_path, (sender_name, sender_address), \
+        (to_names, to_addresses), reply_to_address, \
+        subject, email_body_text, header = dataset[it]
+
+        parsed_email = f'Subject: {subject} \n  From: {sender_name} \n Body: {email_body_text}'
+
+        html = visualizer_model(parsed_email, metadata=email_file_path)
+
+        with open('./debug.html', 'w') as f:
+            f.write(html)

@@ -149,7 +149,6 @@ class EmailDataset(Dataset):
                                                      source='auto',
                                                      target='english')
                 except Exception as e:
-                    print(f"Attempt {attempt} - Error translating: {e}")
                     if attempt < max_retries:
                         time.sleep(retry_delay)
                         retry_delay *= 2  # Exponential backoff
