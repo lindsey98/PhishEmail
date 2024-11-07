@@ -189,10 +189,14 @@ class IdentityMatcher:
 
             # Check similarity with already filtered strings
             similar_found = False
-            for i, f in enumerate(clusters):
-                if difflib.SequenceMatcher(None, string, f[0]).ratio() > threshold: # group into a cluster
+            for i, cluster in enumerate(clusters):
+                if any(difflib.SequenceMatcher(None, string, existing).ratio() > threshold for existing in cluster):
                     similar_found = True
                     # Add the string to the existing cluster
+                    clusters[i].append(string)
+                    break
+                if any(string in existing or existing in string for existing in cluster):
+                    similar_found = True
                     clusters[i].append(string)
                     break
             if not similar_found:

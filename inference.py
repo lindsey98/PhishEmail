@@ -7,9 +7,9 @@ import csv
 from lib.encoder import IdentityBert, Visualizer
 from lib.reference_db import CharacterBERT, IdentityMatcher, BaseFaissIPRetriever
 from lib.utilities import Logger
-from lib.data import EmailDataset, EmailBoxDataset
-from lib.data.pst_conversion import pst_to_eml
-from lib.data.mbox_conversion import mbox_to_eml
+from lib.data import EmailDataset
+from lib.data.utils import pst_to_eml
+from lib.data.utils import mbox_to_eml
 import numpy as np
 import argparse
 from datetime import datetime
@@ -102,7 +102,7 @@ class Config:
 
     thre = 0.95
 
-    ignore_senders = {"hotcrp.com", "arxiv.org", "neurips.cc",
+    whitelist_senders = {"hotcrp.com", "arxiv.org", "neurips.cc",
                       "nus.edu.sg", "sjtu.edu.cn", "tongji.edu.cn", "openreview.net", "msr-cmt.org",
                       "coursera.org"} # ignore the paper submission and the internal senders
     forbidden_subject_prefix = ["re:", "fwd:", "fw:", "回复:", "转发:"]
@@ -176,22 +176,21 @@ def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed):
 
     for it in tqdm(range(len(dataset))):
 
-        # if it <= 9173:
+
+        # if dataset.file_list[it] != 'datasets/field/ruofan/inbox/mbox/email_5.eml':
         #     continue
+
         if os.path.exists(csv_file_path) and dataset.file_list[it] in [x.split(',')[0] for x in open(csv_file_path).readlines()]:
             continue
-        # if dataset.file_list[it] != 'datasets/sjtu_phish/email_154.eml':
-        #     continue
 
         email_file_path, (sender_name, sender_address), \
             (to_names, to_addresses), reply_to_address, \
-            subject, email_body_text, header = dataset[it] ## fixme: the GoogleTranslator takes time
+            subject, email_body_text, header = dataset[it] ## fixme: the GoogleTranslator may take some time
         sender_domains = dataset.domain_parsing(sender_address)  # a set
 
         # Check if the subject has been seen before
-        if sender_name+subject in seen_subjects:
+        if sender_name + subject in seen_subjects:
             continue  # Skip
-
         seen_subjects.add(sender_name+subject)
 
         '''Baseline: D-Fence, HelpHed, Rspamd'''
@@ -226,7 +225,7 @@ def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed):
             identity_recog_runtime = 0
             identity_matching_runtime = 0
             Logger.spit("Non-original email (Reply/Forward)",debug=True, caller_prefix='Main')
-        elif DomainUtils.domain_set_overlap(sender_domains, Config.ignore_senders):
+        elif DomainUtils.domain_set_overlap(sender_domains, Config.whitelist_senders):
             identities = []
             relations = []
             actions = set()

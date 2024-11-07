@@ -95,9 +95,9 @@ PhishEmail/
         |_ characterbert-typos-st/
         |_ identity-model/
         
-        |_ company_database_names.npy # this is a compact version of knowledge base, the brands inside have been manually cleaned
-        |_ company_database_reps.npy
-        |_ company_database_knowphish.json
+        |_ company_database_names_field_study.npy # this is a compact version of knowledge base, the brands inside have been manually cleaned
+        |_ company_database_reps_field_study.npy
+        |_ company_database_knowphish_field_study.json
         
         |_ internal_relation_names.npy 
         |_ internal_relation_reps.npy
