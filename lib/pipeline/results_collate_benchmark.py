@@ -210,7 +210,7 @@ if __name__ == '__main__':
                                                       embed_model=embed_model)
 
 
-    # results_calculation_wo_match(df_cleaned)
+    results_calculation_wo_match(df_cleaned)
     benchmarking_txt = f'./datasets/{dataset_name}_benchmarking.txt'
     for thre in np.linspace(0.78, 0.99, 10):
         #
@@ -222,7 +222,7 @@ if __name__ == '__main__':
                                                             knowledge_base_expansion = False,
                                                             gpt_client = None,
                                                             gpt_assistant = None,
-                                                            check_action = True,
+                                                            check_action = False,
                                                             sim_threshold = thre)
         break
 

@@ -80,21 +80,9 @@ class IdentityBert:
         return urls_after_actions
 
     # Optimized rank_entities function
-    def rank_entities(self, temp_entities: List[Tuple[str, float]], text: str) -> List[Tuple[str, float]]:
+    def rank_entities(self, temp_entities: List[Tuple[str, float]]) -> List[Tuple[str, float]]:
         if not temp_entities:
             return []
-
-        # text_lower = text.lower()
-        # frequencies = {}
-        # max_freq = 5
-        # entities_with_avg = []
-
-        # Count frequencies and find max frequency
-        # for entity, confidence in temp_entities:
-            # freq = text_lower.count(entity.lower())
-            # frequencies[entity] = freq
-            # avg_score = (confidence + freq/max(freq, max_freq)) / 2
-            # entities_with_avg.append((entity, confidence))
 
         # Sort by average score descending
         temp_entities.sort(key=lambda x: x[1], reverse=True)
@@ -127,7 +115,7 @@ class IdentityBert:
                 actions.add(ent_text)
 
         # Rank entities
-        ranked_identities = self.rank_entities(temp_identities, processed_text)
+        ranked_identities = self.rank_entities(temp_identities)
 
         # Initialize list for identities (to preserve order)
         identities: List[str] = []

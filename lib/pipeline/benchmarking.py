@@ -2,7 +2,7 @@
 import os
 from tqdm import tqdm
 import csv
-from lib.data import EmailDataset, EmailBoxDataset
+from lib.data import EmailDataset
 from lib.encoder import IdentityBert
 from inference import main
 from lib.baselines import dfence, helphed, rspamd

@@ -11,6 +11,10 @@ import difflib
 class DomainUtils:
 
     @staticmethod
+    def extract_domain_set(official_emails: List[str]) -> Set[str]:
+        return set([tldextract.extract(x).domain + '.' + tldextract.extract(x).suffix for x in official_emails])
+
+    @staticmethod
     def extract_domain_components(domain: str) -> tuple:
         extracted = tldextract.extract(domain)
         return (extracted.domain, extracted.suffix)

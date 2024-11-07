@@ -279,8 +279,7 @@ class IdentityMatcher:
 
             if closest_match:
                 official_emails = self.brand_domain_map[closest_match]
-                official_domains = set([tldextract.extract(x).domain + '.' +
-                                        tldextract.extract(x).suffix for x in official_emails])
+                official_domains = DomainUtils.extract_domain_set(official_emails)
                 closest_match_set.add(closest_match)
                 official_domains_set = official_domains_set.union(official_domains)
 
@@ -318,7 +317,7 @@ class IdentityMatcher:
         relations = [clean_string(x) for x in relations]
         combined_set = identities + relations  # Identities first, then relations
 
-        if not self.relax_match: # if relax_match is False, match to the first recognized identity with the highest confidence. May introduce FNs when the NER didnt rank the true identity as top-1.
+        if self.relax_match == False: # if relax_match is False, only try to match the top-1 identity with the highest confidence. May introduce FNs when the NER didnt rank the true identity as top-1.
             identities = self.filter_duplicates(identities)  # Returns a list in desired order
             first_cluster_identities = set()
             for this_set in identities:
