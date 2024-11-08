@@ -215,7 +215,7 @@ class IdentityMatcher:
         tag = tag.tolist()[0][0]
 
         if len(query) <= 3: # require exact match if query is too short, because I observe a FP case where 'pay' is matched to 'pay now'
-            thre = 1
+            thre = 0.99
 
         if score >= thre:
             return score, tag
