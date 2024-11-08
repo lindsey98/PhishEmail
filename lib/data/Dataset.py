@@ -247,15 +247,16 @@ class EmailDataset(Dataset):
                         stripped_text = element.strip()
                         if stripped_text:
                             text_parts.append(stripped_text)
-                    elif element.name == 'a':
-                        # Process <a> tags with href attributes
-                        href = element.get('href', '')
+                    # elif element.name == 'a':
+                    #     Process <a> tags with href attributes
+                        # href = element.get('href', '')
                         # Check if the link ends with an unwanted extension
-                        if not any(href.lower().endswith(ext) for ext in unwanted_extensions):
-                            # Check for additional noisy patterns
-                            if not any(noisy in href.lower() for noisy in ['mailto:', 'tel:', '#', 'javascript']):
-                                link_text = f"{element.get_text()} ({href})"
-                                text_parts.append(link_text)
+                        # if not any(href.lower().endswith(ext) for ext in unwanted_extensions):
+                        #     Check for additional noisy patterns
+                            # if not any(noisy in href.lower() for noisy in ['mailto:', 'tel:', '#', 'javascript']):
+                            #     link_text = f"{element.get_text()} ({href})"
+                                # link_text = f"{element.get_text()}" # fixme: No, dont include URL?
+                                # text_parts.append(link_text)
                 text_content = ' '.join(text_parts)  # Join all parts into a single string
                 html_content = decoded_content
 

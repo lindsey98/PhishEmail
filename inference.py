@@ -104,7 +104,7 @@ class Config:
 
     whitelist_senders = {"hotcrp.com", "arxiv.org", "neurips.cc",
                       "nus.edu.sg", "sjtu.edu.cn", "tongji.edu.cn", "openreview.net", "msr-cmt.org",
-                      "coursera.org"} # ignore the paper submission and the internal senders
+                      "coursera.org", "gmail.com"} # ignore the paper submission and the internal senders
     forbidden_subject_prefix = ["re:", "fwd:", "fw:", "回复:", "转发:"]
 
     
@@ -177,7 +177,7 @@ def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed):
     for it in tqdm(range(len(dataset))):
 
 
-        # if dataset.file_list[it] != 'datasets/field/ruofan/inbox/mbox/email_5.eml':
+        # if dataset.file_list[it] != 'datasets/field/ruofan/inbox/mbox/email_2679.eml':
         #     continue
 
         if os.path.exists(csv_file_path) and dataset.file_list[it] in [x.split(',')[0] for x in open(csv_file_path).readlines()]:
@@ -265,6 +265,8 @@ def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed):
                                                                                        relations=relations,
                                                                                        sender_domains=sender_domains,
                                                                                        recipient_domains=recipient_domains)
+
+            # exit()
 
         # Append the new row to the CSV file
         with open(csv_file_path, mode='a', newline='', encoding='utf-8', errors='ignore') as file:
