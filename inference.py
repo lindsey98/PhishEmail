@@ -104,7 +104,7 @@ class Config:
 
     whitelist_senders = {"hotcrp.com", "arxiv.org", "neurips.cc",
                       "nus.edu.sg", "sjtu.edu.cn", "tongji.edu.cn", "openreview.net", "msr-cmt.org",
-                      "coursera.org", "gmail.com"} # ignore the paper submission and the internal senders
+                      "coursera.org"} # ignore the paper submission and the internal senders
     forbidden_subject_prefix = ["re:", "fwd:", "fw:", "回复:", "转发:"]
 
     
