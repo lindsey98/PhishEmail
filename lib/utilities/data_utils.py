@@ -7,6 +7,7 @@ from typing import *
 from transformers import AutoTokenizer
 from tldextract import tldextract
 import difflib
+import json
 
 class DomainUtils:
 
@@ -313,3 +314,4 @@ def clean_string(s: str) -> str:
     # Remove the special characters from the string
     s = re.sub(special_chars_pattern, '', s)
     return s
+

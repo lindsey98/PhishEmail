@@ -19,9 +19,9 @@ class Visualizer(IdentityBert):
     _CallerPrefix = "Visualizer"
 
     _entity_colors: Dict[str, str] = {
-        "identity": "#9AC0F4",    # Lighter Medium Slate Blue for predicted organizations
-        "action": "#F5B8B8",      # Lighter Indian Red for predicted actions
-        "relation": "#7CFC7C",    # Lighter Lime Green for predicted relations
+        "identity": "#DFF4E1",    # Lighter Medium Slate Blue for predicted organizations
+        "action": "#F4D1C1",      # Lighter Indian Red for predicted actions
+        "relation": "#DFF4E1",    # Lighter Lime Green for predicted relations
     }
 
     def __init__(self, identity_checkpoint_path: str):
@@ -121,32 +121,74 @@ class Visualizer(IdentityBert):
         """
         # Generate the displacy HTML with page=False to get the snippet only
         pred_html = displacy.render(pred_doc, style="ent", page=False, options=options)
-        sanitized_metadata = Visualizer.sanitize_metadata(metadata)
+        if len(metadata):
+            sanitized_metadata = Visualizer.sanitize_metadata(metadata)
+        else:
+            sanitized_metadata = ""
+        # Add custom CSS for nested labels
+        custom_css = """
+        <style>
+        .entity {
+            display: inline-block;
+            position: relative;
+            padding: 2px 4px;
+            margin: 0 2px;
+            line-height: 1.5;
+            border-radius: 4px;
+        }
+        .entity .label {
+            position: absolute;
+            bottom: -1.5em;
+            left: 0;
+            background: white;
+            color: black;
+            font-size: 0.8em;
+            padding: 1px 4px;
+            border-radius: 2px;
+            border: 1px solid #ccc;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            white-space: nowrap;
+        }
+        </style>
+        """
 
         # Use Flexbox for layout to prevent overlapping
-        rendered_html = f"""
-            <h2>NER Entity Predictions</h2>
-            <div style="display: flex; flex-wrap: wrap; gap: 20px;">
-                <div style="flex: 1 1 60%; min-width: 300px; border: 1px solid black; padding: 10px; box-sizing: border-box;">
-                    <h3>Predicted Entities</h3>
-                    {pred_html}
+        if len(sanitized_metadata):
+            rendered_html = f"""
+             {custom_css}
+                <h2>NER Entity Predictions</h2>
+                <div style="display: flex; flex-wrap: wrap; gap: 20px;">
+                    <div style="flex: 1 1 60%; min-width: 300px; border: 1px solid black; padding: 10px; box-sizing: border-box;">
+                        <h3>Predicted Entities</h3>
+                        {pred_html}
+                    </div>
+                    <div style="
+                        flex: 1 1 30%; 
+                        min-width: 200px; 
+                        border: 1px solid black; 
+                        padding: 10px; 
+                        box-sizing: border-box; 
+                        background-color: #f9f9f9; 
+                        white-space: pre-wrap;  /* Preserves whitespace */
+                        max-height: 400px;      /* Optional: set a max height */
+                        overflow: auto;         /* Adds scrollbar if content exceeds max-height */
+                    ">
+                        <strong>Metadata:</strong><br>
+                        {sanitized_metadata}
+                    </div>
                 </div>
-                <div style="
-                    flex: 1 1 30%; 
-                    min-width: 200px; 
-                    border: 1px solid black; 
-                    padding: 10px; 
-                    box-sizing: border-box; 
-                    background-color: #f9f9f9; 
-                    white-space: pre-wrap;  /* Preserves whitespace */
-                    max-height: 400px;      /* Optional: set a max height */
-                    overflow: auto;         /* Adds scrollbar if content exceeds max-height */
-                ">
-                    <strong>Metadata:</strong><br>
-                    {sanitized_metadata}
+            """
+        else:
+            rendered_html = f"""
+             {custom_css}
+                <h2>NER Entity Predictions</h2>
+                <div style="display: flex; flex-wrap: wrap; gap: 20px;">
+                    <div style="flex: 1 1 100%; min-width: 300px; border: 1px solid black; padding: 10px; box-sizing: border-box;">
+                        <h3>Predicted Entities</h3>
+                        {pred_html}
+                    </div>
                 </div>
-            </div>
-        """
+            """
         return rendered_html
 
     @staticmethod
@@ -233,30 +275,3 @@ class Visualizer(IdentityBert):
         )
 
         return html
-
-
-if __name__ == '__main__':
-
-    from lib.data import EmailDataset
-    visualizer_model = Visualizer("checkpoints/identity-model")
-
-    dataset = EmailDataset("datasets/field/ruofan/inbox/mbox/")
-    for it in range(len(dataset)):
-
-        if dataset.file_list[it] != 'datasets/field/ruofan/inbox/mbox/email_877.eml':
-            continue
-        # if dataset.file_list[it] != 'datasets/field/ruofan/inbox/mbox/email_3977.eml':
-        #     continue
-        # if dataset.file_list[it] != "datasets/field/ruofan/inbox/mbox/email_5168.eml":
-        #     continue
-
-        email_file_path, (sender_name, sender_address), \
-        (to_names, to_addresses), reply_to_address, \
-        subject, email_body_text, header = dataset[it]
-
-        parsed_email = f'Subject: {subject} \n  From: {sender_name} \n Body: {email_body_text}'
-
-        html = visualizer_model(parsed_email, metadata=email_file_path)
-
-        with open('./debug.html', 'w') as f:
-            f.write(html)

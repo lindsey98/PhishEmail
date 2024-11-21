@@ -410,63 +410,63 @@ if __name__ == '__main__':
     np.save('./checkpoints/company_database_names.npy', np.asarray(tags))
     np.save('./checkpoints/company_database_reps.npy', index_reps)
 
-    Internal_Relations = [
-                          'admin',
-                          'mail admin',
-                          'admin portal',
-                          'administrator',
-                          'administration',
-                          'administrative',
-
-                          'mail team',
-                          'mail service',
-                          'mail server administrator',
-                          'mail desk',
-                          'webmail service',
-                          'mail delivery system',
-                          # 'e-mail',
-                          # 'email',
-                          'mailbox',
-                          'mail support',
-                          'email storage',
-                          'mail notification',
-                          'webmail panel',
-                          'mail security',
-                          'webmaster',
-                          'webmailservice',
-                          'webmail team',
-                          'webmail mail service team'
-
-                          'employee',
-                          'staff',
-                          'colleague',
-                          'faculty',
-                          # 'manager',
-                          'student',
-                          # 'supervisor',
-
-                          # 'human resource',
-                          'human resource team',
-                          'HR team',
-                          'HR',
-                          'human resources department',
-
-                          'Finance team'
-                          'IT department',
-                          'IT support',
-                          'IT service support',
-                          'Payroll',
-                          'IT maintenance services',
-                          'IT report',
-                          'IT Desk',
-
-                          'internal company',
-                          ]
-
-    tags = [x.lower() for x in Internal_Relations]
-    embed, _ = model(tags)
-    embed = embed.cpu().numpy()
-
-    np.save('./checkpoints/internal_relation_names.npy', np.asarray(tags))
-    np.save('./checkpoints/internal_relation_reps.npy', embed)
+    # Internal_Relations = [
+    #                       'admin',
+    #                       'mail admin',
+    #                       'admin portal',
+    #                       'administrator',
+    #                       'administration',
+    #                       'administrative',
+    #
+    #                       'mail team',
+    #                       'mail service',
+    #                       'mail server administrator',
+    #                       'mail desk',
+    #                       'webmail service',
+    #                       'mail delivery system',
+    #                       # 'e-mail',
+    #                       # 'email',
+    #                       'mailbox',
+    #                       'mail support',
+    #                       'email storage',
+    #                       'mail notification',
+    #                       'webmail panel',
+    #                       'mail security',
+    #                       'webmaster',
+    #                       'webmailservice',
+    #                       'webmail team',
+    #                       'webmail mail service team'
+    #
+    #                       'employee',
+    #                       'staff',
+    #                       'colleague',
+    #                       'faculty',
+    #                       # 'manager',
+    #                       'student',
+    #                       # 'supervisor',
+    #
+    #                       # 'human resource',
+    #                       'human resource team',
+    #                       'HR team',
+    #                       'HR',
+    #                       'human resources department',
+    #
+    #                       'Finance team'
+    #                       'IT department',
+    #                       'IT support',
+    #                       'IT service support',
+    #                       'Payroll',
+    #                       'IT maintenance services',
+    #                       'IT report',
+    #                       'IT Desk',
+    #
+    #                       'internal company',
+    #                       ]
+    #
+    # tags = [x.lower() for x in Internal_Relations]
+    # embed, _ = model(tags)
+    # embed = embed.cpu().numpy()
+    #
+    # np.save('./checkpoints/internal_relation_names.npy', np.asarray(tags))
+    # np.save('./checkpoints/internal_relation_reps.npy', embed)
 

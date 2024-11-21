@@ -98,12 +98,6 @@ if __name__ == '__main__':
     print(train_dataset)
     print(test_dataset)
 
-    '''Observe the action pattern'''
-    action_phrases = extract_action_phrases(train_dataset)
-    pattern_counter = summarize_patterns(action_phrases, n=5)
-    for phrase, count in pattern_counter.most_common():
-        print(f"Phrase: {' '.join(phrase)}, Count: {count}")
-
     tokenizer = AutoTokenizer.from_pretrained(model_id)
     tokenized_wnut = ds.map(lambda examples: tokenize_and_align_labels(examples, tokenizer=tokenizer))
     data_collator = DataCollatorForTokenClassification(tokenizer=tokenizer)
@@ -113,6 +107,8 @@ if __name__ == '__main__':
         model_id, num_labels=7, id2label=id_to_label, label2id=label_to_id
     )
     os.environ["WANDB_PROJECT"] = f"{dataset}_bert"  # name your W&B project
+
+
     training_args = TrainingArguments(
         report_to="wandb",  # this tells the Trainer to log the metrics to W&B
         # output_dir="./checkpoints/output_ner",
