@@ -130,6 +130,3 @@ def test(email_dir):
 
     return pred_class, pred_score, pred_metadata, pred_runtime
 
-if __name__ == '__main__':
-    desc_folder = './datasets/sjtu_phish/email_1.eml'
-    test(desc_folder)

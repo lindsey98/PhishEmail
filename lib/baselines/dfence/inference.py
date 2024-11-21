@@ -119,7 +119,3 @@ def test(email_dir):
 
     return pred_confidence, pred_class, total_time
 
-if __name__ == '__main__':
-    # desc_folder = './datasets/sjtu_phish/email_195.eml'
-    # test(desc_folder)
-    feature_importance_viz()

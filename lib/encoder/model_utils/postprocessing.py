@@ -85,15 +85,13 @@ def ner_prediction_postprocess(model, tokenizer, model_outputs, input_ids, offse
     entities = []
     for i in range(len(model_outputs.logits)):
         logits = model_outputs.logits[i]
-        token_scores = logits.softmax(dim=-1)  # 计算每个 token 的 softmax 得分
-        token_labels = token_scores.argmax(dim=-1)  # 选择得分最高的标签
+        token_scores = logits.softmax(dim=-1)
+        token_labels = token_scores.argmax(dim=-1)
 
         for token_index, token_label in enumerate(token_labels):
-            # 跳过特殊 token（例如 [CLS], [SEP] 等）
             if input_ids[i][token_index] in [tokenizer.cls_token_id, tokenizer.sep_token_id]:
                 continue
 
-            # 获取原始文本中 token 的起始和结束位置
             start, end = offset_mapping[i][token_index].tolist()
             entity = {
                 "word": tokenizer.convert_ids_to_tokens([input_ids[i][token_index]])[0],

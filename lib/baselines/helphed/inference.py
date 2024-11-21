@@ -153,8 +153,4 @@ def test_proba(email_dir):
 
     return y_pred_stacked, y_pred_voting, total_time1, total_time2
 
-if __name__ == '__main__':
-    # desc_folder = './datasets/sjtu_phish/email_195.eml'
-    # test(desc_folder)
-    feature_importance_viz()
 

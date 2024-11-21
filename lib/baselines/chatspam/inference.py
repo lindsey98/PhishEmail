@@ -101,7 +101,7 @@ def results_calculation(results_save_dir):
     print(f'Reported = {report_ct}, % = {report_ct / total}')
     print(f'Median time = {np.median(time_list)}')
 
-if __name__ == '__main__':
+# if __name__ == '__main__':
     # desc_folder = './datasets/GPT_V6/v6'
     # test(desc_folder, results_save_dir='./datasets/GPT_results_prompt3_ChatSpamDetector')
 
@@ -110,7 +110,3 @@ if __name__ == '__main__':
     # desc_folder = './datasets/nazario-recent'
     # test(desc_folder, results_save_dir='./datasets/nazario_prompt3_ChatSpamDetector')
     # results_calculation('./datasets/nazario_prompt3_ChatSpamDetector')
-
-    desc_folder = './datasets/field/ruofan_honeypot/Mail/Starred'
-    test(desc_folder, results_save_dir='./datasets/field/ruofan_honeypot/honeypot_ChatSpamDetector')
-    # results_calculation('./datasets/field/ruofan/ruofanINBOX_ChatSpamDetector')

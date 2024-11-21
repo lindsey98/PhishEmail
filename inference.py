@@ -219,15 +219,6 @@ def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed, auto
                     seen_subjects.add(row[1] + row[5])  # Assuming 'subject' is the 6th column (index 5)
 
     for it in tqdm(range(len(dataset))):
-        #
-        # if dataset.file_list[it] not in [ 'datasets/field/ruofan_honeypot/Mail/Starred/email_26.eml',
-        #                                  'datasets/field/ruofan_honeypot/Mail/Starred/email_65.eml', 'datasets/field/ruofan_honeypot/Mail/Starred/email_57.eml',
-        #                                  'datasets/field/ruofan_honeypot/Mail/Starred/email_71.eml', 'datasets/field/ruofan_honeypot/Mail/Starred/email_55.eml',
-        #                                  'datasets/field/ruofan_honeypot/Mail/Starred/email_58.eml', 'datasets/field/ruofan_honeypot/Mail/Starred/email_30.eml',
-        #                                  'datasets/field/ruofan_honeypot/Mail/Starred/email_31.eml',
-        #                                  'datasets/field/ruofan_honeypot/Mail/Starred/email_28.eml', 'datasets/field/ruofan_honeypot/Mail/Starred/email_53.eml',
-        #                                  'datasets/field/ruofan_honeypot/Mail/Starred/email_64.eml', 'datasets/field/ruofan_honeypot/Mail/Starred/email_63.eml']:
-        #     continue
 
         if os.path.exists(csv_file_path) and dataset.file_list[it] in [x.split(',')[0] for x in open(csv_file_path).readlines()]:
             continue
@@ -264,23 +255,23 @@ def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed, auto
             helphed_stacking_pred, helphed_voting_pred, helphed_stacking_runtime, helphed_voting_runtime = None, None, None, None
 
         '''Our method'''
-        # if subject and any([x in subject.lower() for x in Config.forbidden_subject_prefix]):
-        #     identities = []
-        #     relations = []
-        #     actions = set()
-        #     next_step_of_engagement = set()
-        #     matched_identity = "Non-original email (Reply/Forward)"
-        #     is_inconsistent = False
-        #     identity_recog_runtime = 0
-        #     identity_matching_runtime = 0
-        #     dfence_pred = 0
-        #     dfence_runtime = 0
-        #     helphed_stacking_pred = 0
-        #     helphed_stacking_runtime = 0
-        #     helphed_voting_pred = 0
-        #     helphed_voting_runtime = 0
-        #     Logger.spit("Non-original email (Reply/Forward)",debug=True, caller_prefix='Main')
-        if DomainUtils.domain_set_overlap(sender_domains, Config.whitelist_senders):
+        if subject and any([x in subject.lower() for x in Config.forbidden_subject_prefix]):
+            identities = []
+            relations = []
+            actions = set()
+            next_step_of_engagement = set()
+            matched_identity = "Non-original email (Reply/Forward)"
+            is_inconsistent = False
+            identity_recog_runtime = 0
+            identity_matching_runtime = 0
+            dfence_pred = 0
+            dfence_runtime = 0
+            helphed_stacking_pred = 0
+            helphed_stacking_runtime = 0
+            helphed_voting_pred = 0
+            helphed_voting_runtime = 0
+            Logger.spit("Non-original email (Reply/Forward)",debug=True, caller_prefix='Main')
+        elif DomainUtils.domain_set_overlap(sender_domains, Config.whitelist_senders):
             identities = []
             relations = []
             actions = set()
