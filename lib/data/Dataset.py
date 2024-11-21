@@ -14,11 +14,13 @@ import functools
 import langdetect
 from langdetect import detect_langs
 import time
+import quopri
+import bs4
 
 class EmailDataset(Dataset):
     _CallerPrefix = ".eml/.txt email files Loader"
 
-    def __init__(self, root_path):
+    def __init__(self, root_path, translate_on=False):
         self.file_list = []
 
         if os.path.isdir(root_path):  # Check if root_path is a directory
@@ -40,6 +42,8 @@ class EmailDataset(Dataset):
                                                })
         else:
             self.translator = GoogleTranslator(source="auto", target="en")
+
+        self.translate_on = translate_on
 
 
     def __len__(self):
@@ -85,7 +89,12 @@ class EmailDataset(Dataset):
     @staticmethod
     def decode_header(header_value) -> str:
         header_parts = decode_header(header_value)
-        return ''.join(part if isinstance(part, str) else part.decode(charset or 'utf-8', 'replace') for part, charset in header_parts)
+        try:
+            header_parts_decoded = ''.join(part if isinstance(part, str) else part.decode(charset or 'utf-8', 'replace') for part, charset in header_parts)
+        except LookupError:
+            header_parts_decoded = ''.join(str(part) for part, charset in header_parts)
+
+        return header_parts_decoded
 
     @staticmethod
     def clean_text_content(text_content: str) -> str:
@@ -103,7 +112,28 @@ class EmailDataset(Dataset):
         # Deal with invisible hyphen
         text_content = re.sub(r'\xad', '', text_content)
         text_content = re.sub(r'&shy;', '', text_content)
+
+        zero_width_pattern = r'[\u200B\u200C\u200D\u2060\u00AD\uFEFF\u2061\u2062\u2063\u2064\u034F\u17B4\u17B5]'
+        text_content = re.sub(zero_width_pattern, '', text_content)
         return text_content
+
+    @staticmethod
+    def decode_quoted_printable(encoded_str: bytes, charset: str = 'utf-8') -> str:
+        """
+        Decode a quoted-printable encoded string to its original form using the specified charset.
+        """
+        try:
+            # Decode the quoted-printable encoded string
+            decoded_bytes = quopri.decodestring(encoded_str)
+            # Decode the bytes to string using the specified charset
+            decoded_str = decoded_bytes.decode(charset, 'replace')
+        except LookupError:
+            # Fallback to utf-8 if charset is not recognized
+            decoded_str = decoded_bytes.decode('utf-8', 'replace')
+        except Exception as e:
+            print(f"Failed to decode: {e}")
+            decoded_str = encoded_str.decode(charset, 'replace')  # Fallback to raw decoding
+        return decoded_str
 
     @staticmethod
     def remove_prev_messages(text_content: str) -> str:
@@ -208,6 +238,8 @@ class EmailDataset(Dataset):
         text_content = ""
         html_content = ""
         unwanted_extensions = {'.css', '.js', '.ico', '.png', '.jpg', '.jpeg', '.gif', '.pdf', '.doc', '.docx', '.xls', '.xlsx'}
+        unwanted_attachment = {'mailto:', 'tel:', '#', 'javascript', "mso["}
+        url_pattern = re.compile(r'https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+')  # Simple URL pattern
 
         # Check if the part is a multipart
         if part.is_multipart():
@@ -216,24 +248,52 @@ class EmailDataset(Dataset):
                 text_content += content[0]
                 html_content += content[1]
         else:
-            # Process single part (leaf node)
+            # if self.translate_on: ## fixme
+            #     raw_email_content = part.get_payload(decode=False)
+            #     decoded_content = self.auto_translate(raw_email_content)
+            #     content_type = "text"
+            # else:
             content_type = part.get_content_type()
+            # if not content_type or "text" in content_type:
+            #     decoded_content = part.get_payload(decode=False)  # decoding is handled here
+            # else:
             charset = part.get_content_charset('utf-8')
             raw_email_content = part.get_payload(decode=True)  # decoding is handled here
-
+            transfer_encoding = part.get('Content-Transfer-Encoding', '').lower()
             # Handle decoded content directly if available
             if raw_email_content:
-                try:
-                    decoded_content = raw_email_content.decode(charset, 'replace')
-                except LookupError:  # in case charset is not recognized
-                    decoded_content = raw_email_content.decode('utf-8', 'replace')
+                # Decode content based on encoding specified
+                if transfer_encoding == 'quoted-printable':
+                    decoded_content = self.decode_quoted_printable(raw_email_content, charset)
+                else:
+                    try:
+                        decoded_content = raw_email_content.decode(charset, 'replace')
+                    except LookupError:  # in case charset is not recognized
+                        decoded_content = raw_email_content.decode('utf-8', 'replace')
             else:
                 decoded_content = raw_email_content  # handle cases where payload is not encoded
 
+            if self.translate_on:  ## fixme
+                try:
+                    decoded_content = self.auto_translate(decoded_content)
+                except TypeError:
+                    decoded_content = self.auto_translate(decoded_content.decode('ISO-8859-1'))
+
+            ### Extract text from HTML
             if 'html' in content_type:
-                soup = BeautifulSoup(decoded_content, 'html.parser')
+                try:
+                    soup = BeautifulSoup(decoded_content, 'html.parser')
+                except bs4.builder.ParserRejectedMarkup:
+                    soup = BeautifulSoup(decoded_content, 'lxml')
+                except TypeError:
+                    return "", ""
+
                 for script_or_style in soup(['script', 'style']):
                     script_or_style.decompose()
+                # Remove all inline styles (style attributes)
+                for tag in soup.find_all(True):  # `True` finds all tags
+                    if 'style' in tag.attrs:
+                        del tag['style']
 
                 # Remove DOCTYPE and comments
                 for element in soup.contents:
@@ -247,21 +307,30 @@ class EmailDataset(Dataset):
                         stripped_text = element.strip()
                         if stripped_text:
                             text_parts.append(stripped_text)
-                    # elif element.name == 'a':
-                    #     Process <a> tags with href attributes
-                        # href = element.get('href', '')
-                        # Check if the link ends with an unwanted extension
-                        # if not any(href.lower().endswith(ext) for ext in unwanted_extensions):
-                        #     Check for additional noisy patterns
-                            # if not any(noisy in href.lower() for noisy in ['mailto:', 'tel:', '#', 'javascript']):
-                            #     link_text = f"{element.get_text()} ({href})"
-                                # link_text = f"{element.get_text()}" # fixme: No, dont include URL?
-                                # text_parts.append(link_text)
-                text_content = ' '.join(text_parts)  # Join all parts into a single string
+                    elif element.name == 'a':
+                        # Process <a> tags with href attributes
+                        href = element.get('href', '')
+                        text = element.get_text(strip=True)
+                        is_text_url = url_pattern.match(text)
+
+                        # fixme: how to handle the embedded urls?
+                        if href and (not any(href.lower().endswith(ext) for ext in unwanted_extensions)) and \
+                            (not any(noisy in href.lower() for noisy in unwanted_attachment)):
+                            if is_text_url:
+                                text_parts.append(href)
+                            else:
+                                text_parts.append(f'{text}')
+                        else:
+                            text_parts.append(text)
+
+                text_content = '. '.join(text_parts)  # Join all parts into a single string
                 html_content = decoded_content
 
-            elif 'text' in content_type:
-                text_content = decoded_content.strip()
+            else:  ### plain text
+                if decoded_content:
+                    text_content = decoded_content.strip()
+                else:
+                    text_content = ""
 
         return str(text_content), str(html_content)
 
@@ -272,7 +341,12 @@ class EmailDataset(Dataset):
         headers = str(email_content._headers)
 
         sender_name, sender_address = self.extract_sender(email_content)
-        sender_name = self.auto_translate(sender_name)
+        if self.translate_on:
+            sender_name = self.auto_translate(sender_name)
+            if sender_address and "@" not in sender_address:
+                translatedaddress = self.auto_translate(sender_address)
+                if translatedaddress is not None:
+                    sender_name += translatedaddress
 
         to_names, to_addresses = self.extract_recipients(email_content)
         reply_to_address = self.extract_reply_to_address(email_content)
@@ -280,7 +354,8 @@ class EmailDataset(Dataset):
             reply_to_address = sender_address
 
         subject = self.extract_subject(email_content)
-        subject = self.auto_translate(subject)
+        if self.translate_on:
+            subject = self.auto_translate(subject)
 
         text_content, html_content = self.extract_text_content(email_content)
         text_content = self.remove_prev_messages(text_content)

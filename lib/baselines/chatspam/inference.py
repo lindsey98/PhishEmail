@@ -35,7 +35,7 @@ def test(email_dir, results_save_dir):
         # parsed_email = f'Subject: {subject} \n From: {sender_name} \n Body: {email_body_text}'
 
         result_save_path = os.path.join(results_save_dir, os.path.basename(email_file_path) + '.json')
-        if os.path.exists(result_save_path):
+        if os.path.exists(result_save_path) and len(open(result_save_path).read()):
             continue
 
         # Combine system and sample-specific prompts
@@ -84,24 +84,33 @@ def test(email_dir, results_save_dir):
 
 def results_calculation(results_save_dir):
     report_ct = 0
+    total = 0
     time_list = []
     for file in os.listdir(results_save_dir):
         with open(os.path.join(results_save_dir, file), "r") as handle:
             result = json.load(handle)
 
-        # if "Yes, it is phishing" in result['prediction']:
-        if "\"is_phishing\": true" in (result['prediction']):
-            report_ct += 1
-        else:
-            print()
+        if file.replace(".json", "") not in open(f'./datasets/nazario_noisy_list.txt').read():
+            total += 1
+            # if "Yes, it is phishing" in result['prediction']:
+            if "\"is_phishing\": true" in (result['prediction']):
+                report_ct += 1
 
         time_list.append(float(result['runtime']))
 
-    print(f'Reported = {report_ct}, % = {report_ct / len(os.listdir(results_save_dir))}')
-    print(f'Median matching time = {np.median(time_list)}')
+    print(f'Reported = {report_ct}, % = {report_ct / total}')
+    print(f'Median time = {np.median(time_list)}')
 
 if __name__ == '__main__':
-    desc_folder = './datasets/GPT_V6/v6'
+    # desc_folder = './datasets/GPT_V6/v6'
     # test(desc_folder, results_save_dir='./datasets/GPT_results_prompt3_ChatSpamDetector')
 
-    results_calculation('./datasets/GPT_results_prompt3_ChatSpamDetector')
+    # results_calculation('./datasets/GPT_results_prompt3_ChatSpamDetector')
+
+    # desc_folder = './datasets/nazario-recent'
+    # test(desc_folder, results_save_dir='./datasets/nazario_prompt3_ChatSpamDetector')
+    # results_calculation('./datasets/nazario_prompt3_ChatSpamDetector')
+
+    desc_folder = './datasets/field/ruofan_honeypot/Mail/Starred'
+    test(desc_folder, results_save_dir='./datasets/field/ruofan_honeypot/honeypot_ChatSpamDetector')
+    # results_calculation('./datasets/field/ruofan/ruofanINBOX_ChatSpamDetector')

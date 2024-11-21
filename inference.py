@@ -33,8 +33,6 @@ class Config:
         'employee',
         'staff',
         'colleague',
-        'faculty',
-        'student',
         'human resource team',
         'HR team',
         'HR',
@@ -48,9 +46,51 @@ class Config:
         'IT report',
         'IT Desk',
         'internal company',
+        # the following internal roles are observed in field study
+        'billing support',
+        'helpdesk',
+        'IT helpdesk',
+        'Postmaster',
+        'IMAP',
+        'Internal company',
+        'administration department',
+        'mail inc.',
+        'email security center',
+        'financial management department',
+        'general affairs department',
+        'finance department',
+        'human resources department',
+        'email system network record',
+        'ministry of information',
+        'email system management notification',
+        'trusted server',
+        'oa data migration and upgrade',
+        'information management center',
+        'the mail system',
+        'support IT',
+        'mailbox administrator',
+        'enterprise mailbox',
+        'lending department',
+        'system administrator',
+        'accounts payable team',
+        'management department',
+        'service information center',
+        'e-mail mailbox system',
+        "security administrator",
+        "account administrator",
+        "maintenance department",
+        "IT teams",
+        "campus email",
+        "network and data center",
+        "post office system administrator",
+        "mygov",
+        "security center",
+        "tomHRM"
     ]
 
+    # IDENTITY_MODEL_CHECKPOINT = os.getenv("IDENTITY_MODEL_CHECKPOINT", "./checkpoints/identity-model-greedy")
     IDENTITY_MODEL_CHECKPOINT = os.getenv("IDENTITY_MODEL_CHECKPOINT", "./checkpoints/identity-model")
+
     MATCHING_MODEL_CHECKPOINT = os.getenv("MATCHING_MODEL_CHECKPOINT", "./checkpoints/characterbert-typos-st")
 
     REF_IDENTITY_REPS = os.getenv("REF_IDENTITY_REPS", "./checkpoints/company_database_reps_field_study.npy")
@@ -70,12 +110,11 @@ class Config:
         brand_domain_map = json.load(file)
     ref_embed_list = np.load(REF_IDENTITY_REPS) if os.path.exists(REF_IDENTITY_REPS) else None
 
-    Logger.spit('Cache the knowledge base embeddings...', caller_prefix="Main", debug=True)
     index_reps = np.empty((0, 768))
     batch_size = 128
     tags = []
     brand_name_list = list(brand_domain_map.keys())
-    for i in tqdm(range(0, len(brand_name_list), batch_size)):
+    for i in tqdm(range(0, len(brand_name_list), batch_size), desc="Caching the knowledge base embeddings"):
         batch = brand_name_list[i:min(i + batch_size, len(brand_name_list))]  # Get the next batch of brand names
         batch_embeddings, _ = matching_model(batch)
         batch_embeddings = batch_embeddings.cpu().numpy()  # Predict embeddings for the batch
@@ -90,22 +129,24 @@ class Config:
     np.save(REF_RELATION_NAMES, np.asarray(tags))
     np.save(REF_RELATION_REPS, embed)
 
+    Logger.spit('Loaded the identity knowledge base into memory', caller_prefix="Main", debug=True)
     ref_embed_list = np.load(REF_IDENTITY_REPS) if REF_IDENTITY_REPS else None
     ref_tag_list = np.load(REF_IDENTITY_NAMES).tolist()
     brand_index_db = BaseFaissIPRetriever(init_reps=ref_embed_list, tags=ref_tag_list, embed_model=matching_model)
     brand_domain_map_path = REF_IDENTITY_MAP
 
-    Logger.spit('Loaded the identity knowledge base into memory', caller_prefix="Main", debug=True)
     relation_embed_list = np.load(REF_RELATION_REPS) if REF_RELATION_REPS else None
     relation_tag_list = np.load(REF_RELATION_NAMES).tolist()
     internal_relation_index_db = BaseFaissIPRetriever(init_reps=relation_embed_list, tags=relation_tag_list, embed_model=matching_model)
 
     thre = 0.95
 
-    whitelist_senders = {"hotcrp.com", "arxiv.org", "neurips.cc",
-                      "nus.edu.sg", "sjtu.edu.cn", "tongji.edu.cn", "openreview.net", "msr-cmt.org",
-                      "coursera.org", "gmail.com", "slack.com"} # ignore the paper submission and the internal senders
-    forbidden_subject_prefix = ["re:", "fwd:", "fw:", "回复:", "转发:"]
+    whitelist_senders = {"hotcrp.com", "arxiv.org", "neurips.cc", "openreview.net", "msr-cmt.org",
+                         "nus.edu.sg", "sjtu.edu.cn", "tongji.edu.cn", "gmail.com",
+                         "coursera.org", "citiprogram.org",
+                         "symplicity.com", "examsoft.com",
+                         "slack.com"} # ignore the paper submission, online course, and the internal senders
+    forbidden_subject_prefix = ["re:", "fwd:", "fw:", "回复:", "转发:", "reply:"]
 
     
 today = datetime.today()
@@ -117,24 +158,27 @@ today_date = today.strftime("%Y-%m-%d")
 @click.option("--output_csv", default=f'{today_date}_results.csv', help="Output txt path")
 @click.option("--run_dfence", is_flag=True, default=False)
 @click.option("--run_helphed", is_flag=True, default=False)
-def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed):
+@click.option("--auto_translate", is_flag=True, default=False, help='Whether to translate the email (including subject)')
+def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed, auto_translate):
     matcher_cls = IdentityMatcher(brand_index_db=Config.brand_index_db,
                                   internal_relation_index_db=Config.internal_relation_index_db,
                                   embed_model=Config.matching_model,
                                   brand_domain_map_path=Config.brand_domain_map_path,
                                   knowledge_base_expansion=False,
-                                  gpt_client=None, gpt_assistant=None,
+                                  gpt_client=None,
+                                  gpt_assistant=None,
                                   check_action=True,
-                                  threshold=Config.thre)
+                                  threshold=Config.thre,
+                                  relax_match=True) # todo: relax_match!
 
     if '.mbox' in email_dir:
         mbox_to_eml(email_dir, email_dir.replace('.mbox', ''))
-        dataset = EmailDataset(email_dir.replace('.mbox', ''))
+        dataset = EmailDataset(email_dir.replace('.mbox', ''), translate_on=auto_translate)
     elif email_dir.endswith('.pst'):
         pst_to_eml(email_dir, email_dir.replace('.pst', ''))
-        dataset = EmailDataset(email_dir.replace('.pst', ''))
+        dataset = EmailDataset(email_dir.replace('.pst', ''), translate_on=auto_translate)
     else:
-        dataset = EmailDataset(email_dir)
+        dataset = EmailDataset(email_dir, translate_on=auto_translate)
     csv_file_path = output_csv
     if save_vis:
         os.makedirs(vis_dir, exist_ok=True)
@@ -175,9 +219,14 @@ def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed):
                     seen_subjects.add(row[1] + row[5])  # Assuming 'subject' is the 6th column (index 5)
 
     for it in tqdm(range(len(dataset))):
-
-
-        # if dataset.file_list[it] != 'datasets/field/ruofan/inbox/mbox/email_2679.eml':
+        #
+        # if dataset.file_list[it] not in [ 'datasets/field/ruofan_honeypot/Mail/Starred/email_26.eml',
+        #                                  'datasets/field/ruofan_honeypot/Mail/Starred/email_65.eml', 'datasets/field/ruofan_honeypot/Mail/Starred/email_57.eml',
+        #                                  'datasets/field/ruofan_honeypot/Mail/Starred/email_71.eml', 'datasets/field/ruofan_honeypot/Mail/Starred/email_55.eml',
+        #                                  'datasets/field/ruofan_honeypot/Mail/Starred/email_58.eml', 'datasets/field/ruofan_honeypot/Mail/Starred/email_30.eml',
+        #                                  'datasets/field/ruofan_honeypot/Mail/Starred/email_31.eml',
+        #                                  'datasets/field/ruofan_honeypot/Mail/Starred/email_28.eml', 'datasets/field/ruofan_honeypot/Mail/Starred/email_53.eml',
+        #                                  'datasets/field/ruofan_honeypot/Mail/Starred/email_64.eml', 'datasets/field/ruofan_honeypot/Mail/Starred/email_63.eml']:
         #     continue
 
         if os.path.exists(csv_file_path) and dataset.file_list[it] in [x.split(',')[0] for x in open(csv_file_path).readlines()]:
@@ -189,9 +238,9 @@ def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed):
         sender_domains = dataset.domain_parsing(sender_address)  # a set
 
         # Check if the subject has been seen before
-        if sender_name + subject in seen_subjects:
+        if str(sender_name) + str(subject) in seen_subjects:
             continue  # Skip
-        seen_subjects.add(sender_name+subject)
+        seen_subjects.add(str(sender_name) + str(subject))
 
         '''Baseline: D-Fence, HelpHed, Rspamd'''
         if run_dfence:
@@ -215,29 +264,41 @@ def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed):
             helphed_stacking_pred, helphed_voting_pred, helphed_stacking_runtime, helphed_voting_runtime = None, None, None, None
 
         '''Our method'''
-        if any([x in subject.lower() for x in Config.forbidden_subject_prefix]):
+        # if subject and any([x in subject.lower() for x in Config.forbidden_subject_prefix]):
+        #     identities = []
+        #     relations = []
+        #     actions = set()
+        #     next_step_of_engagement = set()
+        #     matched_identity = "Non-original email (Reply/Forward)"
+        #     is_inconsistent = False
+        #     identity_recog_runtime = 0
+        #     identity_matching_runtime = 0
+        #     dfence_pred = 0
+        #     dfence_runtime = 0
+        #     helphed_stacking_pred = 0
+        #     helphed_stacking_runtime = 0
+        #     helphed_voting_pred = 0
+        #     helphed_voting_runtime = 0
+        #     Logger.spit("Non-original email (Reply/Forward)",debug=True, caller_prefix='Main')
+        if DomainUtils.domain_set_overlap(sender_domains, Config.whitelist_senders):
             identities = []
             relations = []
             actions = set()
             next_step_of_engagement = set()
-            matched_identity = "Non-original email (Reply/Forward)"
+            matched_identity = "Sent from an whitelisted address"
             is_inconsistent = False
             identity_recog_runtime = 0
             identity_matching_runtime = 0
-            Logger.spit("Non-original email (Reply/Forward)",debug=True, caller_prefix='Main')
-        elif DomainUtils.domain_set_overlap(sender_domains, Config.whitelist_senders):
-            identities = []
-            relations = []
-            actions = set()
-            next_step_of_engagement = set()
-            matched_identity = "Sent from an internal address"
-            is_inconsistent = False
-            identity_recog_runtime = 0
-            identity_matching_runtime = 0
-            Logger.spit("Sent from an internal address",debug=True, caller_prefix='Main')
+            dfence_pred = 0
+            dfence_runtime = 0
+            helphed_stacking_pred = 0
+            helphed_stacking_runtime = 0
+            helphed_voting_pred = 0
+            helphed_voting_runtime = 0
+            Logger.spit("Sent from an whitelisted address",debug=True, caller_prefix='Main')
         else:
             # Identity recognition
-            parsed_email = f'Subject: {subject} \n  From: {sender_name} \n Body: {email_body_text}'
+            parsed_email = f'Subject: {subject} \n From: {sender_name} \n Body: {email_body_text}'
             identities, actions, relations, urls_after_actions, identity_recog_runtime = Config.identity_model(parsed_email)
             if save_vis:
                 html = Config.visualizer_model(parsed_email, metadata=email_file_path)

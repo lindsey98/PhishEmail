@@ -31,6 +31,7 @@ class MyConcatSentAttacker(SuperAttacker):
 
             sentences_with_delimiters = re.findall(r'([^.!?]+)([.!?]*)', text)
             sentences, delimiters = zip(*sentences_with_delimiters)
+            sentences = list(sentences)
 
             have_attacked = False
             for annot in annotations:

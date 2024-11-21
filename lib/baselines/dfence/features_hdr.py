@@ -327,7 +327,7 @@ def hdr_feature_extraction(header_data,dict_hdr_feature_use):
     std_hdr_cnt = 0
     for std_hdr in colnames_standards:
         if dict_feat_hdr_cnt[std_hdr] > 0:
-            std_hdr_cnt += 1
+            std_hdr_cnt += 1 # the number of standard headers included!
 
     list_header_feature.append(std_hdr_cnt)   
     

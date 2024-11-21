@@ -65,7 +65,6 @@ class TextModel(object):
             pickle.dump(self.model, f_write, protocol=pickle.HIGHEST_PROTOCOL)
         with open(self.scaler_file_path, 'wb') as f_write:
             pickle.dump(self.scaler, f_write, protocol=pickle.HIGHEST_PROTOCOL)
-            
 
     def __get_class(self, prediction):
         #helper function: get class label based on prediction proba value

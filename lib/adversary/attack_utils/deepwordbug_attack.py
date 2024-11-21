@@ -32,6 +32,7 @@ class MyDeepWordBugAttacker(DeepWordBugAttacker, SuperAttacker):
             if word[idx].isalpha():
                 candidate = transform_func(word, idx=idx)
                 candidates.append(candidate)
+                break # just random one char
 
         return candidates
 

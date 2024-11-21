@@ -19,6 +19,7 @@ import re
 import mailbox
 import email
 import os
+from bs4 import BeautifulSoup, NavigableString, Comment, Doctype
 
 
 def mbox_to_eml(mbox_path, output_dir):
@@ -44,8 +45,11 @@ def mbox_to_eml(mbox_path, output_dir):
         eml_filename = os.path.join(output_dir, f"{safe_message_id}.eml")
 
         # Save the message to an .eml file
-        with open(eml_filename, 'w', encoding="utf-8") as eml_file:
-            eml_file.write(msg_str)
+        try:
+            with open(eml_filename, 'w', encoding="utf-8") as eml_file:
+                eml_file.write(msg_str)
+        except UnicodeEncodeError:
+            os.remove(eml_filename)
 
 
 def pst_to_eml(pff_file_path, output_dir):
@@ -56,20 +60,71 @@ def pst_to_eml(pff_file_path, output_dir):
         eml_filename = os.path.join(output_dir, f"{email.identifier}.eml")
 
         with open(eml_filename, 'w', encoding='utf-8') as eml_file:
-            # Write headers
-            eml_file.write(f"{email.transport_headers}\n")
-            eml_file.write("\n")  # Blank line to separate headers from body
+            # # Write headers
+            if email.transport_headers:
+                eml_file.write(email.transport_headers)
+                eml_file.write("\n")
+            else:
+                headers = ''
+                sender_name = email.get_sender_name() if hasattr(email, 'get_sender_name') else "Unknown"
+                sender_attributes = parseaddr(message_from_string(email.transport_headers).get("From", ""))
+                if len(sender_attributes):
+                    sender_email = sender_attributes[1]
+                else:
+                    sender_email = ""
+                headers += f"From: {sender_name} <{sender_email}>\n"
+                headers += f"Date: {email.delivery_time}\n" if hasattr(email, 'delivery_time') else 'Date: \n'
+                headers += f"Subject: {email.subject}\n" if hasattr(email, 'subject') else 'Subject: \n'
+
+                # Determine content type and charset
+                content_type = 'text/plain'
+                charset = 'utf-8'  # Assuming UTF-8 for simplicity; adjust as necessary
+
+                # Add content type and charset to headers
+                headers += f"Content-Type: {content_type}; charset={charset}\n"
+                headers += f"Content-Transfer-Encoding: 8bit\n"  # or 'base64' for binary content
+                headers += '\n'  # Ensure there's a blank line after headers
+                eml_file.write(headers)
 
             # Write email body
-            try:
-                email_body = email.html_body.decode('utf-8')
-            except:
-                email_body = str(email.html_body)
+            # Check if the email has an HTML body and decode appropriately
+            if email.html_body:
+                soup = BeautifulSoup(email.html_body, 'html.parser')
+                for script_or_style in soup(['script', 'style']):
+                    script_or_style.decompose()
+
+                # Remove DOCTYPE and comments
+                for element in soup.contents:
+                    if isinstance(element, Comment) or isinstance(element, Doctype):
+                        element.extract()
+
+                text_parts = []
+                for element in soup.descendants:
+                    if isinstance(element, NavigableString):
+                        # Add text directly, but strip to avoid excessive whitespace
+                        stripped_text = element.strip()
+                        if stripped_text:
+                            text_parts.append(stripped_text)
+                email_body = '. '.join(text_parts)
+
+            elif email.plain_text_body:
+                try:
+                    # Decode plain text body if it's binary
+                    email_body = email.plain_text_body.decode('utf-8', errors='replace')
+                except UnicodeDecodeError:
+                    email_body = email.plain_text_body.decode('iso-8859-1', errors='replace')  # Or 'windows-1252', 'shift_jis', etc.
+                except AttributeError:
+                    # Use the plain text body as is if it's already a string
+                    email_body = email.plain_text_body
+            else:
+                # Default to an empty body if none exists
+                email_body = ''
+
             eml_file.write(email_body)
 
     def extract_emails_and_folders(folder, output_dir):
         # Iterate through items in the folder
-        for item in folder.sub_items:
+        for item in tqdm(folder.sub_items, desc="Exporting pst to eml files"):
             if isinstance(item, pypff.folder):
                 # Recursively process subfolder
                 subfolder_output_dir = os.path.join(output_dir, item.name)
