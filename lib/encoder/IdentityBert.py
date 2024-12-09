@@ -15,9 +15,8 @@ np.random.seed(seed)
 random.seed(seed)
 
 # fixme: several things to adjust:
-#  1. What kind of aggregation strategy to use?
-#  2. Whether to do tokenization first before the pipeline? By right, pipeline should handle the tokenization internally, however I find this extra pre-tokenization step can affect the final results.
-#  3. How to rank the reported entities?
+#  1. Whether to do tokenization first before the pipeline? By right, pipeline should handle the tokenization internally, however I find this extra pre-tokenization step can affect the final results.
+#  2. How to rank the reported entities?
 
 class IdentityBert:
     _CallerPrefix = "IdentityBert"
@@ -93,7 +92,7 @@ class IdentityBert:
 
         # fixme: I dont want the URL during prediction
         processed_text = self.remove_urls(raw_text)
-        # processed_text = self._tokenize(processed_text) # fixme: I find the results will be different if I do tokenization here
+        processed_text = self._tokenize(processed_text) # fixme: I find the results will be different if I do tokenization here
         with Timer() as timer:
             entities = self.classifier_pipeline(processed_text)
 

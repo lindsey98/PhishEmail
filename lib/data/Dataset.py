@@ -16,9 +16,10 @@ from langdetect import detect_langs
 import time
 import quopri
 import bs4
+from lib.utilities import Logger
 
 class EmailDataset(Dataset):
-    _CallerPrefix = ".eml/.txt email files Loader"
+    _CallerPrefix = "Dataset Loader"
 
     def __init__(self, root_path, translate_on=False):
         self.file_list = []
@@ -51,7 +52,11 @@ class EmailDataset(Dataset):
 
     @staticmethod
     def domain_parsing(address: Union[None, float, str, Set[str], List[str]]) -> Set[str]:
-
+        '''
+        parse domain/url/email address into domain.tld format
+        :param address:
+        :return:
+        '''
         url_pattern = re.compile(r'(https?://[^)]+)')
         parsed_domains = set()
 
@@ -98,6 +103,11 @@ class EmailDataset(Dataset):
 
     @staticmethod
     def clean_text_content(text_content: str) -> str:
+        '''
+        remove wildcards
+        :param text_content:
+        :return:
+        '''
         # remove text surrounded by <>, since they are likely be comments that are invisible
         text_content = re.sub(r'<[^>]*>', '', text_content)
         # replace multiple newline characters with a single newline
@@ -119,9 +129,12 @@ class EmailDataset(Dataset):
 
     @staticmethod
     def decode_quoted_printable(encoded_str: bytes, charset: str = 'utf-8') -> str:
-        """
+        '''
         Decode a quoted-printable encoded string to its original form using the specified charset.
-        """
+        :param encoded_str:
+        :param charset:
+        :return:
+        '''
         try:
             # Decode the quoted-printable encoded string
             decoded_bytes = quopri.decodestring(encoded_str)
@@ -131,12 +144,18 @@ class EmailDataset(Dataset):
             # Fallback to utf-8 if charset is not recognized
             decoded_str = decoded_bytes.decode('utf-8', 'replace')
         except Exception as e:
-            print(f"Failed to decode: {e}")
+            Logger.spit(f"Failed to decode the email with exception {e}", debug=True,
+                        caller_prefix=EmailDataset._CallerPrefix)
             decoded_str = encoded_str.decode(charset, 'replace')  # Fallback to raw decoding
         return decoded_str
 
     @staticmethod
     def remove_prev_messages(text_content: str) -> str:
+        '''
+        Ignore previous communications in an email
+        :param text_content:
+        :return:
+        '''
         reply_pattern = re.compile(r"On.*wrote:")
         forward_pattern = re.compile(r"^-{2,}\s*Forwarded message\s*-+$", re.MULTILINE)
 
@@ -158,6 +177,11 @@ class EmailDataset(Dataset):
 
     @functools.lru_cache(maxsize=1000)
     def auto_translate(self, text):
+        '''
+        Google translate
+        :param text:
+        :return:
+        '''
         is_in_english = True
         try:
             detected_langs = detect_langs(text)
@@ -179,15 +203,22 @@ class EmailDataset(Dataset):
                                                      source='auto',
                                                      target='english')
                 except Exception as e:
+                    Logger.spit(f"Email translation fails with exception", debug=True, caller_prefix=EmailDataset._CallerPrefix)
                     if attempt < max_retries:
                         time.sleep(retry_delay)
                         retry_delay *= 2  # Exponential backoff
                     else:
-                        print("Max retries reached. Returning original text.")
+                        Logger.spit("Max retries reached. Returning original text", debug=True,
+                                    caller_prefix=EmailDataset._CallerPrefix)
                         return text  # Return the original text if translation fails after retries
         return text
 
     def extract_subject(self, email_content: Message) -> str:
+        '''
+        get subject
+        :param email_content:
+        :return:
+        '''
         subject = email_content.get('subject', '')
         if len(subject):
             try:
@@ -198,12 +229,22 @@ class EmailDataset(Dataset):
         return subject
 
     def extract_sender(self, email_content: Message) -> Tuple[Optional[str], Optional[str]]:
+        '''
+        get sender name and sender address
+        :param email_content:
+        :return:
+        '''
         sender_name, sender_address = parseaddr(email_content.get('From', ''))
         if sender_name:
             sender_name = self.decode_header(sender_name)
         return sender_name, sender_address
 
     def extract_recipients(self, email_content: Message) -> Tuple[List[str], List[str]]:
+        '''
+        get recipient(s) names and addresses
+        :param email_content:
+        :return:
+        '''
         # Extracting all recipients
         to_addresses = email_content.get('To', '')
         cc_addresses = email_content.get('Cc', '')  # Handling Cc if needed
@@ -224,6 +265,11 @@ class EmailDataset(Dataset):
         return to_names, to_addresses
 
     def extract_reply_to_address(self, email_content: Message) -> Optional[str]:
+        '''
+        get reply-to (destination address if the recipient reply to this email, can be different from the sender address)
+        :param email_content:
+        :return:
+        '''
         reply_to = email_content.get('Reply-To', '').strip()
         if reply_to:
             reply_to_addresses = getaddresses([reply_to])  # Handles potential list of addresses
@@ -231,10 +277,11 @@ class EmailDataset(Dataset):
         return None
 
     def extract_text_content(self, part: Message) -> Tuple[str, str]:
-        """
-        Recursively extracts text content from an email part,
-        including handling nested multiparts.
-        """
+        '''
+        Recursively extracts text content from an email part with nested multiparts.
+        :param part:
+        :return:
+        '''
         text_content = ""
         html_content = ""
         unwanted_extensions = {'.css', '.js', '.ico', '.png', '.jpg', '.jpeg', '.gif', '.pdf', '.doc', '.docx', '.xls', '.xlsx'}
@@ -248,36 +295,36 @@ class EmailDataset(Dataset):
                 text_content += content[0]
                 html_content += content[1]
         else:
-            # if self.translate_on: ## fixme
-            #     raw_email_content = part.get_payload(decode=False)
-            #     decoded_content = self.auto_translate(raw_email_content)
-            #     content_type = "text"
-            # else:
-            content_type = part.get_content_type()
-            # if not content_type or "text" in content_type:
-            #     decoded_content = part.get_payload(decode=False)  # decoding is handled here
-            # else:
-            charset = part.get_content_charset('utf-8')
-            raw_email_content = part.get_payload(decode=True)  # decoding is handled here
-            transfer_encoding = part.get('Content-Transfer-Encoding', '').lower()
-            # Handle decoded content directly if available
-            if raw_email_content:
-                # Decode content based on encoding specified
-                if transfer_encoding == 'quoted-printable':
-                    decoded_content = self.decode_quoted_printable(raw_email_content, charset)
-                else:
-                    try:
-                        decoded_content = raw_email_content.decode(charset, 'replace')
-                    except LookupError:  # in case charset is not recognized
-                        decoded_content = raw_email_content.decode('utf-8', 'replace')
+            if self.translate_on: ## fixme: When the email is in Chinese, need to turn this flag on, no decoding, direct translate
+                raw_email_content = part.get_payload(decode=False)
+                decoded_content = self.auto_translate(raw_email_content)
+                content_type = "text"
             else:
-                decoded_content = raw_email_content  # handle cases where payload is not encoded
+                content_type = part.get_content_type()
+                # if not content_type or "text" in content_type:
+                #     decoded_content = part.get_payload(decode=False)  # decoding is handled here
+                # else:
+                charset = part.get_content_charset('utf-8')
+                raw_email_content = part.get_payload(decode=True)  # decoding is handled here
+                transfer_encoding = part.get('Content-Transfer-Encoding', '').lower()
+                # Handle decoded content directly if available
+                if raw_email_content:
+                    # Decode content based on encoding specified
+                    if transfer_encoding == 'quoted-printable':
+                        decoded_content = self.decode_quoted_printable(raw_email_content, charset)
+                    else:
+                        try:
+                            decoded_content = raw_email_content.decode(charset, 'replace')
+                        except LookupError:  # in case charset is not recognized
+                            decoded_content = raw_email_content.decode('utf-8', 'replace')
+                else:
+                    decoded_content = raw_email_content  # handle cases where payload is not encoded
 
-            if self.translate_on:  ## fixme
-                try:
-                    decoded_content = self.auto_translate(decoded_content)
-                except TypeError:
-                    decoded_content = self.auto_translate(decoded_content.decode('ISO-8859-1'))
+            # if self.translate_on:  ## fixme
+            #     try:
+            #         decoded_content = self.auto_translate(decoded_content)
+            #     except TypeError:
+            #         decoded_content = self.auto_translate(decoded_content.decode('ISO-8859-1'))
 
             ### Extract text from HTML
             if 'html' in content_type:
@@ -323,7 +370,7 @@ class EmailDataset(Dataset):
                         else:
                             text_parts.append(text)
 
-                text_content = '. '.join(text_parts)  # Join all parts into a single string
+                text_content = '\n'.join(text_parts)  # Join all parts into a single string
                 html_content = decoded_content
 
             else:  ### plain text

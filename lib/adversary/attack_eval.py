@@ -9,22 +9,25 @@ import pandas as pd
 import langdetect
 import unicodedata
 import difflib
-from ..reference_db import CharacterBERT, IdentityMatcher, BaseFaissIPRetriever
-from .defence_utils import T5SpellFixer
 import click
 import json
-import re
 from ..utilities.data_utils import remove_trailing_digits, check_lang
 import os
 # os.environ['http_proxy'] = 'http://127.0.0.1:7890'
 # os.environ['https_proxy'] = 'http://127.0.0.1:7890'
 
 class MyAttackEvaluator():
-    def __init__(self, correction_method=Optional[str]):
-        if correction_method is not None and correction_method.lower() == 't5':
-            self.corrector = T5SpellFixer()
+    def __init__(self):
+        pass
 
     def check_is_match(self, prediction_set: List, expected_set: List, cutoff:float):
+        '''
+        Use SequenceMatcher to find a closest match
+        :param prediction_set: query
+        :param expected_set: reference set
+        :param cutoff:
+        :return:
+        '''
         count = 0
         predicted_identities = [x.lower() for x in prediction_set]
         for pred_identity in predicted_identities:
@@ -34,8 +37,15 @@ class MyAttackEvaluator():
                 break
         return count
 
-    def results_collector(self, dataset: List[Dict], tokenizer: AutoTokenizer, model: IdentityBert, result_csv_path: str, defender: Optional[str]):
-
+    def results_collector(self, dataset: List[Dict], tokenizer: AutoTokenizer, model: IdentityBert, result_csv_path: str):
+        '''
+        Log results
+        :param dataset:
+        :param tokenizer:
+        :param model:
+        :param result_csv_path:
+        :return:
+        '''
         if not os.path.exists(result_csv_path):
             with open(result_csv_path, mode='a', newline='', encoding='utf-8') as file:
                 writer = csv.writer(file)
@@ -64,9 +74,6 @@ class MyAttackEvaluator():
                 unattacked_email = unattacked_email.replace(v, k)
 
             identities_after_adv_with_defence, actions_after_adv_with_defence = set(), set()
-            if defender:
-                corrected_attacked_email = self.corrector(attacked_email)
-                identities_after_adv_with_defence, actions_after_adv_with_defence, *_ = model(corrected_attacked_email)
 
             identities_after_adv, actions_after_adv, *_ = model(attacked_email)
             identities_before_adv, actions_before_adv, *_ = model(unattacked_email)
@@ -86,7 +93,12 @@ class MyAttackEvaluator():
                                  ])
 
     def metrics_collector(self, result_csv_path: str, cls_to_check: str):
-
+        '''
+        Compute metrics after attack (NER recognition rate)
+        :param result_csv_path:
+        :param cls_to_check:
+        :return:
+        '''
         result_df = pd.read_csv(result_csv_path)
         before_adv_reported_ct = 0
         after_adv_reported_ct = 0
@@ -140,16 +152,15 @@ class MyAttackEvaluator():
 
 
 @click.command()
-# @click.option('--identity_model_checkpoint', required=True, type=str, default="checkpoints/identity_adversarial_training2/checkpoint-658")
-@click.option('--identity_model_checkpoint', required=True, type=str, default="checkpoints/identity-model")
+@click.option('--identity_model_checkpoint', required=True, type=str, default="checkpoints/identity_adversarial_training/checkpoint-658")
+# @click.option('--identity_model_checkpoint', required=True, type=str, default="checkpoints/identity-model")
 @click.option('--attacker', required=True, type=click.Choice(['bae', 'deepwordbug', 'gpt', 'concatsent', 'textfooler'], case_sensitive=False), help="Specify the attacker type (e.g., 'bae')")
 @click.option('--cls_to_attack', required=True, type=click.Choice(['identity', 'action'], case_sensitive=False), help="Attack which NER class")
 @click.option('--typo_type', help="Specify the typo type, only for the DeepWordBug attacking method", type=click.Choice(['repeat', 'delete', 'replace', 'switch'], case_sensitive=False))
 @click.option('--eval_only', help="Eval only or Attack+Eval", is_flag=True, show_default=True, default=False)
-@click.option('--defender', type=click.Choice(['t5'], case_sensitive=False), help="Specify the defender type (e.g., 't5')")
-def main(identity_model_checkpoint, attacker, cls_to_attack, typo_type, eval_only, defender):
+def main(identity_model_checkpoint, attacker, cls_to_attack, typo_type, eval_only):
 
-    evaluator = MyAttackEvaluator(defender)
+    evaluator = MyAttackEvaluator()
     model = IdentityBert(identity_model_checkpoint)
     tokenizer = AutoTokenizer.from_pretrained(identity_model_checkpoint)
 
@@ -157,15 +168,13 @@ def main(identity_model_checkpoint, attacker, cls_to_attack, typo_type, eval_onl
     if typo_type:
         with open(os.path.join(output_dir, f'adversarial_rephrase_{attacker}_{typo_type}.json'), 'r') as json_file:
             dataset = json.load(json_file)
-        # result_csv_path = f'./datasets/nazario_results_adversarial_{attacker}_{typo_type}.csv'
-        result_csv_path = f'./datasets/nazario_results_adversarial_{attacker}_{typo_type}_no_advtraining.csv'
+        result_csv_path = f'./datasets/nazario_results_adversarial_{attacker}_{typo_type}.csv'
+        # result_csv_path = f'./datasets/nazario_results_adversarial_{attacker}_{typo_type}_no_advtraining.csv'
     else:
         with open(os.path.join(output_dir, f'adversarial_rephrase_{attacker}.json'), 'r') as json_file:
             dataset = json.load(json_file)
-        # result_csv_path = f'./datasets/nazario_results_adversarial_{attacker}.csv'
-        result_csv_path = f'./datasets/nazario_results_adversarial_{attacker}_no_advtraining.csv'
-    if defender:
-        result_csv_path = result_csv_path.replace(".csv", f"_with_defender_{defender}.csv")
+        result_csv_path = f'./datasets/nazario_results_adversarial_{attacker}.csv'
+        # result_csv_path = f'./datasets/nazario_results_adversarial_{attacker}_no_advtraining.csv'
 
     if eval_only:
         if not os.path.exists(result_csv_path):
@@ -177,15 +186,14 @@ def main(identity_model_checkpoint, attacker, cls_to_attack, typo_type, eval_onl
         evaluator.results_collector(dataset=dataset,
                                     tokenizer=tokenizer,
                                     model=model,
-                                    result_csv_path=result_csv_path,
-                                    defender=defender)
+                                    result_csv_path=result_csv_path)
 
         after_adv_reported_ct, before_adv_reported_ct, total_ct = \
                                                         evaluator.metrics_collector(result_csv_path=result_csv_path,
                                                                                     cls_to_check=cls_to_attack)
 
-    print(f"Baseline NER detection rate = {before_adv_reported_ct}/{total_ct} = {before_adv_reported_ct / total_ct}")
-    print(f"After Attacker = {attacker} {typo_type} \t NER detection rate = {after_adv_reported_ct}/{total_ct} = {after_adv_reported_ct / total_ct}")
+    print(f"Clean detection rate = {before_adv_reported_ct}/{total_ct} = {before_adv_reported_ct / total_ct}")
+    print(f"After Attack = {attacker} {typo_type} \t detection rate = {after_adv_reported_ct}/{total_ct} = {after_adv_reported_ct / total_ct}")
 
 
 if __name__ == '__main__':
@@ -193,32 +201,33 @@ if __name__ == '__main__':
 
 ### with adv training ### ###
 
-# After Attacker = deepwordbug switch 	 NER detection rate = 190/268 = 0.7089552238805971
-# After Attacker = deepwordbug replace 	 NER detection rate = 181/260 = 0.6961538461538461
-# After Attacker = deepwordbug delete 	 NER detection rate = 191/269 = 0.7100371747211895
-# After Attacker = deepwordbug repeat 	 NER detection rate = 189/269 = 0.7026022304832714
+# Clean detection rate = 212/278 = 0.762589928057554
+# After Attack = bae None 	 detection rate = 216/278 = 0.7769784172661871
+
+# After Attacker = deepwordbug replace 	 NER detection rate = 150/173 = 0.8670520231213873
+# After Attacker = deepwordbug repeat 	 NER detection rate = 168/212 = 0.7924528301886793
+# After Attacker = deepwordbug switch 	 NER detection rate = 162/203 = 0.7980295566502463
+# After Attacker = deepwordbug delete 	 NER detection rate = 171/208 = 0.8221153846153846
+
+# Clean detection rate = 178/221 = 0.8054298642533937
+# After Attack = gpt None 	 detection rate = 170/221 = 0.7692307692307693
+# Clean detection rate = 141/175 = 0.8057142857142857
+# After Attack = concatsent None 	 detection rate = 133/175 = 0.76
 
 # ### w/o adv training ### ###
-# Baseline NER detection rate = 233/278 = 0.8381294964028777
-# After Attacker = bae None 	 NER detection rate = 231/278 = 0.8309352517985612
 
-# Baseline NER detection rate = 155/173 = 0.8959537572254336
-# After Attacker = deepwordbug replace 	 NER detection rate = 130/173 = 0.7514450867052023
 
-# Baseline NER detection rate = 182/212 = 0.8584905660377359
-# After Attacker = deepwordbug repeat 	 NER detection rate = 172/212 = 0.8113207547169812
+# Clean detection rate = 155/173 = 0.8959537572254336
+# After Attack = deepwordbug replace 	 detection rate = 130/173 = 0.7514450867052023
 
-# Baseline NER detection rate = 183/208 = 0.8798076923076923
-# After Attacker = deepwordbug delete 	 NER detection rate = 172/208 = 0.8269230769230769
+# Clean detection rate = 182/212 = 0.8584905660377359
+# After Attack = deepwordbug repeat 	 detection rate = 172/212 = 0.8113207547169812
 
-# Baseline NER detection rate = 175/203 = 0.8620689655172413
-# After Attacker = deepwordbug switch 	 NER detection rate = 162/203 = 0.7980295566502463
+# Clean detection rate = 175/203 = 0.8620689655172413
+# After Attack = deepwordbug switch 	 detection rate = 162/203 = 0.7980295566502463
 
-# Baseline NER detection rate = 171/221 = 0.7737556561085973
-# After Attacker = gpt None 	 NER detection rate = 174/221 = 0.7873303167420814
+# Clean detection rate = 183/208 = 0.8798076923076923
+# After Attack = deepwordbug delete 	 detection rate = 172/208 = 0.8269230769230769
 
-# Baseline NER detection rate = 147/175 = 0.84
-# After Attacker = concatsent None 	 NER detection rate = 133/175 = 0.76
 
-# Baseline NER detection rate = 169/221 = 0.7647058823529411
-# After Attacker = textfooler None 	 NER detection rate = 165/221 = 0.746606334841629
+#

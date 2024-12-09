@@ -33,6 +33,8 @@ class Config:
         'employee',
         'staff',
         'colleague',
+        'colleagues',
+        'student',
         'human resource team',
         'HR team',
         'HR',
@@ -88,10 +90,11 @@ class Config:
         "tomHRM"
     ]
 
-    # IDENTITY_MODEL_CHECKPOINT = os.getenv("IDENTITY_MODEL_CHECKPOINT", "./checkpoints/identity-model-greedy")
-    IDENTITY_MODEL_CHECKPOINT = os.getenv("IDENTITY_MODEL_CHECKPOINT", "./checkpoints/identity-model")
+    IDENTITY_MODEL_CHECKPOINT = os.getenv("IDENTITY_MODEL_CHECKPOINT", "./checkpoints/identity_adversarial_training")
+    # IDENTITY_MODEL_CHECKPOINT = os.getenv("IDENTITY_MODEL_CHECKPOINT", "./checkpoints/identity-model")
+    # IDENTITY_MODEL_CHECKPOINT = "./checkpoints/output_ner_augmented_corrected/"
 
-    MATCHING_MODEL_CHECKPOINT = os.getenv("MATCHING_MODEL_CHECKPOINT", "./checkpoints/characterbert-typos-st")
+    MATCHING_MODEL_CHECKPOINT = os.getenv("MATCHING_MODEL_CHECKPOINT", "./checkpoints/characterbert-typos-st-adv")
 
     REF_IDENTITY_REPS = os.getenv("REF_IDENTITY_REPS", "./checkpoints/company_database_reps_field_study.npy")
     REF_IDENTITY_NAMES = os.getenv("REF_IDENTITY_NAMES", "./checkpoints/company_database_names_field_study.npy")
@@ -141,14 +144,9 @@ class Config:
 
     thre = 0.95
 
-    whitelist_senders = {"hotcrp.com", "arxiv.org", "neurips.cc", "openreview.net", "msr-cmt.org",
-                         "nus.edu.sg", "sjtu.edu.cn", "tongji.edu.cn", "gmail.com",
-                         "coursera.org", "citiprogram.org",
-                         "symplicity.com", "examsoft.com",
-                         "slack.com"} # ignore the paper submission, online course, and the internal senders
+    whitelist_senders = set([x.strip() for x in open("whitelist_senders.txt").readlines()]) # ignore the paper submission, online course, and the internal senders
     forbidden_subject_prefix = ["re:", "fwd:", "fw:", "回复:", "转发:", "reply:"]
 
-    
 today = datetime.today()
 today_date = today.strftime("%Y-%m-%d")
 @click.command()
@@ -160,6 +158,17 @@ today_date = today.strftime("%Y-%m-%d")
 @click.option("--run_helphed", is_flag=True, default=False)
 @click.option("--auto_translate", is_flag=True, default=False, help='Whether to translate the email (including subject)')
 def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed, auto_translate):
+    '''
+    PiMRef main inference function
+    :param email_dir: a directory containing all eml files, also support .mbox and .pst format
+    :param save_vis: whether to save the visualized results or not
+    :param vis_dir: where to save the visualized result
+    :param output_csv: where to save the output
+    :param run_dfence: whether to run Dfence as well
+    :param run_helphed: whether to run helphed as well
+    :param auto_translate: whether to translate the email
+    :return:
+    '''
     matcher_cls = IdentityMatcher(brand_index_db=Config.brand_index_db,
                                   internal_relation_index_db=Config.internal_relation_index_db,
                                   embed_model=Config.matching_model,
@@ -184,7 +193,6 @@ def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed, auto
         os.makedirs(vis_dir, exist_ok=True)
     Logger.set_debug_on()
     Logger.spit(f'Loaded the testing dataset = {len(dataset)} emails', caller_prefix="Main", debug=True)
-    # exit()
 
     seen_subjects = set()
     # Check if we're writing to a new file, and write the header if so

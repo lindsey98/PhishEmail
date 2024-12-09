@@ -2,8 +2,8 @@
 import click
 from ..encoder import IdentityBert
 from transformers import AutoTokenizer
-from .attack_utils import MySCPNAttacker, MyBAEAttacker, MyDeepWordBugAttacker, MyGPTAttacker, \
-    MyViperAttacker, MyBartParaphraseAttacker, MyT5ParaphraseAttacker, MyConcatSentAttacker, MyTextFoolerAttacker
+from .attack_utils import MyBAEAttacker, MyDeepWordBugAttacker, MyGPTAttacker, \
+    MyConcatSentAttacker, MyTextFoolerAttacker
 import os
 import json
 # os.environ['http_proxy'] = 'http://127.0.0.1:7890'

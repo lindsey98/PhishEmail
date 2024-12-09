@@ -1,10 +1,9 @@
 import copy
-
 from OpenAttack.attackers import DeepWordBugAttacker
 from .base_attack import SuperAttacker
 from tqdm import tqdm
 import numpy as np
-from lib.encoder.IdentityBert import IdentityBert
+from ...encoder.IdentityBert import IdentityBert
 from ...utilities.data_utils import repeat_char, delete_char, switch_chars, replace_with_similar, find_all_token_indices
 from transformers import AutoTokenizer
 from typing import List, Dict, Optional, Set, Tuple
@@ -14,16 +13,23 @@ import torch
 class MyDeepWordBugAttacker(DeepWordBugAttacker, SuperAttacker):
 
     _CallerPrefix = "DeepWordBug Attacker"
+    _Help = "Insert typos into the entity"
 
     def transform(self, type_: str, word: str) -> List[str]:
+        '''
+        insert typo, chose one typo type out of four typo types available.
+        :param type_: 4 types of typos
+        :param word:
+        :return:
+        '''
         candidates = []
         if type_ == 'repeat':
             transform_func = repeat_char
         elif type_ == 'delete':
             transform_func = delete_char
-        elif type_ == 'switch':
+        elif type_ == 'switch': # switch 2 neighboring chars
             transform_func = switch_chars
-        elif type_ == 'replace':
+        elif type_ == 'replace': # homoglyph attack
             transform_func = replace_with_similar
         else:
             raise NotImplementedError
@@ -32,14 +38,24 @@ class MyDeepWordBugAttacker(DeepWordBugAttacker, SuperAttacker):
             if word[idx].isalpha():
                 candidate = transform_func(word, idx=idx)
                 candidates.append(candidate)
-                break # just random one char
+                break # just perturb 1 char
 
         return candidates
 
 
-    def process_entries(self, data: List[Dict], model: Optional[IdentityBert], tokenizer: Optional[AutoTokenizer],
+    def process_entries(self, data: List[Dict],
+                        model: Optional[IdentityBert],
+                        tokenizer: Optional[AutoTokenizer],
                         cls_to_modify=1
                         ) -> List[Dict]:
+        '''
+        Conduct attack on a list of data, each data is a dict with 'text' and 'annotations'
+        :param data:
+        :param model:
+        :param tokenizer:
+        :param cls_to_modify:
+        :return: the list of data after attack
+        '''
         seen_texts = set()
         processed_data = []
 

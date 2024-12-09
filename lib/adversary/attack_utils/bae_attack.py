@@ -5,7 +5,7 @@ from typing import List, Dict, Optional
 from tqdm import tqdm
 from .base_attack import SuperAttacker
 from transformers import AutoTokenizer, BertForMaskedLM
-from lib.encoder.IdentityBert import IdentityBert
+from ...encoder.IdentityBert import IdentityBert
 import re
 import ssl
 from ...utilities.data_utils import match_case, tokenize_and_map
@@ -13,14 +13,27 @@ ssl._create_default_https_context = ssl._create_unverified_context # fix the ssl
 
 class MyBAEAttacker(BAEAttacker, SuperAttacker):
     _CallerPrefix = "BAE Attacker"
+    _Help = "Insert a token before the entity"
 
     def explicit_truncate_ground_truth(self, ground_truth_labels: List[int]):
+        '''
+        truncate the labels within max_length
+        :param ground_truth_labels:
+        :return:
+        '''
         if len(ground_truth_labels) > self.max_length:
             return ground_truth_labels[:self.max_length-1] + [-100] # truncate again
         else:
             return ground_truth_labels
 
     def explicit_truncate_tokens(self, long_tokens: List[str]):
+        '''
+        truncate the tokens within max_length
+        :param ground_truth_labels:
+        :return:
+        :param long_tokens:
+        :return:
+        '''
         if len(long_tokens) > self.max_length:
             return long_tokens[:self.max_length-1] + ['[SEP]'] # truncate again
         else:
@@ -30,6 +43,17 @@ class MyBAEAttacker(BAEAttacker, SuperAttacker):
     def get_substitues(self, masked_index: int, tokens: List[str],
                        tokenizer: AutoTokenizer, model: BertForMaskedLM,
                        sub_mode: str, k: int, threshold: float=3.0) -> List[str]:
+        '''
+        get top-k most probable candidate tokens to insert here
+        :param masked_index:
+        :param tokens:
+        :param tokenizer:
+        :param model:
+        :param sub_mode:
+        :param k:
+        :param threshold:
+        :return: top-k candidate tokens
+        '''
 
         masked_tokens = copy.deepcopy(tokens)
         if sub_mode == "r":
@@ -64,7 +88,15 @@ class MyBAEAttacker(BAEAttacker, SuperAttacker):
     def get_transformations(self, model: IdentityBert, tokens: List[str],
                             ground_truth: List[int], tokenizer: AutoTokenizer,
                             cls_to_modify: List[int]=[1]) -> Dict:
-
+        '''
+        before the entity's starting token, predict top-k most probable candidate tokens to insert here, select the one that decreases the model confidence the most
+        :param model:
+        :param tokens:
+        :param ground_truth:
+        :param tokenizer:
+        :param cls_to_modify:
+        :return: tokens to be inserted
+        '''
         # with CLS and SEP tokens added
         tokens = ['[CLS]'] + tokens[:self.max_length - 2] + ['[SEP]']
         ground_truth = [-100] + ground_truth[:self.max_length - 2] + [-100]
@@ -151,6 +183,13 @@ class MyBAEAttacker(BAEAttacker, SuperAttacker):
 
 
     def process_entries(self, data: List[Dict], model: Optional[IdentityBert], tokenizer: Optional[AutoTokenizer]) -> List[Dict]:
+        '''
+        Conduct attack on a list of data, each data is a dict with 'text' and 'annotations'
+        :param data:
+        :param model:
+        :param tokenizer:
+        :return: the list of data after attack
+        '''
         seen_texts = set()
         processed_data = []
 
