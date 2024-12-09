@@ -2,21 +2,11 @@ import json
 import wandb
 import re
 from transformers import AutoTokenizer
-import random
-import pandas as pd
 import os
-from datasets import load_from_disk  # for some reason load_dataset gives an error
-import json
-from wandb import Api
 import torch
-from torch.utils.data import DataLoader
-from transformers import default_data_collator, AutoModelForCausalLM
-from types import SimpleNamespace
-from transformers import get_cosine_schedule_with_warmup
 from transformers import GenerationConfig
 from tqdm.auto import tqdm
 from pathlib import Path
-from lib.decoder.log_dataset import load_jsonl, formatting_prompts_func, create_prompt_no_anwer
 from peft import LoraConfig, get_peft_model
 from transformers import TrainingArguments
 from trl import SFTTrainer, DataCollatorForCompletionOnlyLM
@@ -25,6 +15,92 @@ from datasets import load_dataset
 
 os.environ['http_proxy'] = 'http://127.0.0.1:7890'
 os.environ['https_proxy'] = 'http://127.0.0.1:7890'
+
+def save_jsonl(data, filename):
+    with open(filename, 'w') as file:
+        for entry in data:
+            json.dump(entry, file)
+            file.write('\n')
+
+def load_jsonl(filename):
+    data = []
+    with open(filename, 'r') as file:
+        for line in file:
+            data.append(json.loads(line))
+    return data
+
+def remove_urls(text):
+    pattern = r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
+    return re.sub(pattern, '', text)
+
+def prompt_input(row, max_seq_len=500):
+    cleaned_input = remove_urls(row['input'])  # Assuming 'input' is a key in the row dictionary
+    cleaned_input = cleaned_input[:max_seq_len]
+    return f"### Instruction:\n{row['instruction']}\n\n### Input:\n{cleaned_input}\n\n### Response:\n"
+
+# remove answers
+def create_prompt_no_anwer(row):
+    row["output"] = ""
+    return {"text": prompt_input(row)}
+
+
+def formatting_prompts_func_no_out(examples, max_seq_len=500):
+    output_text = []
+    for i in range(len(examples["instruction"])):
+        instruction = examples["instruction"][i]
+        input_text = examples["input"][i]
+
+        input_text = remove_urls(input_text)  # Assuming 'input' is a key in the row dictionary
+        words = input_text.split()  # Split the text into words
+        input_text = ' '.join(words[:max_seq_len])  # Join the first 500 words back into a string
+
+        text = f'''Write a response that appropriately completes the request.
+
+                ### Instruction:
+                {instruction}
+
+                ### Input:
+                {input_text}
+
+                ### Response:
+                '''
+
+        output_text.append(text)
+
+    return output_text
+
+def formatting_prompts_func(examples, max_seq_len=500):
+    output_text = []
+    for i in range(len(examples["instruction"])):
+        instruction = examples["instruction"][i]
+        input_text = examples["input"][i]
+        response = examples["output"][i]
+
+        input_text = remove_urls(input_text)  # Assuming 'input' is a key in the row dictionary
+        words = input_text.split()  # Split the text into words
+        input_text = ' '.join(words[:max_seq_len])  # Join the first 500 words back into a string
+        input_text = input_text.strip()
+
+        text = f'''Write a response that appropriately completes the request.
+
+                ### Instruction:
+                {instruction}
+
+                ### Input:
+                {input_text}
+
+                ### Response:
+                {response}
+                '''
+
+        output_text.append(text)
+
+    return output_text
+
+
+def pad_eos(ds):
+    EOS_TOKEN = "</s>"
+    return [f"{row['output']}{EOS_TOKEN}" for row in ds]
 
 
 def param_count(m):
