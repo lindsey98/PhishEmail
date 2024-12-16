@@ -1,7 +1,7 @@
 from torch.utils.data import Dataset, DataLoader
 import os, re
 from email.utils import parseaddr, getaddresses
-from bs4 import BeautifulSoup, NavigableString, Comment, Doctype
+from bs4 import BeautifulSoup, NavigableString, Comment, Doctype, ProcessingInstruction
 from email.header import decode_header
 from email import message_from_string
 from email.utils import parseaddr
@@ -17,6 +17,8 @@ import time
 import quopri
 import bs4
 from lib.utilities import Logger
+from lib.utilities.data_utils import normalization
+import unicodedata
 
 class EmailDataset(Dataset):
     _CallerPrefix = "Dataset Loader"
@@ -52,11 +54,7 @@ class EmailDataset(Dataset):
 
     @staticmethod
     def domain_parsing(address: Union[None, float, str, Set[str], List[str]]) -> Set[str]:
-        '''
-        parse domain/url/email address into domain.tld format
-        :param address:
-        :return:
-        '''
+
         url_pattern = re.compile(r'(https?://[^)]+)')
         parsed_domains = set()
 
@@ -102,39 +100,60 @@ class EmailDataset(Dataset):
         return header_parts_decoded
 
     @staticmethod
-    def clean_text_content(text_content: str) -> str:
-        '''
-        remove wildcards
-        :param text_content:
-        :return:
-        '''
-        # remove text surrounded by <>, since they are likely be comments that are invisible
-        text_content = re.sub(r'<[^>]*>', '', text_content)
-        # replace multiple newline characters with a single newline
-        text_content = re.sub(r'\n{2,}', '\n', text_content)
-        # replace multiple consecutive periods with a single period
-        text_content = re.sub(r'\.{2,}', '', text_content)
-        # replace multiple spaces with a single space
-        text_content = re.sub(r'\s+', ' ', text_content)
-        # Deal with &nbsp
-        text_content = re.sub(r'\xa0', ' ', text_content)
-        text_content = re.sub(r'&nbsp;', ' ', text_content)
-        # Deal with invisible hyphen
-        text_content = re.sub(r'\xad', '', text_content)
-        text_content = re.sub(r'&shy;', '', text_content)
+    def extract_invisible_chars(text):
+        return {char: unicodedata.name(char, "UNKNOWN")
+                for char in text if not char.isprintable() or unicodedata.category(char).startswith("C")}
 
-        zero_width_pattern = r'[\u200B\u200C\u200D\u2060\u00AD\uFEFF\u2061\u2062\u2063\u2064\u034F\u17B4\u17B5]'
+
+    @staticmethod
+    def clean_text_content(text_content: str) -> str:
+        # Remove text within angle brackets (likely comments or invisible)
+        text_content = re.sub(r'<[^>]*>', '', text_content)
+
+        # Replace multiple newlines with a single newline, and multiple spaces with a single space
+        text_content = re.sub(r'\n{2,}', '\n', text_content)
+        text_content = re.sub(r'\s+', ' ', text_content)
+
+        # Replace multiple consecutive periods with a single period
+        text_content = re.sub(r'\.{2,}', '.', text_content)
+
+        # Replace non-breaking spaces and soft hyphens
+        text_content = re.sub(r'\xa0|&nbsp;', ' ', text_content)
+        text_content = re.sub(r'\xad|&shy;', '', text_content)
+
+        # Remove zero-width characters
+        zero_width_pattern = r'[\u200B-\u200D\u2060\uFEFF\u034F\u17B4\u17B5]'
         text_content = re.sub(zero_width_pattern, '', text_content)
+
+        # Normalize the text
+        text_content = unicodedata.normalize('NFKD', text_content)
+
+        # Remove remaining invisible characters
+        invisible_chars = EmailDataset.extract_invisible_chars(text_content)
+        text_content = ''.join(char for char in text_content if char not in invisible_chars)
+
+        # Shrink URLs
+        url_pattern = re.compile(
+            r'(?P<protocol>https?:)\/\/'  # Capture protocol (http: or https:)
+            r'(?P<domain>(?:[\w-]+\.)+[\w-]+\.[a-zA-Z]{2,})'  # Capture domain with optional subdomains
+            r'(?:\/\S*)?',  # Optional path, query parameters, etc.
+            re.IGNORECASE
+        )
+
+        # Define the replacement function
+        def shrink_url(match):
+            protocol = match.group('protocol')
+            domain = match.group('domain')
+            return f"{protocol}{domain}"
+
+        text_content = url_pattern.sub(shrink_url, text_content)
         return text_content
 
     @staticmethod
     def decode_quoted_printable(encoded_str: bytes, charset: str = 'utf-8') -> str:
-        '''
+        """
         Decode a quoted-printable encoded string to its original form using the specified charset.
-        :param encoded_str:
-        :param charset:
-        :return:
-        '''
+        """
         try:
             # Decode the quoted-printable encoded string
             decoded_bytes = quopri.decodestring(encoded_str)
@@ -144,18 +163,13 @@ class EmailDataset(Dataset):
             # Fallback to utf-8 if charset is not recognized
             decoded_str = decoded_bytes.decode('utf-8', 'replace')
         except Exception as e:
-            Logger.spit(f"Failed to decode the email with exception {e}", debug=True,
+            Logger.spit(f"Failed to decode the email with exception", debug=True,
                         caller_prefix=EmailDataset._CallerPrefix)
             decoded_str = encoded_str.decode(charset, 'replace')  # Fallback to raw decoding
         return decoded_str
 
     @staticmethod
     def remove_prev_messages(text_content: str) -> str:
-        '''
-        Ignore previous communications in an email
-        :param text_content:
-        :return:
-        '''
         reply_pattern = re.compile(r"On.*wrote:")
         forward_pattern = re.compile(r"^-{2,}\s*Forwarded message\s*-+$", re.MULTILINE)
 
@@ -177,11 +191,6 @@ class EmailDataset(Dataset):
 
     @functools.lru_cache(maxsize=1000)
     def auto_translate(self, text):
-        '''
-        Google translate
-        :param text:
-        :return:
-        '''
         is_in_english = True
         try:
             detected_langs = detect_langs(text)
@@ -194,31 +203,26 @@ class EmailDataset(Dataset):
 
         max_retries = 3  # Number of times to retry the translation
         retry_delay = 2  # Seconds to wait before retrying
+        chunk_size = 4900  # Character limit for each translation request
 
         if not is_in_english:
-            for attempt in range(1, max_retries + 1):
+            chunk = text[:chunk_size]
+
+            for attempt in range(max_retries):
                 try:
-                    # Deeptranslator has a character limit of 5000
-                    return self.translator.translate(text[:min(5000, len(text))],
-                                                     source='auto',
-                                                     target='english')
+                    translated_chunk = self.translator.translate(
+                        chunk, source='auto', target='english'
+                    )
+                    if translated_chunk is not None:
+                        return translated_chunk  # Combine all translated chunks
+                    return chunk
                 except Exception as e:
                     Logger.spit(f"Email translation fails with exception", debug=True, caller_prefix=EmailDataset._CallerPrefix)
-                    if attempt < max_retries:
-                        time.sleep(retry_delay)
-                        retry_delay *= 2  # Exponential backoff
-                    else:
-                        Logger.spit("Max retries reached. Returning original text", debug=True,
-                                    caller_prefix=EmailDataset._CallerPrefix)
-                        return text  # Return the original text if translation fails after retries
+                    time.sleep(retry_delay)
+
         return text
 
     def extract_subject(self, email_content: Message) -> str:
-        '''
-        get subject
-        :param email_content:
-        :return:
-        '''
         subject = email_content.get('subject', '')
         if len(subject):
             try:
@@ -229,22 +233,24 @@ class EmailDataset(Dataset):
         return subject
 
     def extract_sender(self, email_content: Message) -> Tuple[Optional[str], Optional[str]]:
-        '''
-        get sender name and sender address
-        :param email_content:
-        :return:
-        '''
-        sender_name, sender_address = parseaddr(email_content.get('From', ''))
+        email_pattern = r'<([^<>]+)>$'
+        from_header = email_content.get('From', '')
+
+        # Extract the last email address
+        match = re.search(email_pattern, from_header)
+        if match:
+            sender_address = match.group(1).strip()  # Extract the email
+            sender_name = from_header[:match.start()].strip()  # Everything before the email
+        else:
+            # Fallback: no valid email found
+            sender_address = ""
+            sender_name = from_header.strip()
+
         if sender_name:
             sender_name = self.decode_header(sender_name)
         return sender_name, sender_address
 
     def extract_recipients(self, email_content: Message) -> Tuple[List[str], List[str]]:
-        '''
-        get recipient(s) names and addresses
-        :param email_content:
-        :return:
-        '''
         # Extracting all recipients
         to_addresses = email_content.get('To', '')
         cc_addresses = email_content.get('Cc', '')  # Handling Cc if needed
@@ -265,28 +271,115 @@ class EmailDataset(Dataset):
         return to_names, to_addresses
 
     def extract_reply_to_address(self, email_content: Message) -> Optional[str]:
-        '''
-        get reply-to (destination address if the recipient reply to this email, can be different from the sender address)
-        :param email_content:
-        :return:
-        '''
         reply_to = email_content.get('Reply-To', '').strip()
         if reply_to:
             reply_to_addresses = getaddresses([reply_to])  # Handles potential list of addresses
             return reply_to_addresses[0][1]  # Return the first parsed email address
         return None
 
-    def extract_text_content(self, part: Message) -> Tuple[str, str]:
-        '''
-        Recursively extracts text content from an email part with nested multiparts.
-        :param part:
-        :return:
-        '''
-        text_content = ""
-        html_content = ""
+    def unfragment_text(self, text):
+        # Pattern to find two or more single characters separated by spaces
+        pattern = r'\b(?:\w\s+){2,}\w\b'
+
+        def replace_match(match):
+            # Extract the matched fragment
+            fragment = match.group()
+            # Check if the fragment ends before an uppercase letter
+            # Find the position after the fragment
+            end_pos = match.end()
+            # If the next character is uppercase, stop unfragmenting here
+            if end_pos < len(text) and text[end_pos].isupper():
+                return fragment  # Do not replace; leave as is
+            else:
+                # Remove spaces between single characters
+                return ''.join(fragment.split())
+
+        # Use a loop to iteratively replace fragmented parts
+        previous_text = None
+        while previous_text != text:
+            previous_text = text
+            text = re.sub(pattern, replace_match, text)
+
+        # Finally, replace multiple spaces with a single space to clean up the text
+        cleaned_text = re.sub(r'\s+', ' ', text).strip()
+        return cleaned_text
+
+    def extract_rendered_text_from_html(self, html_content) -> str:
         unwanted_extensions = {'.css', '.js', '.ico', '.png', '.jpg', '.jpeg', '.gif', '.pdf', '.doc', '.docx', '.xls', '.xlsx'}
         unwanted_attachment = {'mailto:', 'tel:', '#', 'javascript', "mso["}
         url_pattern = re.compile(r'https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+')  # Simple URL pattern
+
+        # Initialize BeautifulSoup with the 'html.parser'
+        try:
+            soup = BeautifulSoup(html_content, 'html.parser')
+        except bs4.builder.ParserRejectedMarkup:
+            soup = BeautifulSoup(html_content, 'lxml')
+        except:
+            return ""
+
+        # Remove all comments and processing instructions
+        for element in soup.find_all(text=lambda text: isinstance(text, (Comment, ProcessingInstruction, Doctype))):
+            element.extract()
+
+        # Remove unwanted tags such as style, script, head, meta, and conditional comments
+        for tag in soup(['style', 'script', 'head', 'meta']):
+            tag.decompose()
+
+        # Function to determine if a tag's text should be ignored
+        def is_ignorable(element):
+            return element.name in ['style', 'script', 'head', 'meta']
+
+        # Initialize a list to hold text parts
+        text_parts = []
+
+        # Iterate over all descendants in the soup
+        for element in soup.descendants:
+            if isinstance(element, NavigableString):
+                # Skip if the parent tag is ignorable
+                if is_ignorable(element.parent):
+                    continue
+                # Strip the text to remove leading/trailing whitespace
+                stripped_text = element.strip()
+                if stripped_text:
+                    text_parts.append(stripped_text)
+            elif element.name == 'a':
+                # Process <a> tags with href attributes
+                href = element.get('href', '')
+                text = element.get_text(strip=True)
+                is_text_url = url_pattern.match(text)
+
+                # fixme: how to handle the embedded urls?
+                if href and (not any(href.lower().endswith(ext) for ext in unwanted_extensions)) and \
+                        (not any(noisy in href.lower() for noisy in unwanted_attachment)):
+                    if is_text_url:
+                        text_parts.append(href)
+                    else:
+                        text_parts.append(f'{text}')
+                else:
+                    text_parts.append(text)
+
+        # Join all text parts with a space to maintain readability
+        combined_text = ' '.join(text_parts)
+
+        # Use regex to replace multiple spaces with a single space
+        cleaned_text = re.sub(r'\s+', ' ', combined_text)
+
+        # Optionally, further clean up specific artifacts from the original HTML
+        # For example, remove residual conditional comment indicators if any
+        cleaned_text = re.sub(r'\[if .*?\]>', '', cleaned_text)
+        cleaned_text = re.sub(r'<!\[endif\]', '', cleaned_text)
+
+        # Remove any remaining square-bracketed text that may not have been removed
+        cleaned_text = re.sub(r'\[.*?\]', '', cleaned_text)
+        return cleaned_text.strip()
+
+    def extract_text_content(self, part: Message) -> Tuple[str, str]:
+        """
+        Recursively extracts text content from an email part,
+        including handling nested multiparts.
+        """
+        text_content = ""
+        html_content = ""
 
         # Check if the part is a multipart
         if part.is_multipart():
@@ -301,9 +394,6 @@ class EmailDataset(Dataset):
                 content_type = "text"
             else:
                 content_type = part.get_content_type()
-                # if not content_type or "text" in content_type:
-                #     decoded_content = part.get_payload(decode=False)  # decoding is handled here
-                # else:
                 charset = part.get_content_charset('utf-8')
                 raw_email_content = part.get_payload(decode=True)  # decoding is handled here
                 transfer_encoding = part.get('Content-Transfer-Encoding', '').lower()
@@ -320,64 +410,14 @@ class EmailDataset(Dataset):
                 else:
                     decoded_content = raw_email_content  # handle cases where payload is not encoded
 
-            # if self.translate_on:  ## fixme
-            #     try:
-            #         decoded_content = self.auto_translate(decoded_content)
-            #     except TypeError:
-            #         decoded_content = self.auto_translate(decoded_content.decode('ISO-8859-1'))
-
             ### Extract text from HTML
             if 'html' in content_type:
-                try:
-                    soup = BeautifulSoup(decoded_content, 'html.parser')
-                except bs4.builder.ParserRejectedMarkup:
-                    soup = BeautifulSoup(decoded_content, 'lxml')
-                except TypeError:
-                    return "", ""
-
-                for script_or_style in soup(['script', 'style']):
-                    script_or_style.decompose()
-                # Remove all inline styles (style attributes)
-                for tag in soup.find_all(True):  # `True` finds all tags
-                    if 'style' in tag.attrs:
-                        del tag['style']
-
-                # Remove DOCTYPE and comments
-                for element in soup.contents:
-                    if isinstance(element, Comment) or isinstance(element, Doctype):
-                        element.extract()
-
-                text_parts = []
-                for element in soup.descendants:
-                    if isinstance(element, NavigableString):
-                        # Add text directly, but strip to avoid excessive whitespace
-                        stripped_text = element.strip()
-                        if stripped_text:
-                            text_parts.append(stripped_text)
-                    elif element.name == 'a':
-                        # Process <a> tags with href attributes
-                        href = element.get('href', '')
-                        text = element.get_text(strip=True)
-                        is_text_url = url_pattern.match(text)
-
-                        # fixme: how to handle the embedded urls?
-                        if href and (not any(href.lower().endswith(ext) for ext in unwanted_extensions)) and \
-                            (not any(noisy in href.lower() for noisy in unwanted_attachment)):
-                            if is_text_url:
-                                text_parts.append(href)
-                            else:
-                                text_parts.append(f'{text}')
-                        else:
-                            text_parts.append(text)
-
-                text_content = '\n'.join(text_parts)  # Join all parts into a single string
                 html_content = decoded_content
+                text_content = self.extract_rendered_text_from_html(decoded_content)
 
-            else:  ### plain text
+            elif 'text' in content_type:  ### plain text
                 if decoded_content:
                     text_content = decoded_content.strip()
-                else:
-                    text_content = ""
 
         return str(text_content), str(html_content)
 
@@ -388,26 +428,22 @@ class EmailDataset(Dataset):
         headers = str(email_content._headers)
 
         sender_name, sender_address = self.extract_sender(email_content)
-        if self.translate_on:
-            sender_name = self.auto_translate(sender_name)
-            if sender_address and "@" not in sender_address:
-                translatedaddress = self.auto_translate(sender_address)
-                if translatedaddress is not None:
-                    sender_name += translatedaddress
-
         to_names, to_addresses = self.extract_recipients(email_content)
         reply_to_address = self.extract_reply_to_address(email_content)
         if reply_to_address is None:
             reply_to_address = sender_address
 
         subject = self.extract_subject(email_content)
-        if self.translate_on:
-            subject = self.auto_translate(subject)
+        subject = self.auto_translate(subject)
+        sender_name = normalization(sender_name)
+        subject = normalization(subject)
 
         text_content, html_content = self.extract_text_content(email_content)
         text_content = self.remove_prev_messages(text_content)
         text_content = self.clean_text_content(text_content)
         text_content = self.auto_translate(text_content)
+        text_content = normalization(text_content)
+        text_content = self.unfragment_text(text_content)
 
         return email_file_path, \
                (sender_name, sender_address), \
