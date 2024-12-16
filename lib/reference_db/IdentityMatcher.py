@@ -74,7 +74,7 @@ class BaseFaissIPRetriever:
         if init_reps is None:
             assert embed_model is not None
             self.embed_model = embed_model
-            Logger.spit("No cached representations, build index from scratch ..", caller_prefix=BaseFaissIPRetriever._CallerPrefix, debug=True)
+            Logger.spit("No cached representations, build index from scratch ..", caller_prefix=BaseFaissIPRetriever._CallerPrefix)
             init_reps = self.build_reps_from_scratch(self.tags)
 
         assert len(tags) == init_reps.shape[0], "Number of tags must match the number of representations."
@@ -93,8 +93,7 @@ class BaseFaissIPRetriever:
 
         self.index.add(init_reps)  # Add vectors to the index
         Logger.spit("Index base of size {} with dimension {} is trained".format(init_reps.shape[0], init_reps.shape[1]),
-                    caller_prefix=BaseFaissIPRetriever._CallerPrefix,
-                    debug=True)
+                    caller_prefix=BaseFaissIPRetriever._CallerPrefix)
 
     def build_reps_from_scratch(self, tag_list):
         index_reps = np.empty((0, 768))
@@ -243,7 +242,7 @@ class IdentityMatcher:
         Logger.spit(f'Searching {queried_identity} in GPT, \t'
                     f'Return {search_email}, \t'
                     f'Searching time = {searching_time}',
-                    caller_prefix=IdentityMatcher._CallerPrefix, debug=True)
+                    caller_prefix=IdentityMatcher._CallerPrefix)
 
         email_regex = re.compile(
             r'^\[?([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})(,\s*[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})*\]?$')
@@ -314,8 +313,8 @@ class IdentityMatcher:
         total_time = 0
         # Check sender organization or relation
         if len(identities) == 0 and len(relations) == 0:
-            Logger.spit('No predicted identity', caller_prefix=IdentityMatcher._CallerPrefix, debug=True)
-            return None, 'No Prediction', total_time
+            Logger.spit('No predicted identity', caller_prefix=IdentityMatcher._CallerPrefix)
+            return False, 'No Prediction', total_time
 
         identities = [clean_string(x) for x in identities]
         relations = [clean_string(x) for x in relations]
@@ -343,19 +342,19 @@ class IdentityMatcher:
             if self.check_action:
                 if len(actions) > 0:
                     Logger.spit(f'[!Phish] Matched brand = "{matched_brand_set}", inconsistent identity-address found with sender address as "{sender_domains}", and contains at least 1 instruction',
-                                caller_prefix=IdentityMatcher._CallerPrefix, debug=True)
+                                caller_prefix=IdentityMatcher._CallerPrefix)
                     return True, matched_brand_set, total_time
                 else:
                     Logger.spit(f'Matched brand = "{matched_brand_set}", inconsistent identity-address found, but does not contain any instruction => Benign',
-                                caller_prefix=IdentityMatcher._CallerPrefix, debug=True)
+                                caller_prefix=IdentityMatcher._CallerPrefix)
                     return False, matched_brand_set, total_time
             else:
                 Logger.spit(f'[!Phish] Matched brand = "{matched_brand_set}", inconsistent identity-address found with sender address as "{sender_domains}"',
-                            caller_prefix=IdentityMatcher._CallerPrefix, debug=True)
+                            caller_prefix=IdentityMatcher._CallerPrefix)
                 return True, matched_brand_set, total_time
 
         if official_email_domains_set:  # do not further check the internal relations
-            Logger.spit('Consistent identity-address => Benign', caller_prefix=IdentityMatcher._CallerPrefix, debug=True)
+            Logger.spit('Consistent identity-address => Benign', caller_prefix=IdentityMatcher._CallerPrefix)
             return False, 'Consistent', total_time
 
         # Check internal relations
@@ -368,24 +367,28 @@ class IdentityMatcher:
             if self.check_action:
                 if len(actions) > 0:
                     Logger.spit(f'[!Phish] Imitating an internal role "{imitated_role}" but from an external domain with sender address as "{sender_domains}", and contains at least 1 instruction',
-                                caller_prefix=IdentityMatcher._CallerPrefix, debug=True)
+                                caller_prefix=IdentityMatcher._CallerPrefix)
                     return True, 'Internal', total_time
                 else:
                     Logger.spit(f'Imitating an internal role "{imitated_role}" but from an external domain, but does not contain any instruction => Benign',
-                                caller_prefix=IdentityMatcher._CallerPrefix, debug=True)
+                                caller_prefix=IdentityMatcher._CallerPrefix)
                     return False, 'Internal', total_time
             else:
                 Logger.spit(f'[!Phish] Imitating an internal role "{imitated_role}" but from an external domain with sender address as "{sender_domains}"',
-                            caller_prefix=IdentityMatcher._CallerPrefix, debug=True)
+                            caller_prefix=IdentityMatcher._CallerPrefix)
                 return True, 'Internal', total_time
 
         if is_internal_emails:  # do not further check the internal relations
-            Logger.spit('Consistent sender-recipient-address => Benign', caller_prefix=IdentityMatcher._CallerPrefix, debug=True)
+            Logger.spit('Consistent sender-recipient-address => Benign', caller_prefix=IdentityMatcher._CallerPrefix)
             return False, 'Consistent', total_time
 
-        Logger.spit('Does not match to any known identity or internal role => Benign',
-                    caller_prefix=IdentityMatcher._CallerPrefix, debug=True)
-        return False, 'No Matched Brand', total_time
+        if len(identities):
+            Logger.spit('Does not match to any known identity or internal role => Benign',
+                        caller_prefix=IdentityMatcher._CallerPrefix)
+            return False, 'No Matched Brand', total_time
+        else:
+            Logger.spit('No predicted identity', caller_prefix=IdentityMatcher._CallerPrefix)
+            return False, 'No Prediction', total_time
 
 
 if __name__ == '__main__':

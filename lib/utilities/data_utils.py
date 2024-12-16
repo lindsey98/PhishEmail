@@ -8,8 +8,46 @@ from transformers import AutoTokenizer
 from tldextract import tldextract
 import difflib
 import json
+from unidecode import unidecode
+import requests
+from bs4 import BeautifulSoup
+import os
 
 class DomainUtils:
+    def __init__(self):
+        self.regional_tlds = self.get_regional_tlds_from_iana()
+
+    def get_regional_tlds_from_iana(self):
+        """
+        Scrapes IANA's Root Zone Database to identify regional TLDs.
+
+        Returns:
+            set: A set of regional TLDs.
+        """
+        url = "https://www.iana.org/domains/root/db"
+        response = requests.get(url, proxies={
+            "http": os.environ.get("http_proxy", None),
+            "https": os.environ.get("https_proxy", None)
+        })
+        regional_tlds = set()
+
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.text, 'html.parser')
+            table = soup.find('table', {'id': 'tld-table'})
+            if table:
+                rows = table.find_all('tr')
+                for row in rows:
+                    cols = row.find_all('td')
+                    if len(cols) >= 2:
+                        tld = cols[0].text.strip('.').lower()
+                        tld_type = cols[1].text.strip().lower()
+                        # Define criteria for regional TLDs based on type or sponsoring organization
+                        if tld_type in {'geographic', 'internationalized', 'sponsored'}:
+                            regional_tlds.add(tld)
+        return regional_tlds
+
+    def is_regional_tld(self, suffix: str) -> bool:
+        return '.' in suffix
 
     @staticmethod
     def extract_domain_set(official_emails: List[str]) -> Set[str]:
@@ -19,21 +57,6 @@ class DomainUtils:
     def extract_domain_components(domain: str) -> tuple:
         extracted = tldextract.extract(domain)
         return (extracted.domain, extracted.suffix)
-
-    @staticmethod
-    def is_regional_tld(suffix: str) -> bool:
-        """
-        Determines if a given suffix is a regional TLD.
-        For simplicity, a suffix with a dot is considered regional.
-        E.g., 'co.uk', 'com.sg', 'org.au' are regional TLDs.
-
-        Args:
-            suffix (str): The suffix part of the domain.
-
-        Returns:
-            bool: True if the suffix is regional, False otherwise.
-        """
-        return '.' in suffix
 
     @staticmethod
     def contains_domain(text: str) -> Tuple[bool, Optional[Set[str]]]:
@@ -73,13 +96,15 @@ class DomainUtils:
 
         for domain1, suffix1 in extracted_set1:
             for domain2, suffix2 in extracted_set2:
-                # if DomainUtils.is_regional_tld(suffix1): # fixme: I just check the domain for now
+                # if DomainUtils.is_regional_tld(suffix1): # fixme: I only check the domain for now
                 #     if domain1 == domain2:
                 #         return True
                 # else:
                 #     if domain1 == domain2 and suffix1 == suffix2:
                 #         return True
-                if domain1 == domain2:
+                if (not len(suffix2)) or (not len(suffix1)):
+                    continue
+                elif domain1 == domain2:
                     return True
         # If no overlap found
         return False
@@ -88,8 +113,11 @@ def find_all_token_indices(all_tokens: List[str], entity_tokens: List[str]):
     entity_len = len(entity_tokens)
     indices = []
 
-    for i in range(len(all_tokens) - entity_len + 1):
-        if [token.lower() for token in all_tokens[i:i + entity_len]] == entity_tokens:
+    lower_all_tokens = [token.lower() for token in all_tokens]
+    lower_entity_tokens = [token.lower() for token in entity_tokens]
+
+    for i in range(len(lower_all_tokens) - entity_len + 1):
+        if lower_all_tokens[i:i + entity_len] == lower_entity_tokens:
             indices.append((i, i + entity_len))
 
     return indices
@@ -109,7 +137,7 @@ def find_first_last_indices(all_tokens: List[str], entity_tokens: List[str]):
             last_index = (i, i + entity_len)
 
     # Check if the last occurrence is within the signatures
-    if last_index and last_index[0] >= len(all_tokens) - 30:
+    if last_index and last_index[0] >= len(all_tokens) - 100:
         indices = [first_index, last_index] if first_index != last_index else [first_index]
     elif first_index:
         indices = [first_index]
@@ -118,7 +146,7 @@ def find_first_last_indices(all_tokens: List[str], entity_tokens: List[str]):
 
 def tokenize_and_map(text: str, annotations: List[Dict], tokenizer: AutoTokenizer, label_to_id: Dict):
     # Tokenize text using a custom tokenizer function
-    tokens = tokenizer.tokenize(text)
+    tokens = tokenizer.tokenize(text, truncation=False, add_special_tokens=False)
 
     # Initialize tags with "O"
     tags = [label_to_id["O"]] * len(tokens)
@@ -126,7 +154,7 @@ def tokenize_and_map(text: str, annotations: List[Dict], tokenizer: AutoTokenize
     for annot in annotations:
         entity = annot['text']
         entity_cls = annot['labels'][0]
-        entity_tokens = tokenizer.tokenize(entity)
+        entity_tokens = tokenizer.tokenize(entity, truncation=False, add_special_tokens=False)
 
         if entity_cls == "identity":
             all_indices = find_first_last_indices(tokens, entity_tokens)
@@ -313,5 +341,14 @@ def clean_string(s: str) -> str:
     special_chars_pattern = r'[()\[\]:\*\^]'
     # Remove the special characters from the string
     s = re.sub(special_chars_pattern, '', s)
+    # normalization: todo
+    # mеtамаsk
     return s
 
+def remove_urls(text):
+    pattern = r'\((https?://[^)]+)\)'
+    return re.sub(pattern, '', text)
+
+def normalization(text):
+    transliterated = unidecode(text)
+    return transliterated
