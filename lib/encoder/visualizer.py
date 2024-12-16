@@ -13,6 +13,7 @@ from spacy.tokens import Doc, Span
 from typing import List, Tuple
 from spacy.language import Language
 from ..utilities import Timer, Logger
+from ..utilities.data_utils import remove_urls
 from transformers import DataCollatorForTokenClassification, AutoModelForTokenClassification, AutoTokenizer
 import json
 import torch.nn.functional as F
@@ -160,8 +161,9 @@ class Visualizer(IdentityBert):
 
     @torch.inference_mode()
     def __call__(self, raw_text: str, metadata: str = "") -> str:
-        raw_text = self.remove_urls(raw_text)
+        raw_text = remove_urls(raw_text)
         raw_text = self._tokenize(raw_text)
+        raw_text = raw_text[0]
         with Timer():
             # Obtain NER predictions
             output = self.classifier_pipeline(raw_text)
@@ -216,11 +218,12 @@ class TokenPredVisualizer(Visualizer):
         self.tokenizer = AutoTokenizer.from_pretrained(identity_checkpoint_path)
 
     @staticmethod
-    def visualize_token_predictions(token_outputs: List[Dict], other_html: str, metadata=""):
+    def visualize_token_predictions(token_outputs: List[Dict], other_html: str, metadata: str = "",
+                                    token_idx: Optional[int] = None):
         sanitized_metadata = Visualizer.sanitize_metadata(metadata)
         debug_output_json = json.dumps(token_outputs)
 
-        # HTML template
+        # HTML template with added token_idx
         html_template = f"""
         <!DOCTYPE html>
         <html lang="en">
@@ -250,7 +253,7 @@ class TokenPredVisualizer(Visualizer):
                     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
                     white-space: nowrap;
                 }}
-               .tooltip {{
+                .tooltip {{
                     position: absolute;
                     display: none;
                     background-color: white;
@@ -277,9 +280,9 @@ class TokenPredVisualizer(Visualizer):
         <body>
             <strong>Metadata:</strong><br>
             {sanitized_metadata}
-                        
+
             <h2>NER Token-level Predictions</h2>
-           
+
             <p id="paragraph">
                 <!-- Tokens will be inserted here -->
             </p>
@@ -303,6 +306,9 @@ class TokenPredVisualizer(Visualizer):
                 let currentChart;
                 let tooltipTimeout;
 
+                // Variable to hold the token index to highlight and show tooltip
+                const initialTokenIdx = {token_idx if token_idx is not None else 'null'};
+
                 // Function to insert tokens as a paragraph
                 function insertTokens() {{
                     const paragraph = document.getElementById('paragraph');
@@ -312,7 +318,7 @@ class TokenPredVisualizer(Visualizer):
                         tokenSpan.textContent = item.token;
                         tokenSpan.dataset.index = index;
                         paragraph.appendChild(tokenSpan);
-            
+
                         // Add a space after each token except the last
                         if (index < debugOutput.length - 1) {{
                             const spaceSpan = document.createElement('span');
@@ -329,10 +335,10 @@ class TokenPredVisualizer(Visualizer):
                         const tooltip = document.getElementById('tooltip');
                         const index = event.target.dataset.index;
                         const probabilities = debugOutput[index].probabilities;
-            
+
                         // Highlight the token
                         event.target.classList.add('highlight');
-            
+
                         // Create chart data
                         const data = {{
                             labels: labelList,
@@ -373,7 +379,7 @@ class TokenPredVisualizer(Visualizer):
                         tooltip.style.display = 'block';
                         tooltip.style.left = event.pageX + 10 + 'px';  // Offset tooltip slightly
                         tooltip.style.top = event.pageY + 10 + 'px';
-            
+
                         // Draw chart
                         const canvas = document.getElementById('probChart');
                         currentChart = new Chart(canvas, config);
@@ -391,12 +397,76 @@ class TokenPredVisualizer(Visualizer):
 
                 // Insert tokens and add event listeners
                 insertTokens();
-                document.querySelectorAll('.token').forEach(token => {{
+                const tokens = document.querySelectorAll('.token');
+                tokens.forEach(token => {{
                     token.addEventListener('mouseover', showTooltip);
                     token.addEventListener('mouseout', hideTooltip);
                 }});
+
+                // Function to show tooltip programmatically
+                function showTooltipForIndex(index) {{
+                    const token = document.querySelector(`.token[data-index='${{index}}']`);
+                    if (token) {{
+                        // Highlight the token
+                        token.classList.add('highlight');
+
+                        const tooltip = document.getElementById('tooltip');
+                        const probabilities = debugOutput[index].probabilities;
+
+                        // Create chart data
+                        const data = {{
+                            labels: labelList,
+                            datasets: [{{
+                                label: 'Probabilities',
+                                data: probabilities,
+                                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                borderWidth: 1
+                            }}]
+                        }};
+
+                        const config = {{
+                            type: 'bar',
+                            data: data,
+                            options: {{
+                                responsive: true,
+                                maintainAspectRatio: true,
+                                scales: {{
+                                    y: {{
+                                        beginAtZero: true
+                                    }}
+                                }},
+                                plugins: {{
+                                    legend: {{
+                                        display: false
+                                    }}
+                                }}
+                            }}
+                        }};
+
+                        // Clear existing chart if any
+                        if (currentChart) {{
+                            currentChart.destroy();
+                        }}
+
+                        // Position the tooltip near the token
+                        const rect = token.getBoundingClientRect();
+                        tooltip.style.display = 'block';
+                        tooltip.style.left = rect.right + window.scrollX + 10 + 'px';
+                        tooltip.style.top = rect.top + window.scrollY + 'px';
+
+                        // Draw chart
+                        const canvas = document.getElementById('probChart');
+                        currentChart = new Chart(canvas, config);
+                    }}
+                }}
+
+                // If token_idx is provided, highlight and show tooltip for it by default
+                if (initialTokenIdx !== null) {{
+                    showTooltipForIndex(initialTokenIdx);
+                }}
             </script>
-            
+
             {other_html}
         </body>
         </html>
@@ -406,7 +476,7 @@ class TokenPredVisualizer(Visualizer):
     @torch.inference_mode()
     def get_token_outputs(self, text: str) -> List[Dict]:
         # Tokenize the input text
-        tokens = self.tokenizer(text, return_tensors="pt", truncation=True, padding=True).to(self.model.device)
+        tokens = self.tokenizer(text, return_tensors="pt", truncation=True, add_special_tokens=False).to(self.model.device)
 
         # Run the model to get logits
         with torch.no_grad():
@@ -427,19 +497,19 @@ class TokenPredVisualizer(Visualizer):
         # Process each token and map to its corresponding probabilities
         token_outputs = []
         for i, token in enumerate(tokens):
-            if token not in ["[CLS]", "[SEP]"]:  # Exclude special tokens
-                token_outputs.append({
-                    "token": token,
-                    "probabilities": probabilities[0, i].cpu().numpy().tolist(),  # Probabilities for each label
-                    "label": label_names[label_ids[i].item()]  # Predicted label
-                })
+            token_outputs.append({
+                "token": token,
+                "probabilities": probabilities[0, i].cpu().numpy().tolist(),  # Probabilities for each label
+                "label": label_names[label_ids[i].item()]  # Predicted label
+            })
 
         return token_outputs
 
     @torch.inference_mode()
     def __call__(self, raw_text: str, metadata: str = "") -> str:
-        raw_text = self.remove_urls(raw_text)
+        raw_text = remove_urls(raw_text)
         raw_text = self._tokenize(raw_text)
+        raw_text = raw_text[0]
         with Timer():
             # Obtain NER predictions
             token_outputs = self.get_token_outputs(raw_text)
@@ -521,10 +591,11 @@ class TracInVisualizer(TokenPredVisualizer):
         return doc
 
     @torch.inference_mode()
-    def __call__(self, raw_text: str, metadata: str = "", helpful_examples: List = [], harmful_examples: List = []) -> str:
+    def __call__(self, raw_text: str, token_idx: Optional[int]=None, metadata: str = "", helpful_examples: List = [], harmful_examples: List = []) -> str:
 
-        raw_text = self.remove_urls(raw_text)
+        raw_text = remove_urls(raw_text)
         raw_text = self._tokenize(raw_text)
+        raw_text = raw_text[0]
         with Timer():
             # Obtain NER predictions
             token_outputs = self.get_token_outputs(raw_text)
@@ -538,10 +609,9 @@ class TracInVisualizer(TokenPredVisualizer):
         nlp = spacy.blank("en")
         pred_doc = self.ner_create_spacy_doc(raw_text, cleaned_output, nlp)
         pred_html = displacy.render(pred_doc, style="ent", page=False, options=spacy_options)
-        other_html += f"""
-            <h2>NER Full Predictions for This Example</h2>
-            {pred_html}
-        """
+        other_html += f"""<h2>NER Full Predictions for This Example</h2>
+                        {pred_html}
+                    """
 
         # helpful examples
         for it, eg in enumerate(helpful_examples):
@@ -549,10 +619,9 @@ class TracInVisualizer(TokenPredVisualizer):
             nlp = spacy.blank("en")
             pred_doc = self.ner_create_spacy_doc_from_ground_truth(tokens, tags, nlp)
             pred_html = displacy.render(pred_doc, style="ent", page=False, options=spacy_options)
-            other_html += f"""
-                        <h2>Top {it + 1} Helpful Example, TracIn Score = {score}, Path = {metadata}</h2>
-                        {pred_html}
-                """
+            other_html += f"""<h2>Top {it + 1} Helpful Example, TracIn Score = {score}, Path = {metadata}</h2>
+                            {pred_html}
+                        """
 
         # harmful examples
         for it, eg in enumerate(harmful_examples):
@@ -560,12 +629,12 @@ class TracInVisualizer(TokenPredVisualizer):
             nlp = spacy.blank("en")
             pred_doc = self.ner_create_spacy_doc_from_ground_truth(tokens, tags, nlp)
             pred_html = displacy.render(pred_doc, style="ent", page=False, options=spacy_options)
-            other_html += f"""
-                        <h2>Top {it + 1} Harmful Example, TracIn Score = {score}, Path = {metadata}</h2>
-                        {pred_html}
-                """
+            other_html += f"""<h2>Top {it + 1} Harmful Example, TracIn Score = {score}, Path = {metadata}</h2>
+                            {pred_html}
+                        """
 
         html_template = self.visualize_token_predictions(token_outputs=token_outputs,
+                                                         token_idx=token_idx,
                                                          other_html=other_html,
                                                          metadata=metadata)
         return html_template

@@ -2,6 +2,7 @@ from transformers import pipeline, AutoTokenizer, AutoModelForTokenClassificatio
 from typing import Tuple, Set, List
 import torch
 from ..utilities import Timer, Logger
+from ..utilities.data_utils import remove_urls, normalization
 import re
 import numpy as np
 import torch
@@ -27,6 +28,8 @@ class IdentityBert:
         self.device = 0 if torch.cuda.is_available() else 'cpu'
         self.model = AutoModelForTokenClassification.from_pretrained(identity_checkpoint_path)
         self.tokenizer = AutoTokenizer.from_pretrained(identity_checkpoint_path)
+        self.max_length = self.tokenizer.model_max_length
+        self.pad_to_max_length = False
         self.classifier_pipeline = pipeline("ner",
                                             tokenizer=self.tokenizer,
                                             model=self.model,  # Use the already loaded model
@@ -44,16 +47,58 @@ class IdentityBert:
         outputs = self.model(input_ids)[0][0].cpu().numpy()
         return np.exp(outputs) / np.exp(outputs).sum(-1, keepdims=True) # B x C
 
-    @staticmethod
-    def remove_urls(text):
-        pattern = r'\((https?://[^)]+)\)'
-        return re.sub(pattern, '', text)
 
-    def _tokenize(self, text: str) -> str:
-        tokens = self.tokenizer(text, return_offsets_mapping=True, truncation=True)
-        tokenized_email = self.tokenizer.convert_ids_to_tokens(tokens["input_ids"])
-        tokenized_email_str = self.tokenizer.convert_tokens_to_string(tokenized_email)
-        return tokenized_email_str
+    def _tokenize(self, text: str) -> List[str]:
+
+        prefix = "Subject: \nFrom: \nBody: \n"
+        prepend_ids = self.tokenizer.encode(prefix, add_special_tokens=False)
+        prepend_length = len(prepend_ids)
+        reserved_tokens = prepend_length + 2  # prepend_ids + BOS + EOS
+        max_tokens_subsequent = self.max_length - reserved_tokens
+        bos_id = 101
+        eos_id = 102
+
+        tokens = self.tokenizer(
+            text,
+            return_offsets_mapping=True,
+            truncation=False,  # Disable automatic truncation
+            add_special_tokens=True
+        )
+
+        input_ids = tokens["input_ids"]
+        total_length = len(input_ids)
+        batches = []
+
+        # First batch: handle separately
+        first_batch_ids = input_ids[:self.max_length]
+        if len(first_batch_ids) >= self.max_length:
+            first_batch_ids = input_ids[:self.max_length-1] + [eos_id]
+        first_batch_tokens = self.tokenizer.convert_ids_to_tokens(first_batch_ids)
+        first_batch_str = self.tokenizer.convert_tokens_to_string(first_batch_tokens)
+        batches.append(first_batch_str)
+
+        for i in range(self.max_length, total_length, max_tokens_subsequent):
+            # Slice the input_ids for the current batch
+            batch_ids = input_ids[i:i + max_tokens_subsequent]
+
+            # Combine prepend_ids with the current batch_ids
+            combined_ids = prepend_ids + batch_ids
+
+            # Add BOS and EOS tokens
+            combined_ids = [bos_id] + combined_ids + [eos_id]
+
+            # Calculate the number of tokens after adding prepend and special tokens
+            current_length = len(combined_ids)
+
+            # Truncate if necessary
+            if current_length > self.max_length:
+                combined_ids = combined_ids[:self.max_length]
+
+            combined_tokens = self.tokenizer.convert_ids_to_tokens(combined_ids)
+            combined_str = self.tokenizer.convert_tokens_to_string(combined_tokens)
+            batches.append(combined_str)
+
+        return batches
 
     def get_next_step_of_engagement(self, raw_text: str, actions: Set[str]):
         # Define a regex to extract URLs enclosed in parentheses
@@ -91,11 +136,12 @@ class IdentityBert:
     def __call__(self, raw_text: str) -> Tuple[List[str], Set[str], List[str], Set[str], float]:
 
         # fixme: I dont want the URL during prediction
-        processed_text = self.remove_urls(raw_text)
+        processed_text = remove_urls(raw_text)
         processed_text = self._tokenize(processed_text) # fixme: I find the results will be different if I do tokenization here
         with Timer() as timer:
             entities = self.classifier_pipeline(processed_text)
 
+        entities = [y for x in entities for y in x]
         # Temporary lists to store entities with their confidence scores
         temp_identities: List[Tuple[str, float]] = []
         relations: List[str] = []
@@ -105,13 +151,14 @@ class IdentityBert:
             ent_label = ent['entity_group']
             ent_text = ent['word']
             ent_score = ent.get('score', 0.0)  # Get the confidence score
-            if ent_label == 'identity':
-                if ent_text not in ['[CLS]', '[UNK]']: # cannot be CLS token
-                    temp_identities.append((ent_text, ent_score))
-            elif ent_label == 'relation':
-                relations.append(ent_text)
-            else:
-                actions.add(ent_text)
+            if ent_text not in ['[CLS]', '[SEP]', '[PAD]']:  # cannot be CLS token
+                if ent_label == 'identity':
+                    if ent_text not in ['[UNK]']:
+                        temp_identities.append((ent_text, ent_score))
+                elif ent_label == 'relation':
+                    relations.append(ent_text)
+                else:
+                    actions.add(ent_text)
 
         # Rank entities
         ranked_identities = self.rank_entities(temp_identities)
@@ -148,7 +195,6 @@ class IdentityBert:
         Logger.spit(f"Recognized identities = {identities}, "
                     f"recognized actions = {actions}, "
                     f"potential relations to the sender = {relations}",
-                    debug=True,
                     caller_prefix=IdentityBert._CallerPrefix)
 
         ## Beta: get next-step-of-engagement
