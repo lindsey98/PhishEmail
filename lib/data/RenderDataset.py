@@ -1,25 +1,16 @@
-import asyncio
 from PIL import Image
-import io
-import numpy as np
 import os
-import sys
 import email
 import email.header
-import quopri
 import hashlib
 import base64
-import re
 import pdfkit
-from tqdm import tqdm
 import pdf2image
 from pdf2image import convert_from_path
-from lib.data import EmailDataset
-from lib.utilities import Logger
-from email.message import Message
-from typing import Union, Tuple
-from lib.data.OCR import OCR
-from lib.utilities.data_utils import normalization
+from ..data import EmailDataset, OCR
+from ..utilities import Logger
+from ..utilities.data_utils import normalization
+from typing import Union, Tuple, List
 import subprocess
 
 # pip install pdf2image
@@ -38,7 +29,13 @@ class RenderDataset(EmailDataset):
         self.save_imgs = save_imgs
 
     @staticmethod
-    def pdfs_to_combined_image(pdf_list, dpi=200):
+    def pdfs_to_combined_image(pdf_list: List[str], dpi=200) -> Union[Image.Image, bool]:
+        '''
+        Merge multiple pdfs into a single image
+        :param pdf_list:
+        :param dpi:
+        :return:
+        '''
         images = []
 
         # Convert each PDF to images
@@ -56,7 +53,7 @@ class RenderDataset(EmailDataset):
         return False
 
     @staticmethod
-    def concat_images(images):
+    def concat_images(images: List[Image.Image]) -> Image.Image:
         bgColor = (255, 255, 255)
         widths, heights = zip(*(i.size for i in images))
         new_width = max(widths)
@@ -80,7 +77,7 @@ class RenderDataset(EmailDataset):
     # Usage
     def render_eml(self, data:bytes, dumpName="new") -> (Union[bool, str], str):
         '''
-
+        Render the eml as pdfs, then combine the pdfs into a final image
         :param data:
         :param dumpDir:
         :param dumpName:
@@ -88,10 +85,8 @@ class RenderDataset(EmailDataset):
         '''
         textTypes = ['text/plain', 'text/html']
         imageTypes = ['image/gif', 'image/jpeg', 'image/png', "application/pdf"]
-        imgkitOptions = {'load-error-handling': 'ignore',
-                        'load-media-error-handling': 'ignore',
-                         'enable-local-file-access': "",
-                         "quiet": None}
+        imgkitOptions = {'load-error-handling': 'ignore', 'load-media-error-handling': 'ignore',
+                         'enable-local-file-access': "", "quiet": None}
         imagesList = []
 
         msg = email.message_from_bytes(data)

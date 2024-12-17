@@ -1,5 +1,5 @@
 from transformers import Trainer
-from lib.encoder.model_utils.losses import FocalLoss
+from .losses import FocalLoss
 from torch.utils.data import DataLoader
 import torch.nn.functional as F
 from transformers.trainer_utils import (

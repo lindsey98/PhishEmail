@@ -1,23 +1,19 @@
 import json
 import os.path
-from lib.encoder import Visualizer, TracInVisualizer
-from lib.utilities import Timer
-import torch.nn.functional as F
-import spacy
-from spacy import displacy
+from .visualizer import Visualizer, TracInVisualizer
 import pandas as pd
 import shutil
-from lib.data.OCR import OCR
+from ..data import OCR, RenderDataset
 import torch
 import datasets
-from lib.encoder.model_utils.preprocessing import tokenize_and_align_labels
+from .model_utils.preprocessing import tokenize_and_align_labels
+from .model_utils.trainer import BertTrainer_FocalLoss
 from transformers import DataCollatorForTokenClassification, AutoModelForTokenClassification, AutoTokenizer
-from lib.encoder.model_utils.trainer import BertTrainer_FocalLoss
 from transformers import TrainingArguments
-from lib.data import RenderDataset
 from tqdm import tqdm
 os.environ["CUDA_VISIBLE_DEVICES"] = "2"
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
 def align_words_and_tokens(example):
     inputs = tokenizer(
         example,
