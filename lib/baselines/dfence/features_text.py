@@ -1,6 +1,6 @@
 import re
 from langdetect import detect
-import lib.baselines.dfence.utils as utils
+import utils
 import torch
 '''
 This file contains a list of functions to preprocess, extract embeddings for text component from the email.

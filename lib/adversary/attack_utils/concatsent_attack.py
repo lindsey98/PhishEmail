@@ -7,14 +7,22 @@ from tqdm import tqdm
 from .base_attack import SuperAttacker
 from ...utilities.data_utils import to_sentence_case
 from transformers import AutoTokenizer, BertForMaskedLM
-from lib.encoder.IdentityBert import IdentityBert
+from ...encoder.IdentityBert import IdentityBert
 from typing import List, Dict, Optional
 import re
 
 class MyConcatSentAttacker(SuperAttacker):
     _CallerPrefix = "ConcatSentence Attacker"
+    _Help = "Concatenate the entity with its preceding sentence"
 
     def process_entries(self, data: List[Dict], model: Optional[IdentityBert], tokenizer: Optional[AutoTokenizer]) -> List[Dict]:
+        '''
+        Conduct attack on a list of data, each data is a dict with 'text' and 'annotations'
+        :param data:
+        :param model:
+        :param tokenizer:
+        :return:
+        '''
         processed_data = []
         seen_texts = set()
 

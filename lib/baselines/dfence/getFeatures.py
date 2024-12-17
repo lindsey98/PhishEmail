@@ -1,25 +1,13 @@
-import os
-import pandas as pd
 import email
-import numpy as np
-from lib.baselines.dfence import features_hdr
-from lib.baselines.dfence import features_text
-from lib.baselines.dfence import features_html
+import features_hdr
+import features_text
+import features_html
 import re
-import pickle
-import configparser
-import glob
 from bs4 import BeautifulSoup as bs
-from lib.baselines.dfence.utils import *
-import lib.baselines.dfence.utils as utils
+from .utils import *
 import time
-import shutil
-from multiprocessing.dummy import Pool as ThreadPool
-import threading
 from transformers import BertTokenizer, BertModel
 import torch
-from tqdm import tqdm
-
 
 '''
 This file extracts and store the features from each email, for input to the different modules 

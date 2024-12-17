@@ -1,14 +1,14 @@
 import warnings
 warnings.filterwarnings('ignore')
 import argparse
-from lib.baselines.dfence.getFeatures import processEmails
-from lib.baselines.dfence.utils import *
-from lib.baselines.dfence.StructuralModel import StructuralModel
-from lib.baselines.dfence.TextModel import TextModel
-from lib.baselines.dfence.URLDeepModel import URLDeep
-from lib.baselines.dfence.MetaModel import MetaModel
+from .getFeatures import processEmails
+from .utils import *
+from .StructuralModel import StructuralModel
+from .TextModel import TextModel
+from .URLDeepModel import URLDeep
+from .MetaModel import MetaModel
 import pandas as pd
-from lib.data.Dataset import EmailDataset
+from ...data.Dataset import EmailDataset
 '''
 Main function
 '''

@@ -2,7 +2,7 @@
 import email
 import lxml.html
 from nltk import tokenize
-from lib.baselines.chatspam import htmlUtil
+import htmlUtil
 
 TOKEN_LIMIT = 3000
 

@@ -1,4 +1,4 @@
-from lib.data.Dataset import EmailDataset
+from ...data.Dataset import EmailDataset
 import time
 import os
 import subprocess

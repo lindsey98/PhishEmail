@@ -1,18 +1,15 @@
 import warnings
 warnings.filterwarnings('ignore')
 import argparse
-from lib.baselines.helphed.getFeatures import parse_email_parts
-from lib.data.Dataset import EmailDataset
-import configparser
+from ...data.Dataset import EmailDataset
 import os
 from tqdm import tqdm
 import pandas as pd
 import numpy as np
 import json
-from sklearn.preprocessing import LabelEncoder
 import time
 from openai import OpenAI
-from lib.baselines.chatspam.processHTML import get_email_text
+from .processHTML import get_email_text
 
 '''
 Main function
@@ -35,8 +32,8 @@ def test(email_dir, results_save_dir):
         # parsed_email = f'Subject: {subject} \n From: {sender_name} \n Body: {email_body_text}'
 
         result_save_path = os.path.join(results_save_dir, os.path.basename(email_file_path) + '.json')
-        if os.path.exists(result_save_path) and len(open(result_save_path).read()):
-            continue
+        # if os.path.exists(result_save_path) and len(open(result_save_path).read()):
+        #     continue
 
         # Combine system and sample-specific prompts
         messages = [
@@ -102,8 +99,8 @@ def results_calculation(results_save_dir):
     print(f'Median time = {np.median(time_list)}')
 
 # if __name__ == '__main__':
-    # desc_folder = './datasets/GPT_V6/v6'
-    # test(desc_folder, results_save_dir='./datasets/GPT_results_prompt3_ChatSpamDetector')
+    desc_folder = './datasets/GPT_V6/v6'
+    test(desc_folder, results_save_dir='./datasets/GPT_results_prompt3_ChatSpamDetector')
 
     # results_calculation('./datasets/GPT_results_prompt3_ChatSpamDetector')
 

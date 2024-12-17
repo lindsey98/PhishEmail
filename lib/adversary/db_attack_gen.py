@@ -1,11 +1,10 @@
-from lib.adversary.attack_utils import MyDeepWordBugAttacker
+from .attack_utils import MyDeepWordBugAttacker
 import json
-from lib.reference_db import CharacterBERT
+from ..reference_db import CharacterBERT
 import torch
 import torch.nn.functional as F
 from transformers import BertTokenizer, BertModel
 import numpy as np
-import matplotlib.pyplot as plt
 from tqdm import tqdm
 
 @torch.inference_mode()

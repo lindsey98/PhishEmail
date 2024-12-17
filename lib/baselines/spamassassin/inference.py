@@ -7,7 +7,7 @@
 
 import os
 from spamassassin_client import SpamAssassin
-from lib.data.Dataset import EmailDataset
+from ...data.Dataset import EmailDataset
 import pandas as pd
 import time
 
