@@ -1,8 +1,8 @@
 import warnings
 warnings.filterwarnings('ignore')
 import argparse
-from lib.baselines.helphed.getFeatures import parse_email_parts
-from lib.data.Dataset import EmailDataset
+from .getFeatures import parse_email_parts
+from ...data.Dataset import EmailDataset
 import configparser
 import os
 from tqdm import tqdm

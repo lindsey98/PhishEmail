@@ -2,7 +2,6 @@ import copy
 from OpenAttack.attackers import DeepWordBugAttacker
 from .base_attack import SuperAttacker
 from tqdm import tqdm
-import numpy as np
 from ...encoder.IdentityBert import IdentityBert
 from ...utilities.data_utils import repeat_char, delete_char, switch_chars, replace_with_similar, find_all_token_indices
 from transformers import AutoTokenizer

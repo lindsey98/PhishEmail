@@ -11,7 +11,7 @@ import unicodedata
 import difflib
 import click
 import json
-from ..utilities.data_utils import remove_trailing_digits, check_lang
+from ..utilities.data_utils import remove_trailing_digits
 import os
 
 class MyAttackEvaluator():
