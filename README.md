@@ -2,57 +2,57 @@
 
 # Introduction
 
-[//]: # ()
-[//]: # (---)
 
-[//]: # (There are two primary approaches in phishing email detection research:)
+---
 
-[//]: # ()
-[//]: # (- Email Header Analysis: )
+There are two primary approaches in phishing email detection research:
 
-[//]: # (This line of research focuses on identifying spoofing signs within the email header. )
 
-[//]: # (While such methods can detect certain phishing attempts, we believe the ultimate solution is to design robust email authentication protocols, such as SPF &#40;Sender Policy Framework&#41; and DKIM &#40;DomainKeys Identified Mail&#41;. )
+- Email Header Analysis: 
 
-[//]: # (These protocols address spoofing at its root, eliminating the need for complicated heuristics.)
+This line of research focuses on identifying spoofing signs within the email header. 
 
-[//]: # ()
-[//]: # (- Content-Based Classification: )
+While such methods can detect certain phishing attempts, we believe the ultimate solution is to design robust email authentication protocols, such as SPF (Sender Policy Framework) and DKIM (DomainKeys Identified Mail). 
 
-[//]: # (The second approach involves classifying emails based on their content. )
+These protocols address spoofing at its root, eliminating the need for complicated heuristics.
 
-[//]: # (Traditional methods rely on feature-engineering-based techniques which, despite achieving promising results on benchmark datasets, often lack explainability and transferability to new waves of phishing attacks. )
 
-[//]: # (This limitation is especially significant in the current era of AI-generated content, where phishing emails can appear highly professional and personalized.)
+- Content-Based Classification: 
 
-[//]: # (In recent years, researchers have also explored the capability of Large Language Models &#40;LLMs&#41; in classifying phishing emails. )
+The second approach involves classifying emails based on their content. 
 
-[//]: # (However, decoder-based LLMs introduce impractical runtime overheads—approximately 8 seconds per email—and can produce hallucinated answers, reducing their effectiveness in real-world applications.)
+Traditional methods rely on feature-engineering-based techniques which, despite achieving promising results on benchmark datasets, often lack explainability and transferability to new waves of phishing attacks. 
 
-[//]: # ()
-[//]: # (In our work, we propose an explainable and efficient detection approach based on the concept of verifiable claims in phishing emails.)
+This limitation is especially significant in the current era of AI-generated content, where phishing emails can appear highly professional and personalized.
 
-[//]: # (We posit that phishing emails often imitate official organizations of which the recipient may be a customer or member, or they impersonate internal roles within the recipient's own organization.)
+In recent years, researchers have also explored the capability of Large Language Models (LLMs) in classifying phishing emails. 
 
-[//]: # (This imitation creates an information inconsistency between the claimed identity and the true identity &#40;as indicated by the sender's address&#41;. )
+However, decoder-based LLMs introduce impractical runtime overheads—approximately 8 seconds per email—and can produce hallucinated answers, reducing their effectiveness in real-world applications.
 
-[//]: # (Such inconsistencies serve as strong indicators for phishing alerts and provide clear explanations for the detection.)
 
-[//]: # ()
-[//]: # (Furthermore, phishing emails typically include a call to action, such as prompting the recipient to visit a suspicious link, in an attempt to trick victims into financial loss or data breaches. )
+In our work, we propose an explainable and efficient detection approach based on the concept of verifiable claims in phishing emails.
 
-[//]: # (Therefore, we also highlight potential instructions within the email when reporting a phishing alert.)
+We posit that phishing emails often imitate official organizations of which the recipient may be a customer or member, or they impersonate internal roles within the recipient's own organization.
 
-[//]: # ()
-[//]: # (Building on these intuitions, we formulate phishing email detection as a Named Entity Recognition &#40;NER&#41; task. )
+This imitation creates an information inconsistency between the claimed identity and the true identity (as indicated by the sender's address). 
 
-[//]: # (Our approach involves extracting the claimed identity and instructions from the email content. )
+Such inconsistencies serve as strong indicators for phishing alerts and provide clear explanations for the detection.
 
-[//]: # (With the claimed identity identified, we cross-reference the sender's address against the official email addresses associated with this identity in our knowledge base. )
 
-[//]: # (If an inconsistency is discovered and at least one instruction is present, we classify the email as phishing. )
+Furthermore, phishing emails typically include a call to action, such as prompting the recipient to visit a suspicious link, in an attempt to trick victims into financial loss or data breaches. 
 
-[//]: # (Otherwise, we consider the email to be benign.)
+Therefore, we also highlight potential instructions within the email when reporting a phishing alert.
+
+
+Building on these intuitions, we formulate phishing email detection as a Named Entity Recognition (NER) task. 
+
+Our approach involves extracting the claimed identity and instructions from the email content. 
+
+With the claimed identity identified, we cross-reference the sender's address against the official email addresses associated with this identity in our knowledge base. 
+
+If an inconsistency is discovered and at least one instruction is present, we classify the email as phishing. 
+
+Otherwise, we consider the email to be benign.
 
 # Setup
 
@@ -62,26 +62,11 @@ For **Ubuntu**
 
 ## Preparing the ingredients
 1. Clone the repo
-```commandline
-git clone https://github.com/your-org/PhishEmail.git
-```
 
-2. Create a conda environment and install the requirements (pypff is not available via pip, so you need to build it from source.)
+2. Run setup
 ```commandline
-conda create -n emailenv python=3.10
-conda activate emailenv 
-pip install -r requirements.txt
-```
-
-3. Go to the project dir, download the models
-First download from Google drive
-```commandline
-gdown --id 10Gu1zlRiCS5ICglNJQGq-2wpPPLKqcZ8 -O checkpoints.zip
-```
-
-Then unzip the download file
-```commandline
-unzip checkpoints.zip -d checkpoints/
+chmox +x setup.sh
+./setup.sh
 ```
 
 Make sure the directory structure is:
@@ -208,6 +193,7 @@ In addition, it has a required instruction for the recipients to "confirm the de
 | email_file_path | sender_name |            sender_address             | to_names | to_addresses | subject | email_body_text | sender_identities |        sender_relations                        |           required_actions           | our_pred |               matched_identity                | our_runtime |
 |:---------------:|:-----------:|:-------------------------------------:|:--------:|:------------:|:-------:|:---------------:|:-----------------:|:----------------------------------------------:|:------------------------------------:|:---------------:|:---------------------------------------------:|:-----------:|
 |       ...       |     DHL Shp     | sanjiv.bahl@rgnau.ac.in |   ...    |     ...      |   ...   |       ...       |       {'dhl shp'}       | set() | {'kindly find attached to track shp and confirm delivery details.'} |      True       | DHL Express |    0.023 |
+
 
 
 
