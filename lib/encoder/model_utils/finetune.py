@@ -1,7 +1,5 @@
 import os
 import datasets
-# os.environ['http_proxy'] = 'http://127.0.0.1:7890'
-# os.environ['https_proxy'] = 'http://127.0.0.1:7890'
 from transformers import TrainingArguments
 from transformers import DataCollatorForTokenClassification, AutoModelForTokenClassification, AutoTokenizer
 import wandb

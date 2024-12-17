@@ -114,7 +114,7 @@ class Visualizer(IdentityBert):
 
     @staticmethod
     def visualize_full_predictions(pred_html: str, metadata: str = "") -> str:
-        # Generate the displacy HTML with page=False to get the snippet only
+
         sanitized_metadata = Visualizer.sanitize_metadata(metadata)
 
         rendered_html = f"""

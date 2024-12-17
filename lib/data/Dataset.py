@@ -4,7 +4,6 @@ from email.utils import parseaddr, getaddresses
 from bs4 import BeautifulSoup, NavigableString, Comment, Doctype, ProcessingInstruction
 from email.header import decode_header
 from email import message_from_string
-from email.utils import parseaddr
 from email.message import Message
 from typing import Union, Optional, Tuple, List, Set
 from tldextract import tldextract
@@ -16,8 +15,8 @@ from langdetect import detect_langs
 import time
 import quopri
 import bs4
-from lib.utilities import Logger
-from lib.utilities.data_utils import normalization
+from ..utilities import Logger
+from ..utilities.data_utils import normalization
 import unicodedata
 
 class EmailDataset(Dataset):
@@ -54,7 +53,11 @@ class EmailDataset(Dataset):
 
     @staticmethod
     def domain_parsing(address: Union[None, float, str, Set[str], List[str]]) -> Set[str]:
-
+        '''
+        Convert address to domain.suffix format
+        :param address:
+        :return:
+        '''
         url_pattern = re.compile(r'(https?://[^)]+)')
         parsed_domains = set()
 
@@ -106,6 +109,11 @@ class EmailDataset(Dataset):
 
     @staticmethod
     def shrink_urls(text_content):
+        '''
+        shrink long URL into its protocal://domain format
+        :param text_content:
+        :return:
+        '''
         url_pattern = re.compile(
             r'(?P<protocol>https?:)\/\/'  # Capture protocol (http: or https:)
             r'(?P<domain>(?:[\w-]+\.)+[\w-]+\.[a-zA-Z]{2,})'  # Capture domain with optional subdomains
@@ -155,9 +163,12 @@ class EmailDataset(Dataset):
 
     @staticmethod
     def decode_quoted_printable(encoded_str: bytes, charset: str = 'utf-8') -> str:
-        """
+        '''
         Decode a quoted-printable encoded string to its original form using the specified charset.
-        """
+        :param encoded_str:
+        :param charset:
+        :return:
+        '''
         try:
             # Decode the quoted-printable encoded string
             decoded_bytes = quopri.decodestring(encoded_str)
@@ -174,6 +185,11 @@ class EmailDataset(Dataset):
 
     @staticmethod
     def remove_prev_messages(text_content: str) -> str:
+        '''
+        remove previous conversations
+        :param text_content:
+        :return:
+        '''
         reply_pattern = re.compile(r"On.*wrote:")
         forward_pattern = re.compile(r"^-{2,}\s*Forwarded message\s*-+$", re.MULTILINE)
 
@@ -195,6 +211,11 @@ class EmailDataset(Dataset):
 
     @functools.lru_cache(maxsize=1000)
     def auto_translate(self, text):
+        '''
+        translate non-english email
+        :param text:
+        :return:
+        '''
         is_in_english = True
         try:
             detected_langs = detect_langs(text)
@@ -237,6 +258,11 @@ class EmailDataset(Dataset):
         return subject
 
     def extract_sender(self, email_content: Message) -> Tuple[Optional[str], Optional[str]]:
+        '''
+        Get sender name and address
+        :param email_content:
+        :return:
+        '''
         from_header = email_content.get('From', '')
 
         # 1. Case: Name in parentheses, Email without angle brackets
@@ -260,7 +286,11 @@ class EmailDataset(Dataset):
         return sender_name, sender_address
 
     def extract_recipients(self, email_content: Message) -> Tuple[List[str], List[str]]:
-        # Extracting all recipients
+        '''
+        Get all recipients names and addresses
+        :param email_content:
+        :return:
+        '''
         to_addresses = email_content.get('To', '')
         cc_addresses = email_content.get('Cc', '')  # Handling Cc if needed
         bcc_addresses = email_content.get('Bcc', '')  # Handling Bcc if needed, though Bcc should not be visible
@@ -300,7 +330,11 @@ class EmailDataset(Dataset):
         return None
 
     def unfragment_text(self, text):
-        # Pattern to find two or more single characters separated by spaces
+        '''
+        Merge consecutive single characters into a word
+        :param text:
+        :return:
+        '''
         pattern = r'\b(?:\w\s+){2,}\w\b'
 
         def replace_match(match):
@@ -327,6 +361,11 @@ class EmailDataset(Dataset):
         return cleaned_text
 
     def extract_rendered_text_from_html(self, html_content) -> str:
+        '''
+        Extract the text from HTML
+        :param html_content:
+        :return:
+        '''
         unwanted_extensions = {'.css', '.js', '.ico', '.png', '.jpg', '.jpeg', '.gif', '.pdf', '.doc', '.docx', '.xls', '.xlsx'}
         unwanted_attachment = {'mailto:', 'tel:', '#', 'javascript', "mso["}
 
@@ -392,10 +431,11 @@ class EmailDataset(Dataset):
         return cleaned_text.strip()
 
     def extract_text_content(self, part: Message) -> Tuple[str, str]:
-        """
-        Recursively extracts text content from an email part,
-        including handling nested multiparts.
-        """
+        '''
+        Recursively extracts text content from an email part, including handling nested multiparts.
+        :param part:
+        :return:
+        '''
         text_content = ""
         html_content = ""
 

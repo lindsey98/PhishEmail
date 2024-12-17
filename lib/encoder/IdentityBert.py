@@ -36,20 +36,24 @@ class IdentityBert:
                                             device=self.device,
                                             aggregation_strategy=aggregation_strategy)
 
-    def get_pred(self, input_ids):
+    def get_pred(self, input_ids: torch.Tensor) -> torch.Tensor:
         probs = self.get_prob(input_ids)
         pred_classes = probs.argmax(axis=-1)
         return pred_classes
 
     @torch.inference_mode()
-    def get_prob(self, input_ids):
+    def get_prob(self, input_ids: torch.Tensor) -> np.ndarray:
         input_ids = input_ids.to(self.device)
         outputs = self.model(input_ids)[0][0].cpu().numpy()
         return np.exp(outputs) / np.exp(outputs).sum(-1, keepdims=True) # B x C
 
 
     def _tokenize(self, text: str) -> List[str]:
-
+        '''
+        Perform separate tokenization
+        :param text:
+        :return:
+        '''
         prefix = "Subject: \nFrom: \nBody: \n"
         prepend_ids = self.tokenizer.encode(prefix, add_special_tokens=False)
         prepend_length = len(prepend_ids)
@@ -100,7 +104,13 @@ class IdentityBert:
 
         return batches
 
-    def get_next_step_of_engagement(self, raw_text: str, actions: Set[str]):
+    def get_next_step_of_engagement(self, raw_text: str, actions: Set[str]) -> Set[str]:
+        '''
+        Get the URLs near the call-to-actions phrases, if any
+        :param raw_text:
+        :param actions:
+        :return:
+        '''
         # Define a regex to extract URLs enclosed in parentheses
         url_pattern = re.compile(r'\((http[s]?://[^)]+)\)')
 
@@ -123,8 +133,12 @@ class IdentityBert:
 
         return urls_after_actions
 
-    # Optimized rank_entities function
     def rank_entities(self, temp_entities: List[Tuple[str, float]]) -> List[Tuple[str, float]]:
+        '''
+        Rank entities based on confidences
+        :param temp_entities:
+        :return:
+        '''
         if not temp_entities:
             return []
 
