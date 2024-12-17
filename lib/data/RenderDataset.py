@@ -70,12 +70,12 @@ class RenderDataset(EmailDataset):
         return new_im
 
     @staticmethod
-    def kill_wkhtmltopdf_processes(): # fixme: wkhtmltopdf never properly close
+    def kill_wkhtmltopdf_processes():
         try:
             subprocess.run(['pkill', 'wkhtmltopdf'], check=True)
-            print("All wkhtmltopdf processes have been terminated.")
+            Logger.spit("All wkhtmltopdf processes have been terminated.", debug=True)
         except subprocess.CalledProcessError:
-            print("No wkhtmltopdf processes found or failed to terminate.")
+            Logger.spit("No wkhtmltopdf processes found or failed to terminate.", debug=True)
 
     # Usage
     def render_eml(self, data:bytes, dumpName="new") -> (Union[bool, str], str):
@@ -177,6 +177,8 @@ class RenderDataset(EmailDataset):
 
         sender_name, sender_address = self.extract_sender(email_content)
         to_names, to_addresses = self.extract_recipients(email_content)
+        # fixme: kick sender_address out?
+        to_addresses = list(set(to_addresses) - set(sender_address))
         reply_to_address = self.extract_reply_to_address(email_content)
         if reply_to_address is None:
             reply_to_address = sender_address
@@ -187,16 +189,20 @@ class RenderDataset(EmailDataset):
         subject = normalization(subject)
 
         text_content, html_content = self.extract_text_content(email_content)
-        if len(text_content) < 100 or len(text_content) > 512*2:  ## too short or too long => extract OCR text from HTML
+        if len(text_content) < 100 or len(text_content) > 512*2:  # fixme: too short or too long => extract OCR text from HTML
             with open(email_file_path, "rb") as f:
                 msg_bytes = f.read()
             resultImage, html_content = self.render_eml(msg_bytes, dumpName=os.path.basename(email_file_path))
+            RenderDataset.kill_wkhtmltopdf_processes()
 
             if resultImage is not False:
                 text_content_from_ocr = self.ocr_model.ocr(resultImage)
                 if not self.save_imgs:
                     os.remove(resultImage)
-                text_content = text_content_from_ocr + text_content
+                if len(text_content) > 512*2:
+                    text_content = text_content_from_ocr
+                else:
+                    text_content = text_content_from_ocr + text_content
 
 
         text_content = self.remove_prev_messages(text_content)

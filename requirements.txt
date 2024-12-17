@@ -23,4 +23,6 @@ gdown
 tldextract
 xgboost
 mlxtend
-
+imgkit
+pdf2image
+git+https://github.com/akhilnarang/python-pdfkit.git@add-timeout-option

@@ -363,7 +363,7 @@ class IdentityMatcher:
             is_internal_emails, imitated_role = self.handle_internal_emails(combined_set)
         total_time += timer.interval
 
-        if is_internal_emails and recipient_domains and (not DomainUtils.domain_set_overlap(sender_domains, recipient_domains)):
+        if is_internal_emails and (not DomainUtils.domain_set_overlap(sender_domains, recipient_domains)):
             if self.check_action:
                 if len(actions) > 0:
                     Logger.spit(f'[!Phish] Imitating an internal role "{imitated_role}" but from an external domain with sender address as "{sender_domains}", and contains at least 1 instruction',

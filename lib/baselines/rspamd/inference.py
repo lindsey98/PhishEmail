@@ -128,5 +128,5 @@ def test(email_dir):
     pred_metadata = pred_metadata.tolist()
     pred_runtime = pred_runtime.tolist()
 
-    return pred_class, pred_score, pred_metadata, pred_runtime
+    return pred_class, pred_score, pred_runtime, pred_metadata
 

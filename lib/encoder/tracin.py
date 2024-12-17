@@ -72,16 +72,16 @@ if __name__ == '__main__':
     token_alignment_file = "./datasets/phishpot_token_alignment_round4.json"
 
     '''Compare 2 preprocessing solutions'''
-    ocr = OCR()
-    dataset = RenderDataset(rootDir, ocr_model=ocr, dumpDir=dumpDir)
-    for i in range(len(dataset)):
-        if dataset.file_list[i] not in ["./datasets/phishpot/sample-69.eml"]:
-            continue
-        email_file_path, (sender_name, sender_address), \
-                    (to_names, to_addresses), reply_to_address, \
-                subject, email_body_text, header = dataset[i]
-        #
-    exit()
+    # ocr = OCR()
+    # dataset = RenderDataset(rootDir, ocr_model=ocr, dumpDir=dumpDir)
+    # for i in range(len(dataset)):
+    #     if dataset.file_list[i] not in ["./datasets/phishpot/sample-69.eml"]:
+    #         continue
+    #     email_file_path, (sender_name, sender_address), \
+    #                 (to_names, to_addresses), reply_to_address, \
+    #             subject, email_body_text, header = dataset[i]
+    #     #
+    # exit()
 
     '''Log training samples gradients'''
     dataset_dir = f'./datasets/ner_adversarial_training/'
@@ -116,13 +116,16 @@ if __name__ == '__main__':
     ocr = OCR()
     dataset = RenderDataset(rootDir, ocr_model=ocr, dumpDir=dumpDir)
     # # Load the list of email paths to process
-    df = pd.read_csv("./datasets/phishpot_results.csv")
-    # df = pd.read_csv("./datasets/nazario_results.csv")
+    # dataset_name = "CSDMC2010_benign"
+    dataset_name = "nazario"
+    # df = pd.read_csv("./datasets/CSDMC2010_benign_results.csv")
+    # df = pd.read_csv("./datasets/phishpot_results.csv")
+    df = pd.read_csv("./datasets/nazario_results.csv")
     df = df.drop_duplicates(subset='email_file_path')
     print(f'Original # Emails = {len(df)}') # 2584
 
-    if os.path.exists(f'./datasets/nazario_noisy_list.txt'):
-        noisy_email_files = [x.strip() for x in open(f'./datasets/nazario_noisy_list.txt').readlines()]
+    if os.path.exists(f'./datasets/{dataset_name}_noisy_list.txt'):
+        noisy_email_files = [x.strip() for x in open(f'./datasets/{dataset_name}_noisy_list.txt').readlines()]
         df = df[~df['email_file_path'].isin(noisy_email_files)]
     print(f'Clean # Emails = {len(df)}') #
 

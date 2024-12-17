@@ -1,13 +1,12 @@
 
 import os
 import time
-
 from tqdm import tqdm
 import csv
 from lib.encoder import IdentityBert, Visualizer
 from lib.reference_db import CharacterBERT, IdentityMatcher, BaseFaissIPRetriever
 from lib.utilities import Logger
-from lib.data import EmailDataset
+from lib.data import EmailDataset, RenderDataset, OCR
 from lib.data.utils import pst_to_eml
 from lib.data.utils import mbox_to_eml
 import numpy as np
@@ -87,12 +86,13 @@ class Config:
         "post office system administrator",
         "mygov",
         "security center",
-        "tomHRM"
+        "tomHRM",
+        "home depot department",
+        "mail inc."
     ]
 
-    IDENTITY_MODEL_CHECKPOINT = os.getenv("IDENTITY_MODEL_CHECKPOINT", "./checkpoints/identity_adversarial_training")
-    # IDENTITY_MODEL_CHECKPOINT = os.getenv("IDENTITY_MODEL_CHECKPOINT", "./checkpoints/identity-model")
-    # IDENTITY_MODEL_CHECKPOINT = "./checkpoints/output_ner_augmented_corrected/"
+    # IDENTITY_MODEL_CHECKPOINT = os.getenv("IDENTITY_MODEL_CHECKPOINT", "./checkpoints/identity_adversarial_training")
+    IDENTITY_MODEL_CHECKPOINT = os.getenv("IDENTITY_MODEL_CHECKPOINT", "./checkpoints/identity-model")
 
     MATCHING_MODEL_CHECKPOINT = os.getenv("MATCHING_MODEL_CHECKPOINT", "./checkpoints/characterbert-typos-st-adv")
 
@@ -182,12 +182,16 @@ def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed, auto
 
     if '.mbox' in email_dir:
         mbox_to_eml(email_dir, email_dir.replace('.mbox', ''))
-        dataset = EmailDataset(email_dir.replace('.mbox', ''), translate_on=auto_translate)
+        desc_folder = email_dir.replace('.mbox', '')
     elif email_dir.endswith('.pst'):
         pst_to_eml(email_dir, email_dir.replace('.pst', ''))
-        dataset = EmailDataset(email_dir.replace('.pst', ''), translate_on=auto_translate)
+        desc_folder = email_dir.replace('.pst', '')
     else:
-        dataset = EmailDataset(email_dir, translate_on=auto_translate)
+        desc_folder = email_dir
+
+    ocr_model = OCR()
+    dataset = RenderDataset(desc_folder, ocr_model=ocr_model, dumpDir=desc_folder + '_imgs', save_imgs=False, translate_on=auto_translate)
+
     csv_file_path = output_csv
     if save_vis:
         os.makedirs(vis_dir, exist_ok=True)

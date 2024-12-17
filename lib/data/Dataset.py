@@ -104,6 +104,23 @@ class EmailDataset(Dataset):
         return {char: unicodedata.name(char, "UNKNOWN")
                 for char in text if not char.isprintable() or unicodedata.category(char).startswith("C")}
 
+    @staticmethod
+    def shrink_urls(text_content):
+        url_pattern = re.compile(
+            r'(?P<protocol>https?:)\/\/'  # Capture protocol (http: or https:)
+            r'(?P<domain>(?:[\w-]+\.)+[\w-]+\.[a-zA-Z]{2,})'  # Capture domain with optional subdomains
+            r'(?:\/\S*)?',  # Optional path, query parameters, etc.
+            re.IGNORECASE
+        )
+
+        # Define the replacement function
+        def shrink_url(match):
+            protocol = match.group('protocol')
+            domain = match.group('domain')
+            return f"{protocol}//{domain}"
+
+        text_content = url_pattern.sub(shrink_url, text_content)
+        return text_content
 
     @staticmethod
     def clean_text_content(text_content: str) -> str:
@@ -133,20 +150,7 @@ class EmailDataset(Dataset):
         text_content = ''.join(char for char in text_content if char not in invisible_chars)
 
         # Shrink URLs
-        url_pattern = re.compile(
-            r'(?P<protocol>https?:)\/\/'  # Capture protocol (http: or https:)
-            r'(?P<domain>(?:[\w-]+\.)+[\w-]+\.[a-zA-Z]{2,})'  # Capture domain with optional subdomains
-            r'(?:\/\S*)?',  # Optional path, query parameters, etc.
-            re.IGNORECASE
-        )
-
-        # Define the replacement function
-        def shrink_url(match):
-            protocol = match.group('protocol')
-            domain = match.group('domain')
-            return f"{protocol}{domain}"
-
-        text_content = url_pattern.sub(shrink_url, text_content)
+        text_content = EmailDataset.shrink_urls(text_content)
         return text_content
 
     @staticmethod
@@ -233,21 +237,26 @@ class EmailDataset(Dataset):
         return subject
 
     def extract_sender(self, email_content: Message) -> Tuple[Optional[str], Optional[str]]:
-        email_pattern = r'<([^<>]+)>$'
         from_header = email_content.get('From', '')
 
-        # Extract the last email address
-        match = re.search(email_pattern, from_header)
-        if match:
-            sender_address = match.group(1).strip()  # Extract the email
-            sender_name = from_header[:match.start()].strip()  # Everything before the email
+        # 1. Case: Name in parentheses, Email without angle brackets
+        comment_match = re.search(r'(.+?)\s*\(([^)]+)\)$', from_header)
+        if comment_match:
+            sender_address = comment_match.group(1).strip()
+            sender_name = comment_match.group(2).strip()
         else:
-            # Fallback: no valid email found
-            sender_address = ""
-            sender_name = from_header.strip()
+            email_pattern = r'<([^<>]+)>$'
+            # Extract the last email address
+            match = re.search(email_pattern, from_header)
+            if match:
+                sender_address = match.group(1).strip()  # Extract the email
+                sender_name = from_header[:match.start()].strip()  # Everything before the email
+            else:
+                sender_name = sender_address = from_header.strip()
 
-        if sender_name:
-            sender_name = self.decode_header(sender_name)
+            if sender_name:
+                sender_name = self.decode_header(sender_name)
+
         return sender_name, sender_address
 
     def extract_recipients(self, email_content: Message) -> Tuple[List[str], List[str]]:
@@ -267,6 +276,19 @@ class EmailDataset(Dataset):
         if len(to_addresses) == 0:
             if email_content.get('Delivered-To'):
                 to_addresses = [email_content.get('Delivered-To')]
+
+        # Check for forged recipient in 'Received' headers
+        received_headers = email_content.get_all('Received', [])
+        for header in received_headers:
+            if 'for' in header.lower():
+                parts = header.split('for')
+                if len(parts) > 1:
+                    forged_address = parts[1].split(';')[0].strip()
+                    if '<' in forged_address and '>' in forged_address:
+                        forged_address = forged_address.strip('<>')
+                    if "@" in forged_address:
+                        to_names.append("")
+                        to_addresses.append(forged_address)
 
         return to_names, to_addresses
 
@@ -307,7 +329,6 @@ class EmailDataset(Dataset):
     def extract_rendered_text_from_html(self, html_content) -> str:
         unwanted_extensions = {'.css', '.js', '.ico', '.png', '.jpg', '.jpeg', '.gif', '.pdf', '.doc', '.docx', '.xls', '.xlsx'}
         unwanted_attachment = {'mailto:', 'tel:', '#', 'javascript', "mso["}
-        url_pattern = re.compile(r'https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+')  # Simple URL pattern
 
         # Initialize BeautifulSoup with the 'html.parser'
         try:
@@ -346,17 +367,14 @@ class EmailDataset(Dataset):
                 # Process <a> tags with href attributes
                 href = element.get('href', '')
                 text = element.get_text(strip=True)
-                is_text_url = url_pattern.match(text)
 
                 # fixme: how to handle the embedded urls?
                 if href and (not any(href.lower().endswith(ext) for ext in unwanted_extensions)) and \
                         (not any(noisy in href.lower() for noisy in unwanted_attachment)):
-                    if is_text_url:
-                        text_parts.append(href)
-                    else:
-                        text_parts.append(f'{text}')
+                    href = EmailDataset.shrink_urls(href)
+                    text_parts.append(f"{text} ({href})")
                 else:
-                    text_parts.append(text)
+                    text_parts.append(f"{text}")
 
         # Join all text parts with a space to maintain readability
         combined_text = ' '.join(text_parts)
@@ -432,6 +450,8 @@ class EmailDataset(Dataset):
         reply_to_address = self.extract_reply_to_address(email_content)
         if reply_to_address is None:
             reply_to_address = sender_address
+        if self.translate_on:
+            sender_name = self.auto_translate(sender_name)
 
         subject = self.extract_subject(email_content)
         subject = self.auto_translate(subject)

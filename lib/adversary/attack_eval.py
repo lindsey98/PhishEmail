@@ -13,8 +13,6 @@ import click
 import json
 from ..utilities.data_utils import remove_trailing_digits, check_lang
 import os
-# os.environ['http_proxy'] = 'http://127.0.0.1:7890'
-# os.environ['https_proxy'] = 'http://127.0.0.1:7890'
 
 class MyAttackEvaluator():
     def __init__(self):
@@ -152,7 +150,7 @@ class MyAttackEvaluator():
 
 
 @click.command()
-@click.option('--identity_model_checkpoint', required=True, type=str, default="checkpoints/identity_adversarial_training/checkpoint-658")
+@click.option('--identity_model_checkpoint', required=True, type=str, default="checkpoints/identity_adversarial_training/checkpoint-770")
 # @click.option('--identity_model_checkpoint', required=True, type=str, default="checkpoints/identity-model")
 @click.option('--attacker', required=True, type=click.Choice(['bae', 'deepwordbug', 'gpt', 'concatsent', 'textfooler'], case_sensitive=False), help="Specify the attacker type (e.g., 'bae')")
 @click.option('--cls_to_attack', required=True, type=click.Choice(['identity', 'action'], case_sensitive=False), help="Attack which NER class")
@@ -201,33 +199,26 @@ if __name__ == '__main__':
 
 ### with adv training ### ###
 
-# Clean detection rate = 212/278 = 0.762589928057554
-# After Attack = bae None 	 detection rate = 216/278 = 0.7769784172661871
+# Clean detection rate = 247/278 = 0.8884892086330936
+# After Attack = bae None 	 detection rate = 241/278 = 0.8669064748201439
 
-# After Attacker = deepwordbug replace 	 NER detection rate = 150/173 = 0.8670520231213873
-# After Attacker = deepwordbug repeat 	 NER detection rate = 168/212 = 0.7924528301886793
-# After Attacker = deepwordbug switch 	 NER detection rate = 162/203 = 0.7980295566502463
-# After Attacker = deepwordbug delete 	 NER detection rate = 171/208 = 0.8221153846153846
+# Clean detection rate = 162/173 = 0.9364161849710982
+# After Attack = deepwordbug replace 	 detection rate = 162/173 = 0.9364161849710982
 
-# Clean detection rate = 178/221 = 0.8054298642533937
-# After Attack = gpt None 	 detection rate = 170/221 = 0.7692307692307693
-# Clean detection rate = 141/175 = 0.8057142857142857
-# After Attack = concatsent None 	 detection rate = 133/175 = 0.76
+# Clean detection rate = 196/212 = 0.9245283018867925
+# After Attack = deepwordbug repeat 	 detection rate = 194/212 = 0.9150943396226415
 
-# ### w/o adv training ### ###
+# Clean detection rate = 183/203 = 0.9014778325123153
+# After Attack = deepwordbug switch 	 detection rate = 185/203 = 0.9113300492610837
 
+# Clean detection rate = 189/208 = 0.9086538461538461
+# After Attack = deepwordbug delete 	 detection rate = 191/208 = 0.9182692307692307
 
-# Clean detection rate = 155/173 = 0.8959537572254336
-# After Attack = deepwordbug replace 	 detection rate = 130/173 = 0.7514450867052023
+# Clean detection rate = 199/221 = 0.9004524886877828
+# After Attack = gpt None 	 detection rate = 195/221 = 0.8823529411764706
 
-# Clean detection rate = 182/212 = 0.8584905660377359
-# After Attack = deepwordbug repeat 	 detection rate = 172/212 = 0.8113207547169812
+# Clean detection rate = 158/175 = 0.9028571428571428
+# After Attack = concatsent None 	 detection rate = 156/175 = 0.8914285714285715
 
-# Clean detection rate = 175/203 = 0.8620689655172413
-# After Attack = deepwordbug switch 	 detection rate = 162/203 = 0.7980295566502463
-
-# Clean detection rate = 183/208 = 0.8798076923076923
-# After Attack = deepwordbug delete 	 detection rate = 172/208 = 0.8269230769230769
-
-
-#
+# Clean detection rate = 198/221 = 0.8959276018099548
+# After Attack = textfooler None 	 detection rate = 197/221 = 0.8914027149321267
