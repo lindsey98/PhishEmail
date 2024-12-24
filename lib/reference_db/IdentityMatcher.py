@@ -267,6 +267,11 @@ class IdentityMatcher:
         return None, searching_time
 
     def handle_external_emails(self, identities: Set[str]) -> Tuple[Union[None, Set[str]], Union[None, Set[str]]]:
+        '''
+        Match to external organizations
+        :param identities:
+        :return:
+        '''
         closest_match_set = set()
         official_domains_set = set()
         for potential_organization in identities:
@@ -298,6 +303,11 @@ class IdentityMatcher:
         return closest_match_set, official_domains_set
 
     def handle_internal_emails(self, relations: Set[str]) -> Tuple[bool, Optional[str]]:
+        '''
+        Match to internal roles
+        :param relations:
+        :return:
+        '''
         for relation in relations:
             matched_score, closest_match = self.find_closest_match(query=relation,
                                                                    value_index_db=self.internal_relation_index_db,
