@@ -1,7 +1,7 @@
 import email
-import features_hdr
-import features_text
-import features_html
+from . import features_hdr
+from . import features_text
+from . import features_html
 import re
 from bs4 import BeautifulSoup as bs
 from .utils import *
@@ -210,13 +210,13 @@ def processText(plain_text_data, html_data, tokenizer, model, num_of_features):
 
     # if plaintext_data_hash in dict_text_hash_plaintext:
     html_data = html_data.replace('\\n', '').replace('\\t', '')
-    utils.g_cur_work_task = 'soup = bs(str(html_data)'
+    # utils.g_cur_work_task = 'soup = bs(str(html_data)'
     soup = bs(str(html_data), 'lxml')
     html_text_data = soup.text.replace('\\n', '').replace('\\t', '')
     html_text_data = html_text_data[2:-1]
     # preprocessing
     plain_text_preprocessed = features_text.preprocessing_text(plain_text_data)
-    utils.g_cur_work_task = 'BERT'
+    # utils.g_cur_work_task = 'BERT'
     plain_text_features = features_text.create_text_feat(plain_text_preprocessed, tokenizer, model, num_of_features,
                                                          words_range=100)
     html_text_features = features_text.create_text_feat(html_text_data, tokenizer, model, num_of_features,

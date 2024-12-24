@@ -12,6 +12,140 @@ from unidecode import unidecode
 import requests
 from bs4 import BeautifulSoup
 import os
+import mailbox
+from tqdm import tqdm
+from email import message_from_string
+from email.utils import parseaddr
+from bs4 import BeautifulSoup, NavigableString, Comment, Doctype, ProcessingInstruction
+
+
+def mbox_to_eml(mbox_path: str, output_dir: str):
+    # Create output directory if it doesn't exist
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    # Open the MBOX file
+    mbox = mailbox.mbox(mbox_path)
+
+    # Loop through all messages in the MBOX file
+    for i, message in tqdm(enumerate(mbox), desc="Exporting mbox to eml files"):
+        # Extract the message as a string
+        try:
+            msg_str = message.as_string()
+        except UnicodeEncodeError:
+            continue
+
+        # If no Message-ID, fall back to a fallback identifier (e.g., email index)
+        safe_message_id = f"email_{i + 1}"
+
+        # Create a filename for the .eml file using the Message-ID or fallback
+        eml_filename = os.path.join(output_dir, f"{safe_message_id}.eml")
+
+        # Save the message to an .eml file
+        try:
+            with open(eml_filename, 'w', encoding="utf-8") as eml_file:
+                eml_file.write(msg_str)
+        except UnicodeEncodeError:
+            os.remove(eml_filename)
+
+
+def pst_to_eml(pff_file_path: str, output_dir: str):
+    import pypff
+
+    def process_email(email, output_dir):
+        # Create .eml filename based on subject or a unique identifier
+        eml_filename = os.path.join(output_dir, f"{email.identifier}.eml")
+
+        with open(eml_filename, 'w', encoding='utf-8') as eml_file:
+            # # Write headers
+            if email.transport_headers:
+                eml_file.write(email.transport_headers)
+                eml_file.write("\n")
+            else:
+                headers = ''
+                sender_name = email.get_sender_name() if hasattr(email, 'get_sender_name') else "Unknown"
+                sender_attributes = parseaddr(message_from_string(email.transport_headers).get("From", ""))
+                if len(sender_attributes):
+                    sender_email = sender_attributes[1]
+                else:
+                    sender_email = ""
+                headers += f"From: {sender_name} <{sender_email}>\n"
+                headers += f"Date: {email.delivery_time}\n" if hasattr(email, 'delivery_time') else 'Date: \n'
+                headers += f"Subject: {email.subject}\n" if hasattr(email, 'subject') else 'Subject: \n'
+
+                # Determine content type and charset
+                content_type = 'text/plain'
+                charset = 'utf-8'  # Assuming UTF-8 for simplicity; adjust as necessary
+
+                # Add content type and charset to headers
+                headers += f"Content-Type: {content_type}; charset={charset}\n"
+                headers += f"Content-Transfer-Encoding: 8bit\n"  # or 'base64' for binary content
+                headers += '\n'  # Ensure there's a blank line after headers
+                eml_file.write(headers)
+
+            # Write email body
+            # Check if the email has an HTML body and decode appropriately
+            if email.html_body:
+                soup = BeautifulSoup(email.html_body, 'html.parser')
+                for script_or_style in soup(['script', 'style']):
+                    script_or_style.decompose()
+
+                # Remove DOCTYPE and comments
+                for element in soup.contents:
+                    if isinstance(element, Comment) or isinstance(element, Doctype):
+                        element.extract()
+
+                text_parts = []
+                for element in soup.descendants:
+                    if isinstance(element, NavigableString):
+                        # Add text directly, but strip to avoid excessive whitespace
+                        stripped_text = element.strip()
+                        if stripped_text:
+                            text_parts.append(stripped_text)
+                email_body = '. '.join(text_parts)
+
+            elif email.plain_text_body:
+                try:
+                    # Decode plain text body if it's binary
+                    email_body = email.plain_text_body.decode('utf-8', errors='replace')
+                except UnicodeDecodeError:
+                    email_body = email.plain_text_body.decode('iso-8859-1', errors='replace')  # Or 'windows-1252', 'shift_jis', etc.
+                except AttributeError:
+                    # Use the plain text body as is if it's already a string
+                    email_body = email.plain_text_body
+            else:
+                # Default to an empty body if none exists
+                email_body = ''
+
+            eml_file.write(email_body)
+
+    def extract_emails_and_folders(folder, output_dir):
+        # Iterate through items in the folder
+        for item in tqdm(folder.sub_items, desc="Exporting pst to eml files"):
+            if isinstance(item, pypff.folder):
+                # Recursively process subfolder
+                subfolder_output_dir = os.path.join(output_dir, item.name)
+                os.makedirs(subfolder_output_dir, exist_ok=True)
+                extract_emails_and_folders(item, subfolder_output_dir)
+            elif isinstance(item, pypff.message):
+                # Process email
+                process_email(item, output_dir)
+
+    # Open the pst file
+    pff_file = pypff.file()
+    pff_file.open(pff_file_path)
+
+    # Ensure output directory exists
+    os.makedirs(output_dir, exist_ok=True)
+
+    # Process root folder
+    root_folder = pff_file.get_root_folder()
+    extract_emails_and_folders(root_folder, output_dir)
+
+    pff_file.close()
+
+
+
 
 class DomainUtils:
     def __init__(self):
@@ -308,32 +442,11 @@ def to_sentence_case(text):
     return ''.join(new_tokens)
 
 
-def preserve_case(original_sentence, corrected_sentence):
-    """Preserve the original case for the first letter of each sentence."""
-    if original_sentence and corrected_sentence:
-        if original_sentence[0].isupper():
-            corrected_sentence = corrected_sentence[0].upper() + corrected_sentence[1:]
-        else:
-            corrected_sentence = corrected_sentence[0].lower() + corrected_sentence[1:]
-    return corrected_sentence
-
-
 def remove_trailing_digits(s):
     # Use regex to replace trailing _digits with an empty string
     return re.sub(r'_\d+$', '', s)
 
-def check_lang(parsed_email):
-    try:
-        detected_langs = detect_langs(parsed_email)
-    except langdetect.lang_detect_exception.LangDetectException:
-        return False
-    is_in_english = True
-    for lang in detected_langs:
-        if lang.lang != 'en':
-            is_in_english = False
-            break
 
-    return is_in_english
 
 def clean_string(s: str) -> str:
     s = s.strip()
@@ -352,3 +465,40 @@ def remove_urls(text):
 def normalization(text):
     transliterated = unidecode(text)
     return transliterated
+
+
+def parse_json(text, delimiter='{"text":'):
+    """
+    Finds and extracts JSON objects from a string based on a given delimiter.
+    """
+    json_objects = []
+    start = 0
+    while True:
+        start = text.find(delimiter, start)
+        if start == -1:
+            break
+        end = text.find(delimiter, start + 1)
+        json_str = text[start:end].strip()
+        if end == -1:
+            json_str = text[start:]
+        try:
+            json_obj = json.loads(json_str)
+            json_objects.append(json_obj)
+        except json.JSONDecodeError as e:
+            print(f"Error parsing JSON: {e}")
+        start += len(delimiter)
+    return json_objects
+
+
+def save_jsonl(data, filename):
+    with open(filename, 'w') as file:
+        for entry in data:
+            json.dump(entry, file)
+            file.write('\n')
+
+def load_jsonl(filename):
+    data = []
+    with open(filename, 'r') as file:
+        for line in file:
+            data.append(json.loads(line))
+    return data

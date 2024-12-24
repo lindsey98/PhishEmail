@@ -5,10 +5,8 @@ from tqdm import tqdm
 import csv
 from lib.encoder import IdentityBert, Visualizer
 from lib.reference_db import CharacterBERT, IdentityMatcher, BaseFaissIPRetriever
-from lib.utilities import Logger
-from lib.data import EmailDataset, RenderDataset, OCR
-from lib.data.utils import pst_to_eml
-from lib.data.utils import mbox_to_eml
+from lib.utilities import Logger, pst_to_eml, mbox_to_eml
+from lib.data import RenderDataset, OCR
 import numpy as np
 import argparse
 from datetime import datetime

@@ -13,7 +13,7 @@ import spacy
 import tldextract
 from urllib.parse import urlparse
 from nltk.corpus import stopwords
-import html_util
+from . import html_util
 import configparser
 
 '''
