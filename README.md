@@ -61,9 +61,9 @@ Otherwise, we consider the email to be benign.
 For **Ubuntu**
 
 ## Preparing the ingredients
-1. Clone the repo
+1. Clone this repo to your local Linux server.
 
-2. Run setup
+2. Run setup.sh, this will create a conda environment named **emailenv**.
 ```commandline
 chmox +x setup.sh
 ./setup.sh
@@ -73,22 +73,17 @@ Make sure the directory structure is:
 ```
 PhishEmail/
     |_ lib/
+        |_ baselines/ # dfence, helphed, chatspamdetector, etc.
+        |_ encoder/ # training and utils scripts for NER model
+        |_ decoder/ # alternative Llama2 model for sender and call-to-action extraction
+        |_ reference_db/ # utils scripts for the CharacterBERT model
     |_ checkpoints/
-        |_ characterbert-typos-st/
-        |_ identity-model/
-        
-        |_ company_database_names_field_study.npy # this is a compact version of knowledge base, the brands inside have been manually cleaned
-
+        |_ characterbert-typos-st-adv/ # this is the CharacterBERT model
+        |_ identity-model/ # this is the NER model
+        |_ company_database_names_field_study.json # this is a compact version of knowledge base, the brands inside have been manually cleaned
         |_ dfence_models/
-            |_ meta/
-            |_ struct/
-            |_ text/
-            |_ url/
-        
         |_ helphed_models/
-            |_ dt_model.pkl
-            |_ word2vec_model.kv
-            |_ ......
+    |_ inference.py # main script
 ```
 
 4. (Optional) I am using Clash (to connect to VPN), which runs a proxy server on port 7890, 
@@ -101,9 +96,10 @@ export https_proxy="http://127.0.0.1:7890"
 # Dataset format
 
 ---
-Prepare a folder of emails in .eml or .txt format. 
+Option 1: Prepare a folder of emails in .eml or .txt format. 
 The .eml/.txt contains the raw email with headers and content.
 E.g.
+
 ```commandline
 maildir/
  |_ 1.eml
@@ -112,7 +108,7 @@ maildir/
  ....
 ```
 
-Alternatively, you can also export your mailbox directly to the **.mbox** or **.pst** format.
+Option 2: Alternatively, you can also export your mailbox directly to the **.mbox** or **.pst** format.
 
 # Run inference
 
@@ -156,8 +152,6 @@ The CSV file has the following columns:
 
 - **subject**: email subject
 
-- **email_body_text**: email body in plain text
-
 - **sender_identities**: recognized sender identity in email
 
 - **sender_relations**: recognized sender-recipient potential relation 
@@ -166,7 +160,7 @@ The CSV file has the following columns:
 
 - **matched_identity**: Imitated target brand | No Prediction | No Matched Brand | Consistent
 
-- **our_pred**: if ``True`` => Found sender identity-address inconsistency => Phish
+- **our_pred**: if ``True`` => Phish
 
 - **our_runtime**: Time taken for identities extraction and identity matching
 
