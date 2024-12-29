@@ -136,19 +136,27 @@ class RenderDataset(EmailDataset):
                         Logger.spit('[WARNING] Decoding this MIME part returned error', debug=True)
 
             elif mimeType in imageTypes:
-                payload = part.get_payload(decode=False)
-                imgdata = base64.b64decode(payload)
+                imgdata = part.get_payload(decode=True)
                 m = hashlib.md5()
-                m.update(payload.encode('utf-8'))
-                imagePath = m.hexdigest() + '.pdf'
+                m.update(imgdata)
+                # Compute MD5 hash of the binary data for a unique filename
+                m = hashlib.md5()
+                m.update(imgdata)
+                imagePath = m.hexdigest() + '.png'
+                pdfPath = m.hexdigest() + '.pdf'
                 try:
+                    # Save the PNG image
                     with open(os.path.join(self.dumpDir, imagePath), 'wb') as f:
                         f.write(imgdata)
-                    Logger.spit('[INFO] Decoded %s' % imagePath, debug=True)
-                    imagesList.append(os.path.join(self.dumpDir, imagePath))
                 except:
                     Logger.spit('[WARNING] Decoding this MIME part returned error', debug=True)
 
+                # Convert PNG to PDF
+                image = Image.open(os.path.join(self.dumpDir, imagePath))
+                image.convert('RGB').save(os.path.join(self.dumpDir, pdfPath), "PDF", resolution=100.0)
+                imagesList.append(os.path.join(self.dumpDir, pdfPath))
+                os.remove(os.path.join(self.dumpDir, imagePath))
+                Logger.spit('[INFO] Decoded %s' % pdfPath, debug=True)
 
         resultImage = os.path.join(self.dumpDir, f'{dumpName}.png')
         if len(imagesList) > 0:
@@ -184,20 +192,20 @@ class RenderDataset(EmailDataset):
         subject = normalization(subject)
 
         text_content, html_content = self.extract_text_content(email_content)
-        if len(text_content) < 100 or len(text_content) > 512*2:  # fixme: too short or too long => extract OCR text from HTML
-            with open(email_file_path, "rb") as f:
-                msg_bytes = f.read()
-            resultImage, html_content = self.render_eml(msg_bytes, dumpName=os.path.basename(email_file_path))
-            RenderDataset.kill_wkhtmltopdf_processes()
+        # if len(text_content) < 100 or len(text_content) > 512*2:  # fixme: too short or too long => extract OCR text from HTML
+        with open(email_file_path, "rb") as f:
+            msg_bytes = f.read()
+        resultImage, html_content = self.render_eml(msg_bytes, dumpName=os.path.basename(email_file_path))
+        RenderDataset.kill_wkhtmltopdf_processes()
 
-            if resultImage is not False:
-                text_content_from_ocr = self.ocr_model.ocr(resultImage)
-                if not self.save_imgs:
-                    os.remove(resultImage)
-                if len(text_content) > 512*2:
-                    text_content = text_content_from_ocr
-                else:
-                    text_content = text_content_from_ocr + text_content
+        if resultImage is not False:
+            text_content_from_ocr = self.ocr_model.ocr(resultImage)
+            if not self.save_imgs:
+                os.remove(resultImage)
+            if len(text_content) > 512*2:
+                text_content = text_content_from_ocr
+            else:
+                text_content = text_content_from_ocr + text_content
 
 
         text_content = self.remove_prev_messages(text_content)
@@ -217,8 +225,9 @@ class RenderDataset(EmailDataset):
 
 
 if __name__ == '__main__':
-    rootDir = "./datasets/phishpot"
+    rootDir = "./temp.eml"
     dumpDir = "./datasets/phishpot_imgs/"
+    Logger.set_debug_on()
     ocr_model = OCR()
     dataset = RenderDataset(rootDir, ocr_model=ocr_model, dumpDir=dumpDir)
 
