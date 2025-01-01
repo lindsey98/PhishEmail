@@ -12,53 +12,94 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-
-      - name: Install system dependencies
+      # Step 1: Checkout Repository
+      - name: Checkout Repository
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          echo "Cloning the repository..."
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git clone https://x-access-token:${GITHUB_TOKEN}@github.com/your-org/PhishEmail.git
+          cd PhishEmail
+
+      # Step 2: Install Python
+      - name: Install Python 3.10
+        run: |
+          echo "Installing Python 3.10..."
           sudo apt-get update
-          sudo apt-get install -y poppler-utils wkhtmltopdf
+          sudo apt-get install -y python3.10 python3.10-venv python3.10-dev
 
-      - name: Install Python dependencies
+      # Step 3: Set Up Python Environment
+      - name: Set Up Python Environment
         run: |
+          echo "Setting up Python virtual environment..."
+          python3.10 -m venv venv
+          source venv/bin/activate
           python -m pip install --upgrade pip
+
+      # Step 4: Install Python Dependencies
+      - name: Install Python Dependencies
+        run: |
+          echo "Installing Python dependencies..."
+          source venv/bin/activate
           pip install -r requirements.txt
           pip install sphinx
           pip install gdown
 
+      # Step 5: Install System Dependencies
+      - name: Install System Dependencies
+        run: |
+          echo "Installing system dependencies..."
+          sudo apt-get install -y poppler-utils wkhtmltopdf
+
+      # Step 6: Download and Setup Checkpoints
       - name: Download and Setup Checkpoints
         run: |
+          echo "Downloading checkpoints..."
+          source venv/bin/activate
           FILE_ID="1OqrhuKMOq8kjkKuU3jtPo9a-jA1zsJj8"
           FILE_NAME="checkpoints.zip"
           gdown --id "$FILE_ID" -O "$FILE_NAME"
           
+          echo "Unzipping checkpoints..."
           unzip "$FILE_NAME" -d checkpoints/
-          cd checkpoints || exit 1  # Exit if the directory doesn't exist
+          cd checkpoints || { echo "Directory 'checkpoints/' does not exist."; exit 1; }
           
           if [ -d "checkpoints" ]; then
             echo "Nested directory 'checkpoints/' detected. Moving contents up..."
             shopt -s dotglob
-            # Move everything from the nested directory to the current directory
             mv checkpoints/* .
             shopt -u dotglob
             rmdir checkpoints
-            cd ../
           else
             echo "No nested 'checkpoints/' directory found. No action needed."
           fi
+          cd ..
 
+      # Step 7: Build Documentation
       - name: Build Documentation
         run: |
+          echo "Building documentation..."
           cd docs
           make html
 
+      # Step 8: Deploy to GitHub Pages
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs/_build/html
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Deploying to GitHub Pages..."
+          cd docs/_build/html
+          
+          # Initialize a new Git repository
+          git init
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Add all files and commit
+          git add .
+          git commit -m "Deploy documentation"
+
+          # Force push to the gh-pages branch
+          git push --force https://x-access-token:${GITHUB_TOKEN}@github.com/your-org/PhishEmail.git master:gh-pages
