@@ -8,7 +8,6 @@ from lib.reference_db import CharacterBERT, IdentityMatcher, BaseFaissIPRetrieve
 from lib.utilities import Logger, pst_to_eml, mbox_to_eml
 from lib.data import RenderDataset, OCR
 import numpy as np
-import argparse
 from datetime import datetime
 from pathlib import Path
 import click
@@ -17,6 +16,7 @@ import json
 from lib.utilities.data_utils import DomainUtils
 
 class Config:
+
     Internal_Relations = [
         'admin',
         'mail admin',
@@ -96,7 +96,7 @@ class Config:
 
     REF_IDENTITY_REPS = os.getenv("REF_IDENTITY_REPS", "./checkpoints/company_database_reps_field_study.npy")
     REF_IDENTITY_NAMES = os.getenv("REF_IDENTITY_NAMES", "./checkpoints/company_database_names_field_study.npy")
-    REF_IDENTITY_MAP = os.getenv("REF_IDENTITY_MAP", "./checkpoints/company_database_field_study.json") # todo: this is the compact version of knowledge base (manually cleaned) with <1k brands
+    REF_IDENTITY_MAP = os.getenv("REF_IDENTITY_MAP", "./checkpoints/company_database_field_study.json")
 
     REF_RELATION_REPS = os.getenv("REF_RELATION_REPS", "./checkpoints/internal_relation_reps.npy")
     REF_RELATION_NAMES = os.getenv("REF_RELATION_NAMES", "./checkpoints/internal_relation_names.npy")
@@ -142,16 +142,19 @@ class Config:
 
     thre = 0.95
 
-    whitelist_senders = set([x.strip() for x in open("whitelist_senders.txt").readlines()]) # ignore the paper submission, online course, and the internal senders
+    whitelist_senders = set([x.strip() for x in open("whitelist_senders.txt").readlines()])  # ignore the paper submission, online course, and the internal senders
     forbidden_subject_prefix = ["re:", "fwd:", "fw:", "回复:", "转发:", "reply:"]
 
-today = datetime.today()
-today_date = today.strftime("%Y-%m-%d")
+
+TODAY = datetime.today()
+TODAY_DATE = TODAY.strftime("%Y-%m-%d")
+
+
 @click.command()
 @click.option("--email_dir", help="Dir containing all the .eml files", required=True, type=str)
 @click.option("--save_vis", help="Save the visualized results or not", is_flag=True, show_default=True, default=False)
 @click.option("--vis_dir", help="Where to save the visualized result", default='./datasets/vis', type=str)
-@click.option("--output_csv", default=f'{today_date}_results.csv', help="Output txt path")
+@click.option("--output_csv", default=f'{TODAY_DATE}_results.csv', help="Output txt path")
 @click.option("--run_dfence", is_flag=True, default=False)
 @click.option("--run_helphed", is_flag=True, default=False)
 @click.option("--auto_translate", is_flag=True, default=False, help='Whether to translate the email (including subject)')
@@ -176,7 +179,7 @@ def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed, auto
                                   gpt_assistant=None,
                                   check_action=True,
                                   threshold=Config.thre,
-                                  relax_match=True) # todo: relax_match!
+                                  relax_match=True)  #todo: relax_match!
 
     if '.mbox' in email_dir:
         mbox_to_eml(email_dir, email_dir.replace('.mbox', ''))
@@ -223,10 +226,10 @@ def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed, auto
         # If it exists, load existing subjects to avoid duplicates
         with open(csv_file_path, mode='r', encoding='utf-8') as file:
             reader = csv.reader(file)
-            next(reader)  # Skip header
+            next(reader)   # Skip header
             for row in reader:
                 if row:
-                    seen_subjects.add(row[1] + row[5])  # Assuming 'subject' is the 6th column (index 5)
+                    seen_subjects.add(row[1] + row[5])   # Assuming 'subject' is the 6th column (index 5)
 
     for it in tqdm(range(len(dataset))):
 
@@ -235,12 +238,12 @@ def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed, auto
 
         email_file_path, (sender_name, sender_address), \
             (to_names, to_addresses), reply_to_address, \
-            subject, email_body_text, header = dataset[it] ## fixme: the GoogleTranslator may take some time
+            subject, email_body_text, header = dataset[it]  # fixme: the GoogleTranslator may take some time
         sender_domains = dataset.domain_parsing(sender_address)  # a set
 
         # Check if the subject has been seen before
         if str(sender_name) + str(subject) in seen_subjects:
-            continue  # Skip
+            continue   # Skip
         seen_subjects.add(str(sender_name) + str(subject))
 
         '''Baseline: D-Fence, HelpHed, Rspamd'''
@@ -280,7 +283,7 @@ def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed, auto
             helphed_stacking_runtime = 0
             helphed_voting_pred = 0
             helphed_voting_runtime = 0
-            Logger.spit("Non-original email (Reply/Forward)",debug=True, caller_prefix='Main')
+            Logger.spit("Non-original email (Reply/Forward)", debug=True, caller_prefix='Main')
         elif DomainUtils.domain_set_overlap(sender_domains, Config.whitelist_senders):
             identities = []
             relations = []
@@ -296,7 +299,7 @@ def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed, auto
             helphed_stacking_runtime = 0
             helphed_voting_pred = 0
             helphed_voting_runtime = 0
-            Logger.spit("Sent from an whitelisted address",debug=True, caller_prefix='Main')
+            Logger.spit("Sent from an whitelisted address", debug=True, caller_prefix='Main')
         else:
             # Identity recognition
             parsed_email = f'Subject: {subject} \n From: {sender_name} \n Body: {email_body_text}'
@@ -352,7 +355,8 @@ def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed, auto
                                  helphed_voting_pred,
                                  helphed_voting_runtime,
                                  ])
-            except:
+            except Exception as e:
+                Logger.spit(f"Encounter error {e} when inferencing on {email_file_path}", warning=True, caller_prefix='Main')
                 continue
 
         time.sleep(0.001)
@@ -367,5 +371,3 @@ if __name__ == '__main__':
     # "google-bert/bert-large-uncased" =>  340 million parameters.
     # character-bert => 105 million parameters
     # 5000 MiB
-
-
