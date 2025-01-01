@@ -24,25 +24,16 @@ jobs:
           cd PhishEmail
 
       # Step 2: Install Python
-      - name: Install Python 3.10
-        run: |
-          echo "Installing Python 3.10..."
-          sudo apt-get update
-          sudo apt-get install -y python3.10 python3.10-venv python3.10-dev
-
-      # Step 3: Set Up Python Environment
-      - name: Set Up Python Environment
-        run: |
-          echo "Setting up Python virtual environment..."
-          python3.10 -m venv venv
-          source venv/bin/activate
-          python -m pip install --upgrade pip
+      - name: Install Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          cache: 'pip'
 
       # Step 4: Install Python Dependencies
-      - name: Install Python Dependencies
+      - name: Install dependencies
         run: |
-          echo "Installing Python dependencies..."
-          source venv/bin/activate
+          python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install sphinx
           pip install gdown
