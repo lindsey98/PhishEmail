@@ -17,11 +17,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "Cloning the repository..."
+          echo "Cloning the repository into the current directory..."
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git clone https://x-access-token:${GITHUB_TOKEN}@github.com/lindsey98/PhishEmail.git
-          cd PhishEmail
+          git clone https://x-access-token:${GITHUB_TOKEN}@github.com/lindsey98/PhishEmail.git .
+          # No need to 'cd PhishEmail' since we're cloning into the current directory
 
       # Step 2: Install Python and Dependencies
       - name: Install Python and Dependencies
