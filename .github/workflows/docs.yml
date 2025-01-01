@@ -1,0 +1,64 @@
+# .github/workflows/docs.yml
+name: Build and Deploy Documentation
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y poppler-utils wkhtmltopdf
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install sphinx
+          pip install gdown
+
+      - name: Download and Setup Checkpoints
+        run: |
+          FILE_ID="1OqrhuKMOq8kjkKuU3jtPo9a-jA1zsJj8"
+          FILE_NAME="checkpoints.zip"
+          gdown --id "$FILE_ID" -O "$FILE_NAME"
+          
+          unzip "$FILE_NAME" -d checkpoints/
+          cd checkpoints || exit 1  # Exit if the directory doesn't exist
+          
+          if [ -d "checkpoints" ]; then
+            echo "Nested directory 'checkpoints/' detected. Moving contents up..."
+            shopt -s dotglob
+            # Move everything from the nested directory to the current directory
+            mv checkpoints/* .
+            shopt -u dotglob
+            rmdir checkpoints
+            cd ../
+          else
+            echo "No nested 'checkpoints/' directory found. No action needed."
+          fi
+
+      - name: Build Documentation
+        run: |
+          cd docs
+          make html
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs/_build/html
