@@ -53,6 +53,7 @@ jobs:
           source venv/bin/activate
           pip install -r requirements.txt
           pip install sphinx
+          sphinx-quickstart docs
           pip install gdown
 
       # Step 5: Install System Dependencies
