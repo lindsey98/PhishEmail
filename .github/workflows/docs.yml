@@ -23,17 +23,26 @@ jobs:
           git clone https://x-access-token:${GITHUB_TOKEN}@github.com/lindsey98/PhishEmail.git
           cd PhishEmail
 
-      # Step 2: Install Python
-      - name: Install Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-          cache: 'pip'
+      # Step 2: Install Python and Dependencies
+      - name: Install Python and Dependencies
+        run: |
+          echo "Installing Python 3 and necessary packages..."
+          sudo apt-get update
+          sudo apt-get install -y python3 python3-venv python3-dev
+
+      # Step 3: Set Up Python Environment
+      - name: Set Up Python Environment
+        run: |
+          echo "Setting up Python virtual environment..."
+          python3 -m venv venv
+          source venv/bin/activate
+          python -m pip install --upgrade pip
 
       # Step 4: Install Python Dependencies
-      - name: Install dependencies
+      - name: Install Python Dependencies
         run: |
-          python -m pip install --upgrade pip
+          echo "Installing Python dependencies..."
+          source venv/bin/activate
           pip install -r requirements.txt
           pip install sphinx
           pip install gdown
@@ -91,6 +100,6 @@ jobs:
           # Add all files and commit
           git add .
           git commit -m "Deploy documentation"
-
+          
           # Force push to the gh-pages branch
           git push --force https://x-access-token:${GITHUB_TOKEN}@github.com/lindsey98/PhishEmail.git master:gh-pages
