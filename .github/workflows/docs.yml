@@ -52,7 +52,7 @@ jobs:
           echo "Installing Python dependencies..."
           source venv/bin/activate
           pip install -r requirements.txt
-          pip install sphinx -y
+          pip install sphinx
           sphinx-quickstart docs
           pip install gdown
 
