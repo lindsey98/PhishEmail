@@ -32,7 +32,14 @@ jobs:
           if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
             echo "Installing Python 3.8 on Windows..."
             choco install python --version 3.8 -y
+          elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+            echo "Installing Python 3.8 on macOS..."
+            brew install python@3.8
+            # Ensure python3.8 is available in PATH
+            echo 'export PATH="/usr/local/opt/python@3.8/bin:$PATH"' >> ~/.bash_profile
+            source ~/.bash_profile
           else
+            echo "Installing Python 3.8 on Linux..."
             sudo apt-get update
             sudo apt-get install -y software-properties-common
             sudo add-apt-repository ppa:deadsnakes/ppa -y
