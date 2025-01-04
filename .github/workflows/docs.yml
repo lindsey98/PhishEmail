@@ -1,5 +1,5 @@
 # .github/workflows/docs.yml
-name: Build and Deploy Documentation
+name: Build and Deploy Documentation on Multiple OS
 
 on:
   push:
@@ -9,7 +9,11 @@ on:
 
 jobs:
   build-docs:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    runs-on: ${{ matrix.os }}
 
     steps:
       # Step 1: Checkout Repository
@@ -21,75 +25,94 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git clone https://x-access-token:${GITHUB_TOKEN}@github.com/lindsey98/PhishEmail.git .
-          # No need to 'cd PhishEmail' since we're cloning into the current directory
 
-      # Step 2: Install Dependencies for Adding PPAs
-      - name: Install Dependencies for PPA
-        run: |
-          echo "Installing dependencies for adding PPAs..."
-          sudo apt-get update
-          sudo apt-get install -y software-properties-common
+      # Step 2: Install Python 3.8
+      - name: Set Up Python 3.8
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.8'
 
-      # Step 3: Add Deadsnakes PPA and Install Python 3.8
-      - name: Install Python 3.8
-        run: |
-          echo "Adding Deadsnakes PPA and installing Python 3.8..."
-          sudo add-apt-repository ppa:deadsnakes/ppa -y
-          sudo apt-get update
-          sudo apt-get install -y python3.8 python3.8-venv python3.8-dev
-
-      # Step 4: Set Up Python 3.8 Virtual Environment
-      - name: Set Up Python 3.8 Environment
+      # Step 3: Set Up Python Virtual Environment
+      - name: Set Up Python Virtual Environment
         run: |
           echo "Setting up Python 3.8 virtual environment..."
-          python3.8 -m venv venv
-          source venv/bin/activate
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            python -m venv venv
+            venv\Scripts\activate
+          elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+            python3 -m venv venv
+            source venv/bin/activate
+          else
+            python3.8 -m venv venv
+            source venv/bin/activate
           python -m pip install --upgrade pip
 
       # Step 4: Install Python Dependencies
       - name: Install Python Dependencies
         run: |
           echo "Installing Python dependencies..."
-          source venv/bin/activate
-          pip install -r requirements.txt
-          pip install gdown
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            venv\Scripts\activate
+          else
+            source venv/bin/activate
+          pip install --no-input -r requirements.txt
+          pip install --no-input sphinx
+          sphinx-quickstart docs
+          pip install --no-input gdown
 
       # Step 5: Install System Dependencies
       - name: Install System Dependencies
         run: |
           echo "Installing system dependencies..."
-          sudo apt-get install -y poppler-utils wkhtmltopdf
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            choco install wkhtmltopdf --yes
+          elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+            brew install poppler
+            brew install wkhtmltopdf
+          else
+            sudo apt-get update
+            sudo apt-get install -y poppler-utils wkhtmltopdf
 
       # Step 6: Download and Setup Checkpoints
       - name: Download and Setup Checkpoints
         run: |
           echo "Downloading checkpoints..."
-          source venv/bin/activate
-          FILE_ID="1OqrhuKMOq8kjkKuU3jtPo9a-jA1zsJj8"
-          FILE_NAME="checkpoints.zip"
-          gdown --id "$FILE_ID" -O "$FILE_NAME"
-          
-          echo "Unzipping checkpoints..."
-          unzip "$FILE_NAME" -d checkpoints/
-          cd checkpoints || { echo "Directory 'checkpoints/' does not exist."; exit 1; }
-          
-          if [ -d "checkpoints" ]; then
-            echo "Nested directory 'checkpoints/' detected. Moving contents up..."
-            shopt -s dotglob
-            mv checkpoints/* .
-            shopt -u dotglob
-            rmdir checkpoints
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            venv\Scripts\activate
+            $env:FILE_ID="1OqrhuKMOq8kjkKuU3jtPo9a-jA1zsJj8"
+            $env:FILE_NAME="checkpoints.zip"
+            gdown --id $env:FILE_ID -O $env:FILE_NAME
+            Expand-Archive -Path $env:FILE_NAME -DestinationPath checkpoints
+            cd checkpoints
+            if (Test-Path "./checkpoints") {
+              Move-Item -Path "./checkpoints/*" -Destination "./" -Force
+              Remove-Item -Recurse -Force "./checkpoints"
+            }
+            cd ..
           else
-            echo "No nested 'checkpoints/' directory found. No action needed."
-          fi
-          cd ..
+            source venv/bin/activate
+            FILE_ID="1OqrhuKMOq8kjkKuU3jtPo9a-jA1zsJj8"
+            FILE_NAME="checkpoints.zip"
+            gdown --id "$FILE_ID" -O "$FILE_NAME"
+            unzip "$FILE_NAME" -d checkpoints/
+            cd checkpoints
+            if [ -d "checkpoints" ]; then
+              mv checkpoints/* .
+              rmdir checkpoints
+            fi
+            cd ..
 
-      # Step 7: Build Documentation
+     # Step 7: Build Documentation
       - name: Build Documentation
         run: |
           echo "Building documentation..."
-          cd docs
-          make html
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            cd docs
+            make html
+          else
+            cd docs
+            make html
+
 
       # Step 8: Deploy to GitHub Pages
       - name: Deploy to GitHub Pages
@@ -97,16 +120,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Deploying to GitHub Pages..."
-          cd docs/_build/html
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            cd docs\_build\html
+          else
+            cd docs/_build/html
           
-          # Initialize a new Git repository
           git init
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          
-          # Add all files and commit
           git add .
           git commit -m "Deploy documentation"
-          
-          # Force push to the gh-pages branch
           git push --force https://x-access-token:${GITHUB_TOKEN}@github.com/lindsey98/PhishEmail.git master:gh-pages
