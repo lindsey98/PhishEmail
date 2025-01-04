@@ -37,6 +37,9 @@ jobs:
               brew install pyenv
               pyenv install 3.8.17  # Use the latest available patch version of Python 3.8
               pyenv global 3.8.17
+              export PATH="$HOME/.pyenv/bin:$PATH"
+              eval "$(pyenv init --path)"
+              eval "$(pyenv init -)"
           else
             echo "Installing Python 3.8 on Linux..."
             sudo apt-get update
