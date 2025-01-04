@@ -1,12 +1,10 @@
 import copy
-import os
 import csv
 from tqdm import tqdm
-from typing import List, Dict, Optional
+from typing import List, Dict
 from transformers import AutoTokenizer
 from ..encoder import IdentityBert
 import pandas as pd
-import langdetect
 import unicodedata
 import difflib
 import click
@@ -14,15 +12,17 @@ import json
 from ..utilities.data_utils import remove_trailing_digits
 import os
 
+
 class MyAttackEvaluator():
     def __init__(self):
         pass
 
-    def check_is_match(self, prediction_set: List, expected_set: List, cutoff:float):
+    @staticmethod
+    def check_is_match(prediction_set: List, expected_set: List, cutoff:float):
         '''
         Use SequenceMatcher to find a closest match
-        :param prediction_set: query
-        :param expected_set: reference set
+        :param prediction_set:  query
+        :param expected_set:  reference set
         :param cutoff:
         :return:
         '''
@@ -125,14 +125,13 @@ class MyAttackEvaluator():
 
                     ### baseline
                     before_adv_reported_ct += self.check_is_match(prediction_set=list(eval(identities_before_adv)),
-                                                                 expected_set=expected_identities_all,
-                                                                 cutoff=0.5)
+                                                                  expected_set=expected_identities_all,
+                                                                  cutoff=0.5)
 
 
                 elif cls_to_check == "action":
                     ### after rephrasing
-                    expected_actions_all = [x.lower() for x in list(eval(rephrased_dict).values())] + \
-                                           [x.lower() for x in list(eval(rephrased_dict).keys())]
+                    expected_actions_all = [x.lower() for x in list(eval(rephrased_dict).values())] + [x.lower() for x in list(eval(rephrased_dict).keys())]
 
                     after_adv_reported_ct += self.check_is_match(prediction_set=list(eval(actions_after_adv)),
                                                                  expected_set=expected_actions_all,
@@ -177,18 +176,13 @@ def main(identity_model_checkpoint, attacker, cls_to_attack, typo_type, eval_onl
     if eval_only:
         if not os.path.exists(result_csv_path):
             raise FileNotFoundError(f"The {result_csv_path} does not exist")
-        after_adv_reported_ct,  before_adv_reported_ct, total_ct = \
-                                                        evaluator.metrics_collector(result_csv_path=result_csv_path,
-                                                                                    cls_to_check=cls_to_attack)
+        after_adv_reported_ct,  before_adv_reported_ct, total_ct = evaluator.metrics_collector(result_csv_path=result_csv_path,
+                                                                                               cls_to_check=cls_to_attack)
     else:
-        evaluator.results_collector(dataset=dataset,
-                                    tokenizer=tokenizer,
-                                    model=model,
-                                    result_csv_path=result_csv_path)
+        evaluator.results_collector(dataset=dataset, tokenizer=tokenizer, model=model, result_csv_path=result_csv_path)
 
-        after_adv_reported_ct, before_adv_reported_ct, total_ct = \
-                                                        evaluator.metrics_collector(result_csv_path=result_csv_path,
-                                                                                    cls_to_check=cls_to_attack)
+        after_adv_reported_ct, before_adv_reported_ct, total_ct = evaluator.metrics_collector(result_csv_path=result_csv_path,
+                                                                                              cls_to_check=cls_to_attack)
 
     print(f"Clean detection rate = {before_adv_reported_ct}/{total_ct} = {before_adv_reported_ct / total_ct}")
     print(f"After Attack = {attacker} {typo_type} \t detection rate = {after_adv_reported_ct}/{total_ct} = {after_adv_reported_ct / total_ct}")

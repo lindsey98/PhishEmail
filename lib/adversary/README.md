@@ -1,8 +1,8 @@
 # Instructions
 
-This directory contains the adversary experiments for the NER model.
+This directory contains the scripts for the adversary experiments.
 
-## To setup the environment
+# Setup the environment
 
 ---
 
@@ -10,18 +10,20 @@ This directory contains the adversary experiments for the NER model.
 pip install -r requirements.txt
 ```
 
-## To attack 
+# NER Adversarial Attack
+
+## To attack the NER model
 
 ---
 
 Select the attacking method from one of the following: 'bae', 'scpn', 'deepwordbug', 'gpt', 'viper', 'bart', 't5', 'concatsent'. E.g.
 ```commandline
-python -m lib.adversary.attack_gen --attacker bae 
+python -m lib.adversary.ner_attack_gen --attacker bae 
 ```
 
 If 'deepwordbug' is selected, you also need to further specify the typo type as 'repeat', 'delete', 'switch' or 'replace'. E.g.
 ```commandline
-python -m lib.adversary.attack_gen --attacker deepwordbug --typo_type repeat 
+python -m lib.adversary.ner_attack_gen --attacker deepwordbug --typo_type repeat 
 ```
 
 The following table explains the details of each attack
@@ -38,7 +40,7 @@ The following table illustrates the comparison of the attack models.
 | **ConcatSent**  |      Action      |      Sentence-level       | Move the entity to the end of its previous sentence                                                                                                                                                               |
 
 
-## To evaluate 
+## To evaluate the NER model
 
 ---
 
@@ -48,10 +50,14 @@ Specify the --cls_to_attack to be 'identity' or 'action' based on the above Tabl
 Inference results will be saved in ``./datasets/nazario_results_adversarial_{attacker}.csv``
 E.g.
 ```commandline
-python -m lib.adversary.attack_eval --attacker bae --cls_to_attack 'identity' 
+python -m lib.adversary.ner_attack_eval --attacker bae --cls_to_attack 'identity' 
 ```
 
-Add --defence flag to activate the spelling corrector (A pre-trained T5-based typo correction model).
+# CharacterBERT Adversarial Attack
+
+---
+
 ```commandline
-python -m lib.adversary.attack_eval --attacker deepwordbug --cls_to_attack 'identity' --typo_type repeat --defence
+python -m lib.adversary.db_attack_gen
 ```
+

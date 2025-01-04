@@ -8,6 +8,7 @@ import os
 import json
 os.environ['OPENAI_API_KEY'] = open('./datasets/openai_key.txt').read()
 
+
 def pick_attacker(attacker_name, typo_type):
     if attacker_name == "bae":
         return MyBAEAttacker()
@@ -19,6 +20,7 @@ def pick_attacker(attacker_name, typo_type):
         return MyConcatSentAttacker()
     elif attacker_name == 'textfooler':
         return MyTextFoolerAttacker()
+
 
 @click.command()
 @click.option('--attacker', required=True,
@@ -78,5 +80,3 @@ def main(attacker, typo_type):
 
 if __name__ == '__main__':
     main()
-
-# 385
