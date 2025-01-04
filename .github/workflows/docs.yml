@@ -38,6 +38,7 @@ jobs:
             sudo add-apt-repository ppa:deadsnakes/ppa -y
             sudo apt-get update
             sudo apt-get install -y python3.8 python3.8-venv python3.8-dev
+          fi
 
       # Step 3: Set Up Python Virtual Environment
       - name: Set Up Python Virtual Environment
@@ -52,6 +53,7 @@ jobs:
           else
             python3.8 -m venv venv
             source venv/bin/activate
+          fi
           python -m pip install --upgrade pip
 
       # Step 4: Install Python Dependencies
@@ -62,6 +64,7 @@ jobs:
             venv\Scripts\activate
           else
             source venv/bin/activate
+          fi
           pip install --no-input -r requirements.txt
           pip install --no-input sphinx
           sphinx-quickstart docs
@@ -79,6 +82,7 @@ jobs:
           else
             sudo apt-get update
             sudo apt-get install -y poppler-utils wkhtmltopdf
+          fi
 
       # Step 6: Download and Setup Checkpoints
       - name: Download and Setup Checkpoints
@@ -108,17 +112,14 @@ jobs:
               rmdir checkpoints
             fi
             cd ..
+          fi
 
      # Step 7: Build Documentation
       - name: Build Documentation
         run: |
           echo "Building documentation..."
-          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-            cd docs
-            make html
-          else
-            cd docs
-            make html
+          cd docs
+          make html
 
 
       # Step 8: Deploy to GitHub Pages
@@ -131,6 +132,7 @@ jobs:
             cd docs\_build\html
           else
             cd docs/_build/html
+          fi
           
           git init
           git config user.name "github-actions[bot]"
