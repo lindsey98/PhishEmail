@@ -1,0 +1,214 @@
+/* 
+ * Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT license.
+ * See LICENSE in the project root for license information.
+ */
+
+ html,
+ body {
+     width: 100%;
+     height: 100%;
+     margin: 0;
+     padding: 0;
+ }
+ 
+ ul {
+     margin: 0;
+     padding: 0;
+ }
+ 
+ .ms-welcome__header {
+    padding: 20px;
+    padding-bottom: 30px;
+    padding-top: 30px;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-flex-direction: column;
+    flex-direction: column;
+    align-items: center;
+ }
+
+ .ms-welcome__main {
+    display: -webkit-flex;
+    display: flex;
+    -webkit-flex-direction: column;
+    flex-direction: column;
+    -webkit-flex-wrap: nowrap;
+    flex-wrap: nowrap;
+    -webkit-align-items: center;
+    align-items: center;
+    -webkit-flex: 1 0 0;
+    flex: 1 0 0;
+    padding: 10px 20px;
+ }
+ 
+ .ms-welcome__main > h2 {
+     width: 100%;
+     text-align: center;
+ }
+ 
+ .ms-welcome__features {
+     list-style-type: none;
+     margin-top: 20px;
+ }
+ 
+ .ms-welcome__features.ms-List .ms-ListItem {
+     padding-bottom: 20px;
+     display: -webkit-flex;
+     display: flex;
+ }
+ 
+ .ms-welcome__features.ms-List .ms-ListItem > .ms-Icon {
+     margin-right: 10px;
+ }
+ 
+ .ms-welcome__action.ms-Button--hero {
+     margin-top: 30px;
+ }
+ 
+
+.rounded-button {
+    background-color: black; /* Button color */
+    color: white; /* Text color */
+    padding: 10px 0px; /* Button padding */
+    border: none; /* Remove border */
+    width: 100%;
+    text-align: center;
+    border-radius: 7px; /* Rounded corners */
+    font-size: 16px; /* Font size */
+    font-weight: 500;
+    cursor: pointer; /* Pointer cursor on hover */
+    transition: background-color 0.3s ease; /* Smooth hover effect */
+}
+
+/* Hover effect */
+.rounded-button:hover {
+    background-color: #444; /* Darker blue */
+}
+
+b {
+    font-weight: bold;
+}
+
+#run {
+    transition: opacity 0.5s ease-in;
+}
+
+.loader {
+    margin-left: auto;
+    margin-right: auto;
+    margin-top:20px;
+    width: 15px;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    visibility: hidden;
+    opacity: 0;
+    animation: l5 1s infinite linear alternate;
+    transition: opacity 0.5s ease-in;
+  }
+  @keyframes l5 {
+      0%  {box-shadow: 20px 0 #000, -20px 0 #0002;background: #000 }
+      33% {box-shadow: 20px 0 #000, -20px 0 #0002;background: #0002}
+      66% {box-shadow: 20px 0 #0002,-20px 0 #000; background: #0002}
+      100%{box-shadow: 20px 0 #0002,-20px 0 #000; background: #000 }
+  }
+
+.bar {
+    height: 60px;
+    width: 100%;
+    display: flex;
+    justify-content: left;
+    align-items: center;
+}
+
+#results-wrapper {
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 1s ease-in;
+}
+
+.border-top {
+    border-top: 1px solid #D9D9D9;
+}
+
+.border-bottom {
+    border-bottom: 1px solid #D9D9D9;
+}
+
+.italic {
+    font-style: italic;
+}
+
+.indent {
+    margin-left:10px;
+}
+
+.results {
+    word-break: break-word;
+    padding-left: 5px;
+}
+
+.bar-title {
+    margin-left: 10px;
+    font-size: 20px;
+    font-weight: 1000;
+}
+
+.header-title {
+    font-size: 20px;
+    font-weight: 1000;
+}
+
+.banner {
+    margin-top: 15px;
+    height: 80px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: 600;
+    font-size: 20px;
+    border-radius: 5px;
+}
+
+#tab-content {
+    display: flex;
+    transition: transform 0.5s ease;
+}
+
+#tab-container {
+    overflow-x: hidden;
+}
+
+.tab-panel {
+    flex: 0 0 100%;
+    box-sizing: border-box;
+}
+
+.alert {
+    background-color: #FFEAC2 !important;
+    color: black !important;
+}
+
+.results-table {
+    width: 100%;
+}
+
+.entry {
+    width: 70px;
+    text-align: left;
+}
+
+.section {
+    padding-top: 10px;
+    width: 100%;
+}
+
+.title {
+    font-size: 22px;
+}
+
+#html-body {
+    padding-top: 10px;
+    overflow-x: hidden;
+    word-break: break-word;
+}

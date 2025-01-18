@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>PiMRef Phishing Detection Add-in</title>
+
+    <!-- Office JavaScript API -->
+    <script type="text/javascript" src="https://appsforoffice.microsoft.com/lib/1.1/hosted/office.js"></script>
+
+    <!-- For more information on Fluent UI, visit https://developer.microsoft.com/fluentui#/. -->
+    <link rel="stylesheet" href="https://res-1.cdn.office.net/files/fabric-cdn-prod_20230815.002/office-ui-fabric-core/11.1.0/css/fabric.min.css"/>
+
+    <!-- Template styles -->
+    <link href="taskpane.css" rel="stylesheet" type="text/css" />
+    <link href="entity.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body class="ms-font-m ms-welcome ms-Fabric">
+    <section id="sideload-msg" class="ms-welcome__main">
+        <h2 class="ms-font-xl">Please <a target="_blank" href="https://learn.microsoft.com/office/dev/add-ins/testing/test-debug-office-add-ins#sideload-an-office-add-in-for-testing">sideload</a> your add-in to see app body.</h2>
+    </section> 
+    <main id="app-body" class="ms-welcome__main" style="display: none;">
+        <img src="../../assets/logo.png"/>
+        <div id="tab-container">
+            <div id="tab-content">
+                <div id="main-tab" class="tab-panel">
+                    <p class="ms-font-l" id="">PiMRef will attempt to identify the identity of the sender in the email, and perform a cross-check to validate if the address matches this purported identity.</p>
+                    <div role="button" id="run" class="rounded-button ms-font-xl">
+                        <span>Check</span>
+                    </div>
+                    <div class="loader" id="loading"></div>
+                    <div id="results-wrapper">
+                        <div class="bar border-top border-bottom"><span class="bar-title">Results</span></div>
+                        <div id="banner" class="banner">Phishing Alert</div>
+                        <div class="section border-bottom" id="identity">
+                            <span class="title">Identity Inconsistency Check</span>
+                            <div class="results">
+                                <p>Represented Brand<br/>
+                                    <span id="represented-brand" class="italic indent">Microsoft</span> <br>
+                                    Sender Domain<br/>
+                                    <span id="sender-domain" class="italic indent">micr0s0ft.com</span> <br>
+                                </p>
+                                <p class="explanation" id="identity-explanation"></p>
+                            </div>
+                        </div>
+                        <div class="section border-bottom" id="action">
+                            <span class="title">Required Action Check</span>
+                            <div class="results">
+                                <p class="explanation" id="action-explanation"></p>
+                            </div>
+                        </div>
+                        <div class="section" id="recommendation">
+                            <span class="title">Recommended Action</span>
+                            <div class="results">
+                                <p class="explanation" id="recommendation-explanation"></p>
+                            </div>
+                        </div>
+                        <div role="button" id="detailed-explanation" class="rounded-button ms-font-xl">
+                            <span>View Detailed Explanation</span>
+                        </div>
+                    </div>
+                </div>
+                <div id="explanation-page" class="tab-panel">
+                    <br/>
+                    <div class="section border-top"><span class="header-title">Header Information</span>
+                        <div class="results">
+                            <table class="results-table">
+                                <tbody>
+                                    <tr><td class="entry">Sender:</td><td><span id="sender-info" class="italic">ACM CCS 2025 &lt;acm2025@acmm2025.com&gt;</span></td></tr>
+                                    <tr><td class="entry">Recepient:</td><td><span id="recepient-info" class="italic">something@u.nus.edu</span></td></tr>
+                                    <tr><td class="entry">Subject:</td><td><span id="subject" class="italic">Congratulations on winning an award at ACM CCS 2025!</span></td></tr>    
+                                </tbody>
+                            </table>
+                        </div>
+                        <br/>
+                    </div>
+                    <div class="section border-top"><span class="header-title">Email Body</span>
+                        <br/>
+                        <div id="html-body">
+                        </div>
+                        <div role="button" id="return" class="rounded-button ms-font-xl">
+                            <span>Go Back</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+
+</html>
