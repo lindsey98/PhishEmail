@@ -1,4 +1,4 @@
-# PhishEmail
+# PimRef
 
 # Introduction
 
@@ -11,12 +11,11 @@ Official repository for PimRef
 
 ---
 
-For **Ubuntu**
-
-## Preparing the ingredients
-1. Clone this repo to your local Linux server.
+## Preparing the environment
+1. Clone this repo
 
 2. Run setup.sh, this will create a conda environment named **emailenv**.
+
 ```commandline
 chmox +x setup.sh
 ./setup.sh
@@ -25,6 +24,7 @@ chmox +x setup.sh
 Make sure the directory structure is:
 ```
 PhishEmail/
+    |_ addin/ # for settup up outlook plugin
     |_ lib/
         |_ baselines/ # dfence, helphed, chatspamdetector, etc.
         |_ encoder/ # training and utils scripts for NER model
@@ -39,48 +39,44 @@ PhishEmail/
     |_ inference.py # main script
 ```
 
-4. (Optional) I am using Clash (to connect to VPN), which runs a proxy server on port 7890, 
-so I need to set the http_proxy environment variable to http://127.0.0.1:7890.
-```commandline
-export http_proxy="http://127.0.0.1:7890"
-export https_proxy="http://127.0.0.1:7890"
-```
-
 # Dataset format
 
 ---
-Option 1: Prepare a folder of emails in .eml or .txt format. 
+
+- Option 1: Prepare a **folder of emails in .eml or .txt format.** 
 The .eml/.txt contains the raw email with headers and content.
 E.g.
 
-```commandline
-maildir/
- |_ 1.eml
- |_ 2.eml
- |_ 3.txt
- ....
-```
+  ```commandline
+  maildir/
+   |_ 1.eml
+   |_ 2.eml
+   |_ 3.txt
+   ....
+  ```
 
-Option 2: Alternatively, you can also export your mailbox directly to the **.mbox** or **.pst** format.
+- Option 2: Alternatively, you can also **export your mailbox directly to the** **.mbox** or **.pst** format.
 
 # Run inference
 
 ---
 
-For a email folder, e.g.:
+- Given a email folder, e.g.:
 ```commandline
 python inference.py --email_dir maildir/
 ```
-or for .mbox, e.g.:
+
+- For .mbox, e.g.:
 ```commandline
 python inference.py --email_dir inbox.mbox
 ```
-or for .pst, e.g.:
+
+- For .pst, e.g.:
 ```commandline
 python inference.py --email_dir inbox.pst
 ```
 
-To run the baselines as well, e.g.:
+- To run the baselines as well, e.g.:
 ```commandline
 python inference.py --email_dir maildir/ --run_dfence --run_helphed
 ```
@@ -113,29 +109,14 @@ The CSV file has the following columns:
 
 - **matched_identity**: Imitated target brand | No Prediction | No Matched Brand | Consistent
 
-- **our_pred**: if ``True`` => Phish
+- **our_pred**: if ``True`` => ``Phish``
 
 - **our_runtime**: Time taken for identities extraction and identity matching
 
 
-Results interpretation:
-- Case 1: **our_pred = True**: 
-  - **Phishing**, and the matched_identity field returns the target brand, if matched_identity = 'Internal', the email is imitating an internal role such as colleague.
-
-- Case 2: **our_pred = False, matched_identity = No Prediction**: 
-  - Benign because we **didnt recognize any claimed identity** in the email.
-  
-- Case 3: **our_pred = False, matched_identity = No Matched Brand**: 
-  - The email is reported as benign because the recognized sender identity is an **unknown brand**.
-  
-- Case 4: **our_pred = False, matched_identity = Consistent**: 
-  - The email is reported as benign because the sender claimed identity and his sender email address are consistent.
-  
-- Case 5: **our_pred = False, matched_identity = target brand**: 
-  - The email is reported as benign because there is **no required action** found in the email.
-
-For example, if we have the following entry, it indicates that the email is imitating DHL Express because we have detected the sender identity as DHL, but its sender address is not from the official contacts of DHL. 
-In addition, it has a required instruction for the recipients to "confirm the delivery details," which suggests the email is a phishing attempt.
+For example, if we have the following entry, it indicates that the email is 
+- imitating DHL Express because we have detected the sender identity as DHL, but its sender address is not from the official contacts of DHL. 
+- In addition, it has a required instruction for the recipients to "confirm the delivery details," which suggests the email is a phishing attempt.
 
 | email_file_path | sender_name |            sender_address             | to_names | to_addresses | subject | email_body_text | sender_identities |        sender_relations                        |           required_actions           | our_pred |               matched_identity                | our_runtime |
 |:---------------:|:-----------:|:-------------------------------------:|:--------:|:------------:|:-------:|:---------------:|:-----------------:|:----------------------------------------------:|:------------------------------------:|:---------------:|:---------------------------------------------:|:-----------:|
@@ -143,4 +124,56 @@ In addition, it has a required instruction for the recipients to "confirm the de
 
 
 
+# PimRef as Outlook Plugin
 
+---
+
+ 
+The PiMRef add-in consists of two main components:
+
+1. **Outlook Add-in:** A task pane add-in to be sideloaded into an Outlook account (requires a valid Office 365 login).
+2. **PiMRef Server:** A server responsible for processing phishing analysis requests from the add-in.
+
+## Step 1: Install Outlook Add-in
+
+1. **Set up the Office Add-in Project:**
+   - Follow the official Microsoft documentation for setting up an Office Add-in using Yeoman: [Microsoft Office Add-ins Documentation](https://learn.microsoft.com/en-sg/office/dev/add-ins/develop/yeoman-generator-overview).
+   - **Important**: During the setup ```yo office```, select the following options:
+     - **Office Add-in Task Pane project**
+     - **typescript**
+     - **Outlook** 
+
+2. **Replace Files in the Generated Directory** 
+   - After running the Yeoman generator, replace the following files in the generated directory with the files from the PiMRef addin/ directory:
+     - manifest.json 
+     - src/taskpane/*
+     - assets/logo.png
+
+3. **Start the add-in locally by running the following command:**
+    ```bash
+    npm start
+    ```
+   - This will:
+     - Start Webpack on the default port (3000). 
+     - Sideload the add-in to the Outlook account you've configured.
+
+
+## Step 2: Settup up PiMRef Server
+
+1. **Install dependencies** 
+```commandline
+conda activate emailenv
+pip install flask 
+pip install flask-cors
+```
+
+2. **Run the server locally on the default port 5000**
+```commandline
+python app.py
+```
+
+## Step 3: Open your local Microsoft Outlook Desktop
+
+- Select an email, **Toolbar** -> **PimRef Add-in** -> **Show Task Pane**
+- Click **Check** to run detection
+- Click **View Detailed Explanation** to show results explanations
