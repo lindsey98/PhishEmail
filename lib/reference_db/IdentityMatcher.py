@@ -160,7 +160,7 @@ class IdentityMatcher:
         self.internal_relation_index_db = internal_relation_index_db
         self.brand_domain_map_path = brand_domain_map_path
         if brand_domain_map_path:
-            with open(self.brand_domain_map_path, 'r') as file:
+            with open(self.brand_domain_map_path, 'r', encoding='utf-8') as file:
                 self.brand_domain_map = json.load(file)
 
         self.knowledge_expansion = knowledge_base_expansion
@@ -378,19 +378,19 @@ class IdentityMatcher:
                 if len(actions) > 0:
                     Logger.spit(f'[!Phish] Imitating an internal role "{imitated_role}" but from an external domain with sender address as "{sender_domains}", and contains at least 1 instruction',
                                 caller_prefix=IdentityMatcher._CallerPrefix)
-                    return True, 'Internal', total_time
+                    return True, f'Internal: {imitated_role}', total_time
                 else:
                     Logger.spit(f'Imitating an internal role "{imitated_role}" but from an external domain, but does not contain any instruction => Benign',
                                 caller_prefix=IdentityMatcher._CallerPrefix)
-                    return False, 'Internal', total_time
+                    return False, f'Internal: {imitated_role}', total_time
             else:
                 Logger.spit(f'[!Phish] Imitating an internal role "{imitated_role}" but from an external domain with sender address as "{sender_domains}"',
                             caller_prefix=IdentityMatcher._CallerPrefix)
-                return True, 'Internal', total_time
+                return True, f'Internal: {imitated_role}', total_time
 
         if is_internal_emails:  # do not further check the internal relations
             Logger.spit('Consistent sender-recipient-address => Benign', caller_prefix=IdentityMatcher._CallerPrefix)
-            return False, 'Consistent', total_time
+            return False, f'Consistent: {imitated_role}', total_time
 
         if len(identities):
             Logger.spit('Does not match to any known identity or internal role => Benign',
