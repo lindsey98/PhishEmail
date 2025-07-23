@@ -1,0 +1,52 @@
+[project]
+name = "emailenv"
+channels = ["conda-forge"]
+platforms = ["linux-64"]
+
+[dependencies]
+python = ">=3.8"
+pip = "*"
+setuptools = "*"
+wheel = "*"
+numpy = "*"
+requests = "*"
+scikit-learn = "*"
+spacy = "3.6.1"
+beautifulsoup4 = "*"
+gensim = "*"
+matplotlib = "*"
+pandas = "*"
+nltk = "*"
+tqdm = "*"
+unidecode = "*"
+accelerate = "*"
+bitsandbytes = "*"
+langdetect = "*"
+gdown = "*"
+tldextract = "*"
+xgboost = "*"
+mlxtend = "*"
+pdf2image = "*"
+faiss-cpu = "*"
+
+[pypi-dependencies]
+"flask" = "*"
+"flask-cors" = "*"
+"imgkit" = "*"
+"deep-translator" = "*"
+"openattack" = "*"
+"opencv-python"= "==4.6.0.66"
+"opencv-contrib-python"= "==4.6.0.66"
+"protobuf" = "==4.25.4"
+"tf-keras" = "*"
+"tensorflow-cpu" = "*"
+"transformers" = "==4.46.3"
+"paddlepaddle" = "*"
+"paddleocr"= "*"
+"pdfkit" = { git = "https://github.com/akhilnarang/python-pdfkit.git", rev="add-timeout-option" }
+
+[tool.pixi.feature.cuda]
+system-requirements = {cuda = "12.1"}
+
+[tool.pixi.environments]
+cuda = ["cuda"]
