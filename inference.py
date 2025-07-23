@@ -11,9 +11,10 @@ import numpy as np
 from datetime import datetime
 from pathlib import Path
 import click
-from lib.baselines import dfence, helphed
+# from lib.baselines import dfence, helphed
 import json
 from lib.utilities.data_utils import DomainUtils
+
 
 class Config:
 
@@ -179,7 +180,7 @@ def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed, auto
                                   gpt_assistant=None,
                                   check_action=True,
                                   threshold=Config.thre,
-                                  relax_match=True)  #todo: relax_match!
+                                  relax_match=True)  # todo: relax_match!
 
     if '.mbox' in email_dir:
         mbox_to_eml(email_dir, email_dir.replace('.mbox', ''))
@@ -236,36 +237,39 @@ def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed, auto
         if os.path.exists(csv_file_path) and dataset.file_list[it] in [x.split(',')[0] for x in open(csv_file_path).readlines()]:
             continue
 
+        # if dataset.file_list[it] != 'datasets/field/silas/inbox/mbox/2099076.eml':
+        #     continue
+
         email_file_path, (sender_name, sender_address), \
             (to_names, to_addresses), reply_to_address, \
             subject, email_body_text, header = dataset[it]  # fixme: the GoogleTranslator may take some time
         sender_domains = dataset.domain_parsing(sender_address)  # a set
 
         # Check if the subject has been seen before
-        if str(sender_name) + str(subject) in seen_subjects:
-            continue   # Skip
+        # if str(sender_name) + str(subject) in seen_subjects:
+        #     continue   # Skip
         seen_subjects.add(str(sender_name) + str(subject))
 
         '''Baseline: D-Fence, HelpHed, Rspamd'''
-        if run_dfence:
-            _, dfence_pred, dfence_runtime = dfence.inference.test(email_file_path)
-            dfence_pred = dfence_pred[0]
-            Logger.spit(f"D-Fence prediction = {dfence_pred} with runtime = {dfence_runtime}", debug=True,
-                        caller_prefix='D-Fence')
+        # if run_dfence:
+        #     _, dfence_pred, dfence_runtime = dfence.inference.test(email_file_path)
+        #     dfence_pred = dfence_pred[0]
+        #     Logger.spit(f"D-Fence prediction = {dfence_pred} with runtime = {dfence_runtime}", debug=True,
+        #                 caller_prefix='D-Fence')
+        #
+        # else:
+        dfence_pred, dfence_runtime = None, None
 
-        else:
-            dfence_pred, dfence_runtime = None, None
-
-        if run_helphed:
-            helphed_stacking_pred, helphed_voting_pred, helphed_stacking_runtime, helphed_voting_runtime = helphed.inference.test(email_file_path)
-            helphed_stacking_pred = helphed_stacking_pred[0]
-            helphed_voting_pred = helphed_voting_pred[0]
-            Logger.spit(
-                f"HelpHed stacking prediction = {helphed_stacking_pred} with runtime = {helphed_stacking_runtime} \t"
-                f"HelpHed voting prediction = {helphed_voting_pred} with runtime = {helphed_voting_runtime}",
-                debug=True, caller_prefix='HelpHed')
-        else:
-            helphed_stacking_pred, helphed_voting_pred, helphed_stacking_runtime, helphed_voting_runtime = None, None, None, None
+        # if run_helphed:
+        #     helphed_stacking_pred, helphed_voting_pred, helphed_stacking_runtime, helphed_voting_runtime = helphed.inference.test(email_file_path)
+        #     helphed_stacking_pred = helphed_stacking_pred[0]
+        #     helphed_voting_pred = helphed_voting_pred[0]
+        #     Logger.spit(
+        #         f"HelpHed stacking prediction = {helphed_stacking_pred} with runtime = {helphed_stacking_runtime} \t"
+        #         f"HelpHed voting prediction = {helphed_voting_pred} with runtime = {helphed_voting_runtime}",
+        #         debug=True, caller_prefix='HelpHed')
+        # else:
+        helphed_stacking_pred, helphed_voting_pred, helphed_stacking_runtime, helphed_voting_runtime = None, None, None, None
 
         '''Our method'''
         if subject and any([x in subject.lower() for x in Config.forbidden_subject_prefix]):
@@ -367,7 +371,3 @@ if __name__ == '__main__':
 
     Logger.set_debug_on()
     main()
-
-    # "google-bert/bert-large-uncased" =>  340 million parameters.
-    # character-bert => 105 million parameters
-    # 5000 MiB
