@@ -38,7 +38,7 @@ Specify the --cls_to_attack to be 'identity' or 'action' based on the above Tabl
 Inference results will be saved in ``./datasets/nazario_results_adversarial_{attacker}.csv``
 E.g.
 ```commandline
-python -m lib.adversary.ner_attack_eval --attacker bae --cls_to_attack 'identity' 
+pixi run python -m lib.adversary.ner_attack_eval --attacker bae --cls_to_attack 'identity' 
 ```
 
 # CharacterBERT Adversarial Attack
@@ -46,6 +46,6 @@ python -m lib.adversary.ner_attack_eval --attacker bae --cls_to_attack 'identity
 ---
 
 ```commandline
-python -m lib.adversary.db_attack_gen
+pixi run python -m lib.adversary.db_attack_gen
 ```
 

@@ -7,22 +7,21 @@ from PIL import Image
 logger = get_logger()
 logger.setLevel(logging.ERROR)
 
-# pip install paddlepaddle
-# pip install paddleocr
 
 class OCR(PaddleOCR):
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+        super().__init__(**kwargs, use_space_char=True)
 
     def ocr(self, img: Union[str, np.ndarray, Image.Image], det=True, rec=True, cls=False) -> str:
         '''
         Improve the ocr function to clean the detected text
-        :param img:
-        :param det:
-        :param rec:
+        :param img: image path or image in ndarray or in PIL.Image
+        :param det: character detection on?
+        :param rec: character recognition on?
         :param cls:
-        :return:
+        :return: detected_text
         '''
+
         most_fit_results = super().ocr(img, det=det, rec=rec, cls=cls)
         if len(most_fit_results):
             most_fit_results = most_fit_results[0]
