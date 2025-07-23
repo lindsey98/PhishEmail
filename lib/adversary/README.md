@@ -1,15 +1,3 @@
-# Instructions
-
-This directory contains the scripts for the adversary experiments.
-
-# Setup the environment
-
----
-
-```commandline
-pip install -r requirements.txt
-```
-
 # NER Adversarial Attack
 
 ## To attack the NER model
@@ -18,12 +6,12 @@ pip install -r requirements.txt
 
 Select the attacking method from one of the following: 'bae', 'scpn', 'deepwordbug', 'gpt', 'viper', 'bart', 't5', 'concatsent'. E.g.
 ```commandline
-python -m lib.adversary.ner_attack_gen --attacker bae 
+pixi run python -m lib.adversary.ner_attack_gen --attacker bae 
 ```
 
-If 'deepwordbug' is selected, you also need to further specify the typo type as 'repeat', 'delete', 'switch' or 'replace'. E.g.
+If 'deepwordbug' is selected, you also need to also specify the typo type as 'repeat', 'delete', 'switch' or 'replace'. E.g.
 ```commandline
-python -m lib.adversary.ner_attack_gen --attacker deepwordbug --typo_type repeat 
+pixi run python -m lib.adversary.ner_attack_gen --attacker deepwordbug --typo_type repeat 
 ```
 
 The following table explains the details of each attack

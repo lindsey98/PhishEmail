@@ -1,9 +1,7 @@
-
 import click
 from ..encoder import IdentityBert
 from transformers import AutoTokenizer
-from .attack_utils import MyBAEAttacker, MyDeepWordBugAttacker, MyGPTAttacker, \
-    MyConcatSentAttacker, MyTextFoolerAttacker
+from .attack_utils import MyBAEAttacker, MyDeepWordBugAttacker, MyGPTAttacker, MyConcatSentAttacker, MyTextFoolerAttacker
 import os
 import json
 os.environ['OPENAI_API_KEY'] = open('./datasets/openai_key.txt').read()
@@ -53,6 +51,7 @@ def main(attacker, typo_type):
     with open(f'./datasets/Enron_2015_unique_annotation/annotated_internal.json', 'r') as json_file:
         data_7 = json.load(json_file)
     data = data_1 + data_2 + data_3 + data_4 + data_5 + data_6 + data_7
+
     # get test split
     with open('./datasets/ner_training_augmented/test.json', 'r') as outfile:
         test_split = json.load(outfile)
