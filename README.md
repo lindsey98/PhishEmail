@@ -63,16 +63,9 @@ E.g.
 
 # Run inference
 
-- Given a email folder, e.g.:
 ```commandline
 pixi run python inference.py --email_dir [directory of emails, e.g. field study/]
 ```
-
-- For .mbox, e.g.:
-```commandline
-pixi run python inference.py --email_dir inbox.mbox
-```
-
 
 # Output format
 
