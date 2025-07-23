@@ -149,8 +149,7 @@ class MyAttackEvaluator():
 
 
 @click.command()
-@click.option('--identity_model_checkpoint', required=True, type=str, default="checkpoints/identity_adversarial_training/checkpoint-770")
-# @click.option('--identity_model_checkpoint', required=True, type=str, default="checkpoints/identity-model")
+@click.option('--identity_model_checkpoint', required=True, type=str, default="checkpoints/identity-model")
 @click.option('--attacker', required=True, type=click.Choice(['bae', 'deepwordbug', 'gpt', 'concatsent', 'textfooler'], case_sensitive=False), help="Specify the attacker type (e.g., 'bae')")
 @click.option('--cls_to_attack', required=True, type=click.Choice(['identity', 'action'], case_sensitive=False), help="Attack which NER class")
 @click.option('--typo_type', help="Specify the typo type, only for the DeepWordBug attacking method", type=click.Choice(['repeat', 'delete', 'replace', 'switch'], case_sensitive=False))
@@ -166,12 +165,10 @@ def main(identity_model_checkpoint, attacker, cls_to_attack, typo_type, eval_onl
         with open(os.path.join(output_dir, f'adversarial_rephrase_{attacker}_{typo_type}.json'), 'r') as json_file:
             dataset = json.load(json_file)
         result_csv_path = f'./datasets/nazario_results_adversarial_{attacker}_{typo_type}.csv'
-        # result_csv_path = f'./datasets/nazario_results_adversarial_{attacker}_{typo_type}_no_advtraining.csv'
     else:
         with open(os.path.join(output_dir, f'adversarial_rephrase_{attacker}.json'), 'r') as json_file:
             dataset = json.load(json_file)
         result_csv_path = f'./datasets/nazario_results_adversarial_{attacker}.csv'
-        # result_csv_path = f'./datasets/nazario_results_adversarial_{attacker}_no_advtraining.csv'
 
     if eval_only:
         if not os.path.exists(result_csv_path):
