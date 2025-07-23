@@ -18,11 +18,6 @@ from ..utilities import Logger, Timer
 from typing import Union, List, Set
 import difflib
 
-# fixme: several things to adjust:
-#  1. Whether to check contains domain or not? => FP, do not check
-#  2. What's the threshold used to group the reported identities into clusters? => higher would produce more clusters, lower would produce bigger clusters
-#  3. What's the threshold used for internal keywords matching?
-
 class CharacterBERT:
     _CallerPrefix = "CharacterBert"
 

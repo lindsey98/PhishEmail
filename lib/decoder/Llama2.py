@@ -15,10 +15,13 @@ class IdentityLlama:
 
     def __init__(self, identity_checkpoint_path: str):
         self.device = 0 if torch.cuda.is_available() else 'cpu'
-        self.model = AutoModelForCausalLM.from_pretrained(identity_checkpoint_path, device_map='auto')
+        self.model = AutoModelForCausalLM.from_pretrained(identity_checkpoint_path,
+                                                          device_map='auto',
+                                                          trust_remote_code=True,
+                                                          torch_dtype=torch.bfloat16)
         self.tokenizer = AutoTokenizer.from_pretrained(identity_checkpoint_path)
         self.max_seq_len = 2048
-        self.gen_config = GenerationConfig.from_pretrained('NousResearch/Llama-2-7b-hf',
+        self.gen_config = GenerationConfig.from_pretrained(identity_checkpoint_path,
                                                   temperature=0.001,
                                                   max_new_tokens=50)
 
@@ -140,6 +143,9 @@ class IdentityLlama:
                 for match in matches:
                     if match not in identities:
                         identities.append(match)
+
+        if ("step 2: []" in results["generation"].lower()) or ("step 2" not in results["generation"].lower()):
+            print(results['generation'])
 
         Logger.spit(f"Recognized identities = {identities}, "
                     f"recognized actions = {actions}, "
