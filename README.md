@@ -1,158 +1,170 @@
-# PimRef
+# PiMRef
 
-# Introduction
+Welcome to the **PiMRef** repository: your gateway to **Detecting and Explaining Ever-evolving Spear Phishing Emails with Knowledge Base Invariants**.
 
-Official repository for **PiMRef: Detecting and Explaining Ever-evolving Spear Phishing Emails with Knowledge Base Invariants**.
+> [!NOTE] 
+> In today’s high-stakes cat-and-mouse world of spear phishing, attackers and defenders clash on an ever-shifting battlefield:
+> 
+> - **Adaptation cost:** Attackers sprint ahead with razor-sharp agility, slashing through defenses at minimal expense. The moment phishing tactics mutate, defenders scramble to forge brand-new detection models from scratch.  
+> - **AIGC-driven realism:** From eerily lifelike deepfakes to voice clones that whisper deception, attackers harness the raw power of generative AI—LLMs, deepfakes, voice cloning—to craft messages dripping with authenticity. Defenders, hamstrung by hallucinating generative models, remain on the back foot.
 
-## Environment
+> [!TIP] 
+> Arm yourself with our lightweight, explainable, and generalizable anti-phish framework—your digital armor forged from two keystones:
+> 
+> - **Identity-Fact-Checking:** Turn phishing detection into forensic fact-checking. We cross-examine every claimed identity—whether donned in an internal badge (e.g., HR, CEO) or cloaked in an external brand (e.g., PayPal, Alibaba)—and unmask any impostors.  
+> - **Intent Analysis via Engagement Instructions:** Zero in on the “next-step” commands—click this link, open that attachment, reveal your credentials—and decode the attacker’s hidden playbook. By mapping each malicious prompt, we expose spear-phishing campaigns before they ensnare unsuspecting users.
 
-- **Hardware Dependencies:** 
-We tested the functionality on a desktop computer with >=16GB of GPU VRAM (Optional), >=8GB of system RAM, and >=16GB of available disk space.
 
-- **Software Dependencies:** 
-We recommend using Linux Ubuntu. Our setup was tested on Ubuntu 20.04.6 LTS with Pixi 0.49.0, CUDA 12.1 (Optional).
+## ⚙️ Environment
 
-## Setup
+**Hardware Requirements:**
+- **GPU VRAM:** ≥ 16 GB  
+- **System RAM:** ≥ 8 GB  
+- **Disk Space:** ≥ 16 GB available  
 
-Install [Pixi](https://pixi.sh/dev/installation/).
+**Software Requirements:**
+- **OS:** Linux Ubuntu 20.04.6 LTS (tested)  
+- **Pixi:** 0.49.0  
+- **CUDA:** 12.1 (optional)  
+
+
+## 🛠️ Setup
+
+1. **Install Pixi**  
+   Follow the instructions at https://pixi.sh/dev/installation  
+
+2. **Clone & Install Dependencies**  
+   ```bash
+   sudo apt-get update
+   sudo apt-get install -y poppler-utils wkhtmltopdf
+   cd PhishEmail/
+   pixi install
+   bash get_model.sh
+   ```
+
+## Dataset Format
+
+**Prepare your email data in one of two ways:**
+
+### Option 1: Folder of `.eml` or `.txt` files
+    ```text
+    maildir/
+    ├─ 1.eml
+    ├─ 2.eml
+    ├─ 3.txt
+    └─ ...
+    ```
+
+> Each file contains the full raw email (headers + body).
+
+### Option 2: Mailbox export
+
+- Export your mailbox to a **`.mbox`** or **`.pst`** file.
+
+## Run Inference
 
 ```bash
-sudo apt-get update
-sudo apt-get install poppler-utils
-sudo apt-get install wkhtmltopdf
-cd PhishEmail/
-pixi install
-bash get_model.sh
+pixi run python inference.py \
+  --email_dir [path/to/emails or .mbox/.pst file]
 ```
 
-Make sure the directory structure is:
-```
-PhishEmail/
-    |_ addin/ # for settup up outlook plugin
-    |_ lib/
-        |_ baselines/ # dfence, helphed, chatspamdetector, etc.
-        |_ encoder/ # training and utils scripts for NER model
-        |_ decoder/ # alternative Llama2 model for sender and call-to-action extraction
-        |_ reference_db/ # utils scripts for the CharacterBERT model
-    |_ checkpoints/
-        |_ characterbert-typos-st-adv/ # this is the CharacterBERT model
-        |_ identity-model/ # this is the NER model
-        |_ company_database_names_field_study.json # this is a compact version of knowledge base, the brands inside have been manually cleaned
-        |_ dfence_models/
-        |_ helphed_models/
-    |_ inference.py # main script
-```
+## Output Format
 
-# Dataset format
+The results are saved as a CSV named:
 
----
+| Column             | Description                                       |
+| ------------------ | ------------------------------------------------- |
+| email\_file\_path  | Path to the email file                            |
+| sender\_name       | Sender’s name                                     |
+| sender\_address    | Sender’s email address                            |
+| to\_names          | Recipient name(s)                                 |
+| to\_addresses      | Recipient email address(es)                       |
+| subject            | Email subject                                     |
+| sender\_identities | Recognized sender identity                        |
+| sender\_relations  | Recognized sender–recipient relations             |
+| required\_actions  | Next-step instructions extracted from the email   |
+| matched\_identity  | Imitated brand or status (e.g., “Consistent”)     |
+| our\_pred          | True if predicted Phish                           |
+| our\_runtime       | Time taken for identity extraction & matching (s) |
 
-- Option 1: Prepare a **folder of emails in .eml or .txt format.** 
-The .eml/.txt contains the raw email with headers and content.
-E.g.
+----
 
-  ```commandline
-  maildir/
-   |_ 1.eml
-   |_ 2.eml
-   |_ 3.txt
-   ....
-  ```
+## PiMRef as Outlook Add‑in
 
-- Option 2: Alternatively, you can also **export your mailbox directly to the** **.mbox** or **.pst** format.
+Integrate PiMRef’s phishing detection directly into Outlook with a simple two-part setup:
 
-# Run inference
+1. **Outlook Task Pane Add-in** – A client-side add-in that you sideload into Outlook.  
+2. **PiMRef Server** – A back-end service that handles phishing analysis requests.
 
-```commandline
-pixi run python inference.py --email_dir [directory of emails, e.g. field study/]
-```
+### Step 1: Install the Outlook Add-in
 
-# Output format
+#### a. Scaffold the Office Add-in Project
 
----
-
-The output will be a CSV file saved as ``{today's date in YYYY-MM-DD}_results.csv``.
-
-The CSV file has the following columns:
-
-- **email_file_path**: Path to the email file
-
-- **sender_name**: sender name
-
-- **sender_address**: sender email address
-
-- **to_names**: recipient names
-
-- **to_addresses**: recipient email addresses
-
-- **subject**: email subject
-
-- **sender_identities**: recognized sender identity in email
-
-- **sender_relations**: recognized sender-recipient potential relation 
-
-- **required_actions**: next-step instruction from the email
-
-- **matched_identity**: Imitated target brand | No Prediction | No Matched Brand | Consistent
-
-- **our_pred**: if ``True`` => ``Phish``
-
-- **our_runtime**: Time taken for identities extraction and identity matching
+   1. **Install Yeoman and the Office generator**  
+       ```bash
+       npm install -g yo generator-office
+       ```
+   
+   2. **Create a new project**
+       ```bash
+       yo office
+       ```
+   
+   3. **When prompted, select:**
+    
+       **Project type:** `Office Add-in Task Pane`
+    
+       **Script type:** `TypeScript`
+    
+       **Host:** `Outlook`
+    
+       _This creates a skeleton Outlook add-in in a new directory._
 
 
-For example, if we have the following entry, it indicates that the email is 
-- imitating DHL Express because we have detected the sender identity as DHL, but its sender address is not from the official contacts of DHL. 
-- In addition, it has a required instruction for the recipients to "confirm the delivery details," which suggests the email is a phishing attempt.
+#### b. Replace with PiMRef Files
 
-| email_file_path | sender_name |            sender_address             | to_names | to_addresses | subject | email_body_text | sender_identities |        sender_relations                        |           required_actions           | our_pred |               matched_identity                | our_runtime |
-|:---------------:|:-----------:|:-------------------------------------:|:--------:|:------------:|:-------:|:---------------:|:-----------------:|:----------------------------------------------:|:------------------------------------:|:---------------:|:---------------------------------------------:|:-----------:|
-|       ...       |     DHL Shp     | sanjiv.bahl@rgnau.ac.in |   ...    |     ...      |   ...   |       ...       |       {'dhl shp'}       | set() | {'kindly find attached to track shp and confirm delivery details.'} |      True       | DHL Express |    0.023 |
+In the generated project directory, overwrite the following with our versions from the addin/ folder:
+
+- `manifest.json`
+
+- All files under `src/taskpane/`
+
+- `assets/logo.png`
 
 
+#### c. Run the Add-in Locally
+    
+1. **Install dependencies**
+    ```bash
+    npm install
+    ```
 
-# PimRef as Outlook Plugin
-
----
-
- 
-The PiMRef add-in consists of two main components:
-
-1. **Outlook Add-in:** A task pane add-in to be sideloaded into an Outlook account (requires a valid Office 365 login).
-2. **PiMRef Server:** A server responsible for processing phishing analysis requests from the add-in.
-
-## Step 1: Install Outlook Add-in
-
-1. **Set up the Office Add-in Project:**
-   - Follow the official Microsoft documentation for setting up an Office Add-in using Yeoman: [Microsoft Office Add-ins Documentation](https://learn.microsoft.com/en-sg/office/dev/add-ins/develop/yeoman-generator-overview).
-   - **Important**: During the setup ```yo office```, select the following options:
-     - **Office Add-in Task Pane project**
-     - **typescript**
-     - **Outlook** 
-
-2. **Replace Files in the Generated Directory** 
-   - After running the Yeoman generator, replace the following files in the generated directory with the files from the PiMRef addin/ directory:
-     - manifest.json 
-     - src/taskpane/*
-     - assets/logo.png
-
-3. **Start the add-in locally by running the following command:**
+2. **Start the dev server & sideload the add-in**
     ```bash
     npm start
     ```
-   - This will:
-     - Start Webpack on the default port (3000). 
-     - Sideload the add-in to the Outlook account you've configured.
+- Starts Webpack on port `3000`
+- Automatically sideloads the add-in into your Outlook (Office 365 login required)
 
+### Step 2: Set Up the PiMRef Server
 
-## Step 2: Settup up PiMRef Server
-
- **Run the server locally on the default port 5000**
-```commandline
-pixi run python app.py
+**Launch the server**
+```bash
+python app.py
 ```
 
-## Step 3: Open your local Microsoft Outlook Desktop
+_The server will listen on port 5000 by default._
 
-- Select an email, **Toolbar** -> **PimRef Add-in** -> **Show Task Pane**
-- Click **Check** to run detection
-- Click **View Detailed Explanation** to show results explanations
+### Step 3: Use PiMRef in Outlook
+
+1. Open **Microsoft Outlook (Desktop)**.
+
+2. Select any email.
+
+3. Click the **PiMRef Add-in** button in the ribbon, then choose **Show Task Pane**.
+
+4. The PiMRef pane will appear and begin analyzing the selected email in real time.
+
+# Citations
+If you run into any issues, please open an issue in this repository.
+Happy phishing defense! 🚀
