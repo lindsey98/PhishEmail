@@ -15,10 +15,6 @@ torch.manual_seed(seed)
 np.random.seed(seed)
 random.seed(seed)
 
-# fixme: several things to adjust:
-#  1. Whether to do tokenization first before the pipeline? By right, pipeline should handle the tokenization internally, however I find this extra pre-tokenization step can affect the final results.
-#  2. How to rank the reported entities?
-
 class IdentityBert:
     _CallerPrefix = "IdentityBert"
 
@@ -26,7 +22,7 @@ class IdentityBert:
                  identity_checkpoint_path: str,
                  aggregation_strategy="first"):
         self.device = 0 if torch.cuda.is_available() else 'cpu'
-        self.model = AutoModelForTokenClassification.from_pretrained(identity_checkpoint_path)
+        self.model     = AutoModelForTokenClassification.from_pretrained(identity_checkpoint_path)
         self.tokenizer = AutoTokenizer.from_pretrained(identity_checkpoint_path)
         self.max_length = self.tokenizer.model_max_length
         self.pad_to_max_length = False
@@ -46,7 +42,6 @@ class IdentityBert:
         input_ids = input_ids.to(self.device)
         outputs = self.model(input_ids)[0][0].cpu().numpy()
         return np.exp(outputs) / np.exp(outputs).sum(-1, keepdims=True) # B x C
-
 
     def _tokenize(self, text: str) -> List[str]:
         '''
@@ -69,7 +64,7 @@ class IdentityBert:
             add_special_tokens=True
         )
 
-        input_ids = tokens["input_ids"]
+        input_ids    = tokens["input_ids"]
         total_length = len(input_ids)
         batches = []
 
@@ -77,8 +72,9 @@ class IdentityBert:
         first_batch_ids = input_ids[:self.max_length]
         if len(first_batch_ids) >= self.max_length:
             first_batch_ids = input_ids[:self.max_length-1] + [eos_id]
+
         first_batch_tokens = self.tokenizer.convert_ids_to_tokens(first_batch_ids)
-        first_batch_str = self.tokenizer.convert_tokens_to_string(first_batch_tokens)
+        first_batch_str    = self.tokenizer.convert_tokens_to_string(first_batch_tokens)
         batches.append(first_batch_str)
 
         for i in range(self.max_length, total_length, max_tokens_subsequent):
@@ -99,7 +95,7 @@ class IdentityBert:
                 combined_ids = combined_ids[:self.max_length]
 
             combined_tokens = self.tokenizer.convert_ids_to_tokens(combined_ids)
-            combined_str = self.tokenizer.convert_tokens_to_string(combined_tokens)
+            combined_str    = self.tokenizer.convert_tokens_to_string(combined_tokens)
             batches.append(combined_str)
 
         return batches
@@ -205,6 +201,25 @@ class IdentityBert:
                 for match in matches:
                     if match not in identities:
                         identities.append(match)
+
+        if not identities:
+            with Timer() as timer:
+                entities = self.classifier_pipeline([raw_text])
+            entities = [y for x in entities for y in x]
+            temp_identities: List[Tuple[str, float]] = []
+
+            for ent in entities:
+                ent_label = ent['entity_group']
+                ent_text = ent['word']
+                ent_score = ent.get('score', 0.0)  # Get the confidence score
+                if ent_text not in ['[CLS]', '[SEP]', '[PAD]']:  # cannot be CLS token
+                    if ent_label == 'identity':
+                        if ent_text not in ['[UNK]']:
+                            temp_identities.append((ent_text, ent_score))
+            # Rank entities
+            ranked_identities = self.rank_entities(temp_identities)
+            identities = list(set([entity for entity, score in ranked_identities]))
+
 
         Logger.spit(f"Recognized identities = {identities}, "
                     f"recognized actions = {actions}, "
