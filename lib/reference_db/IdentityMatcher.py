@@ -15,6 +15,7 @@ ext = tldextract.TLDExtract(cache_dir='./lib/reference_db')
 from ..utilities.gpt_utils import chat_completion
 from ..utilities.data_utils import clean_string, DomainUtils
 from ..utilities import Logger, Timer
+from ..reference_db.db_expansion_agent import lookup_emails
 from typing import Union, List, Set
 import difflib
 
@@ -217,49 +218,47 @@ class IdentityMatcher:
             return None, None
 
     def expand_knowledge_base(self, queried_identity: str) -> Tuple[Optional[List[str]], float]:
-        if self.gpt_client is None:
-            from openai import OpenAI
-            import openai
-            openai.api_key = os.getenv("OPENAI_API_KEY")
-            openai.proxy = os.getenv("http_proxy")  # proxy
-            self.gpt_client = OpenAI()
+        # lookup_emails handles OpenAI client lifecycle internally; we no longer
+        # need self.gpt_client / openai.api_key / openai.proxy at this layer.
 
         with Timer() as timer:
-            search_email = chat_completion(client=self.gpt_client,
-                            context="Given a brand, output its official email address. "
-                                    "If the input is not a brand/organization name, output ''. "
-                                    "Directly give the email address with no additional explanation. "
-                                    "If the you are not sure about the official email, do not respond. "
-                                    "If there are multiple possible emails, output them all as a list [email_1, email_2, ...].",
-                            query=queried_identity)
+            try:
+                emails = lookup_emails(queried_identity)
+            except Exception as e:
+                Logger.spit(
+                    f'lookup_emails raised for {queried_identity!r}: {e!r}',
+                    caller_prefix=IdentityMatcher._CallerPrefix,
+                    warning=True,
+                )
+                emails = []
 
         searching_time = timer.interval
-        Logger.spit(f'Searching {queried_identity} in GPT, \t'
-                    f'Return {search_email}, \t'
-                    f'Searching time = {searching_time}',
-                    caller_prefix=IdentityMatcher._CallerPrefix)
+        Logger.spit(
+            f'Searching {queried_identity} via lookup_emails, \t'
+            f'Return {emails}, \t'
+            f'Searching time = {searching_time}',
+            caller_prefix=IdentityMatcher._CallerPrefix,
+        )
 
-        email_regex = re.compile(
-            r'^\[?([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})(,\s*[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})*\]?$')
+        if not emails:
+            return None, searching_time
 
-        if email_regex.fullmatch(search_email):  # if the return are valid email addresses
-            emails = search_email.strip('[]').split(',')
-            official_emails = list(set([email.split('@')[1].strip() for email in emails]))
+        # Extract unique mail domains. lookup_emails already validated each string
+        # with a strict email regex, so email.split('@')[1] is safe.
+        official_emails = list({e.split('@', 1)[1].strip().lower() for e in emails})
 
-            # update index DB
-            queried_identity_embed, embedding_time = self.embed_model([queried_identity.lower()])
-            queried_identity_embed = queried_identity_embed.cpu().numpy()
-            self.brand_index_db.add(queried_identity_embed, [queried_identity.lower()])
-            # fixme: it doesnt save the index db
+        # Update the FAISS brand index (unchanged behaviour).
+        queried_identity_embed, _embedding_time = self.embed_model([queried_identity.lower()])
+        queried_identity_embed = queried_identity_embed.cpu().numpy()
+        self.brand_index_db.add(queried_identity_embed, [queried_identity.lower()])
+        # fixme: it doesnt save the index db
 
-            # update the reference list
-            self.brand_domain_map[queried_identity.lower()] = official_emails
-            with open(self.brand_domain_map_path, 'w') as file:
-                json.dump(self.brand_domain_map, file, indent=4)
+        # Persist the brand -> domain mapping (unchanged behaviour).
+        self.brand_domain_map[queried_identity.lower()] = official_emails
+        with open(self.brand_domain_map_path, 'w') as file:
+            json.dump(self.brand_domain_map, file, indent=4)
 
-            return official_emails, searching_time
-
-        return None, searching_time
+        return official_emails, searching_time
 
     def handle_external_emails(self, identities: Set[str]) -> Tuple[Union[None, Set[str]], Union[None, Set[str]]]:
         '''

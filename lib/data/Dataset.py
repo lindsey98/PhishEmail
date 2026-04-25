@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup, NavigableString, Comment, Doctype, ProcessingInst
 from email.header import decode_header
 from email import message_from_string
 from email.message import Message
-from typing import Union, Optional, Tuple, List, Set
+from typing import Union, Optional, Tuple, List, Set, Dict
 from tldextract import tldextract
 import mailbox
 from deep_translator import GoogleTranslator
@@ -22,20 +22,27 @@ import unicodedata
 class EmailDataset(Dataset):
     _CallerPrefix = "Dataset Loader"
 
-    def __init__(self, root_path, translate_on=False):
-        self.file_list = []
+    def __init__(self, root_path, translate_on: bool = False):
 
-        if os.path.isdir(root_path):  # Check if root_path is a directory
+        self.file_list: List[str] = []
+        supported_extensions: List[str] = ['.eml', '.txt']
+
+        if isinstance(root_path, list):
+            for filename in root_path:
+                if any(filename.endswith(ext) for ext in supported_extensions):
+                    self.file_list.append(filename)
+        elif os.path.isdir(root_path):  # Check if root_path is a directory
             for root, dirs, files in os.walk(root_path):
                 for filename in files:
-                    if filename.endswith('.eml') or filename.endswith('.txt'):
+                    if any(filename.endswith(ext) for ext in supported_extensions):
                         full_path = os.path.join(root, filename)  # Join root with filename
                         self.file_list.append(full_path)
-        elif os.path.isfile(root_path):  # Check if root_path is a file
-            if root_path.endswith('.eml') or root_path.endswith('.txt'):
-                self.file_list.append(root_path)  # Add the file directly if it ends with .eml or .txt
+        elif os.path.isfile(root_path) and any(root_path.endswith(ext) for ext in supported_extensions):
+            self.file_list.append(root_path)  # Add the file directly if it ends with .eml or .txt
+        else:
+            raise NotImplementedError
 
-        proxy_set = os.getenv("http_proxy", None)
+        proxy_set: Optional[str] = os.getenv("http_proxy", None)
         if proxy_set is not None:
             self.translator = GoogleTranslator(source="auto", target="en",
                                                proxies={
@@ -45,7 +52,7 @@ class EmailDataset(Dataset):
         else:
             self.translator = GoogleTranslator(source="auto", target="en")
 
-        self.translate_on = translate_on
+        self.translate_on: bool = translate_on
 
 
     def __len__(self):
@@ -56,14 +63,14 @@ class EmailDataset(Dataset):
         '''
         Convert address to domain.suffix format
         :param address:
-        :return:
+        :return: set of domain.tld
         '''
+
         url_pattern = re.compile(r'(https?://[^)]+)')
         parsed_domains = set()
 
         if isinstance(address, float) or address is None:
             return parsed_domains
-
         elif isinstance(address, str):
             match = url_pattern.search(address)
             if match: # is a URL
@@ -75,9 +82,7 @@ class EmailDataset(Dataset):
                     domain = address.split('@')[-1]
                     domain = tldextract.extract(domain).domain + '.' + tldextract.extract(domain).suffix
                     parsed_domains.add(domain)
-
             return parsed_domains
-
         else:
             for add in address:
                 ind_domain = EmailDataset.domain_parsing(add)
@@ -103,17 +108,18 @@ class EmailDataset(Dataset):
         return header_parts_decoded
 
     @staticmethod
-    def extract_invisible_chars(text):
+    def extract_invisible_chars(text: str) -> Dict[str, str]:
         return {char: unicodedata.name(char, "UNKNOWN")
                 for char in text if not char.isprintable() or unicodedata.category(char).startswith("C")}
 
     @staticmethod
     def shrink_urls(text_content):
         '''
-        shrink long URL into its protocal://domain format
+        Shrink long URL into its protocal://domain format
         :param text_content:
-        :return:
+        :return: text_content with all URLs being shrunk
         '''
+
         url_pattern = re.compile(
             r'(?P<protocol>https?:)\/\/'  # Capture protocol (http: or https:)
             r'(?P<domain>(?:[\w-]+\.)+[\w-]+\.[a-zA-Z]{2,})'  # Capture domain with optional subdomains
@@ -186,10 +192,11 @@ class EmailDataset(Dataset):
     @staticmethod
     def remove_prev_messages(text_content: str) -> str:
         '''
-        remove previous conversations
+        Remove previous conversations
         :param text_content:
-        :return:
+        :return: text_content with Re:, Fwd: part being removed
         '''
+
         reply_pattern = re.compile(r"On.*wrote:")
         forward_pattern = re.compile(r"^-{2,}\s*Forwarded message\s*-+$", re.MULTILINE)
 
@@ -212,11 +219,16 @@ class EmailDataset(Dataset):
     @functools.lru_cache(maxsize=1000)
     def auto_translate(self, text):
         '''
-        translate non-english email
+        Translate non-english email
         :param text:
         :return:
         '''
+
         is_in_english = True
+        max_retries = 3  # Number of times to retry the translation
+        retry_delay = 2  # Seconds to wait before retrying
+        chunk_size = 4900  # Character limit for each translation request
+
         try:
             detected_langs = detect_langs(text)
             for lang in detected_langs:
@@ -225,10 +237,6 @@ class EmailDataset(Dataset):
                     break
         except langdetect.lang_detect_exception.LangDetectException:
             is_in_english = False
-
-        max_retries = 3  # Number of times to retry the translation
-        retry_delay = 2  # Seconds to wait before retrying
-        chunk_size = 4900  # Character limit for each translation request
 
         if not is_in_english:
             chunk = text[:chunk_size]
@@ -248,6 +256,12 @@ class EmailDataset(Dataset):
         return text
 
     def extract_subject(self, email_content: Message) -> str:
+        '''
+        Get subject
+        :param email_content:
+        :return:
+        '''
+
         subject = email_content.get('subject', '')
         if len(subject):
             try:
@@ -261,11 +275,12 @@ class EmailDataset(Dataset):
         '''
         Get sender name and address
         :param email_content:
-        :return:
+        :return: sender_name, sender_address
         '''
+
         from_header = email_content.get('From', '')
 
-        # 1. Case: Name in parentheses, Email without angle brackets
+        # Name in parentheses, Email without angle brackets
         comment_match = re.search(r'(.+?)\s*\(([^)]+)\)$', from_header)
         if comment_match:
             sender_address = comment_match.group(1).strip()
@@ -285,12 +300,14 @@ class EmailDataset(Dataset):
 
         return sender_name, sender_address
 
-    def extract_recipients(self, email_content: Message) -> Tuple[List[str], List[str]]:
+    @staticmethod
+    def extract_recipients(email_content: Message) -> Tuple[List[str], List[str]]:
         '''
         Get all recipients names and addresses
         :param email_content:
         :return:
         '''
+
         to_addresses = email_content.get('To', '')
         cc_addresses = email_content.get('Cc', '')  # Handling Cc if needed
         bcc_addresses = email_content.get('Bcc', '')  # Handling Bcc if needed, though Bcc should not be visible
@@ -322,19 +339,22 @@ class EmailDataset(Dataset):
 
         return to_names, to_addresses
 
-    def extract_reply_to_address(self, email_content: Message) -> Optional[str]:
+    @staticmethod
+    def extract_reply_to_address(email_content: Message) -> Optional[str]:
         reply_to = email_content.get('Reply-To', '').strip()
         if reply_to:
             reply_to_addresses = getaddresses([reply_to])  # Handles potential list of addresses
             return reply_to_addresses[0][1]  # Return the first parsed email address
         return None
 
-    def unfragment_text(self, text):
+    @staticmethod
+    def unfragment_text(text):
         '''
         Merge consecutive single characters into a word
         :param text:
         :return:
         '''
+
         pattern = r'\b(?:\w\s+){2,}\w\b'
 
         def replace_match(match):
@@ -360,12 +380,14 @@ class EmailDataset(Dataset):
         cleaned_text = re.sub(r'\s+', ' ', text).strip()
         return cleaned_text
 
-    def extract_rendered_text_from_html(self, html_content) -> str:
+    @staticmethod
+    def extract_rendered_text_from_html(html_content) -> str:
         '''
         Extract the text from HTML
         :param html_content:
         :return:
         '''
+
         unwanted_extensions = {'.css', '.js', '.ico', '.png', '.jpg', '.jpeg', '.gif', '.pdf', '.doc', '.docx', '.xls', '.xlsx'}
         unwanted_attachment = {'mailto:', 'tel:', '#', 'javascript', "mso["}
 
@@ -436,6 +458,7 @@ class EmailDataset(Dataset):
         :param part:
         :return:
         '''
+
         text_content = ""
         html_content = ""
 
