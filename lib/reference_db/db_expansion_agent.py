@@ -10,7 +10,7 @@ from typing import Dict, List, Union
 
 from openai import OpenAI
 
-from agent_utils import (
+from .agent_utils import (
     _allowed_domains_from_plan,
     _clean_emails,
     _ensure_api_key,
