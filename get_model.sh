@@ -14,7 +14,7 @@ fi
 
 # Download the zip
 echo "Downloading checkpoints..."
-pixi run gdown --id "$FILE_ID" -O "$FILE_NAME"
+pixi run gdown --fuzzy "https://drive.google.com/file/d/1OqrhuKMOq8kjkKuU3jtPo9a-jA1zsJj8/view" -O "$FILE_NAME"
 
 # Prepare extract directory
 rm -rf "$TARGET_DIR"

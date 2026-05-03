@@ -1,18 +1,15 @@
 # PiMRef
 
-Welcome to the **PiMRef** repository: your gateway to **Detecting and Explaining Ever-evolving Spear Phishing Emails with Knowledge Base Invariants**.
+Welcome to **PiMRef**: **Detecting and Explaining Ever‑evolving Spear‑Phishing Emails with Knowledge‑Base Invariants**.
 
-> [!NOTE] 
-> In today’s high-stakes cat-and-mouse world of spear phishing, attackers and defenders clash on an ever-shifting battlefield:
-> 
-> - **Adaptation cost:** Attackers sprint ahead with razor-sharp agility, slashing through defenses at minimal expense. The moment phishing tactics mutate, defenders scramble to forge brand-new detection models from scratch.  
-> - **AIGC-driven realism:** From eerily lifelike deepfakes to voice clones that whisper deception, attackers harness the raw power of generative AI—LLMs, deepfakes, voice cloning—to craft messages dripping with authenticity. Defenders, hamstrung by hallucinating generative models, remain on the back foot.
+> [!NOTE]
+> Spear phishing is a moving target. As soon as attackers change tactics, defenders often have to retrain or rebuild from scratch. At the same time, AIGC makes phishing content far more convincing, from LLM‑written copy to deepfakes and voice cloning.
 
-> [!TIP] 
-> Arm yourself with our lightweight, explainable, and generalizable anti-phish framework—your digital armor forged from two keystones:
-> 
-> - **Identity-Fact-Checking:** Turn phishing detection into forensic fact-checking. We cross-examine every claimed identity—whether donned in an internal badge (e.g., HR, CEO) or cloaked in an external brand (e.g., PayPal, Alibaba)—and unmask any impostors.  
-> - **Intent Analysis via Engagement Instructions:** Zero in on the “next-step” commands—click this link, open that attachment, reveal your credentials—and decode the attacker’s hidden playbook. By mapping each malicious prompt, we expose spear-phishing campaigns before they ensnare unsuspecting users.
+> [!TIP]
+> PiMRef is a lightweight, explainable, and generalizable anti‑phishing framework built on two pillars:
+>
+> - **Identity Fact‑Checking:** Verify claimed identities, whether internal (HR, CEO) or external (PayPal, Alibaba), and flag impostors.
+> - **Intent Analysis via Engagement Instructions:** Detect action prompts (click links, open attachments, share credentials) to surface attacker intent early.
 
 
 ## ⚙️ Environment
@@ -31,7 +28,7 @@ Welcome to the **PiMRef** repository: your gateway to **Detecting and Explaining
 ## 🛠️ Setup
 
 1. **Install Pixi**  
-   Follow the instructions at https://pixi.sh/dev/installation  
+   Follow the official instructions at https://pixi.sh/dev/installation  
 
 2. **Clone & Install Dependencies**  
    ```bash
@@ -39,7 +36,7 @@ Welcome to the **PiMRef** repository: your gateway to **Detecting and Explaining
    sudo apt-get install -y poppler-utils wkhtmltopdf
    cd PhishEmail/
    pixi install
-   bash get_model.sh
+   bash get_model.sh  # Downloads and extracts pre-trained model checkpoints
    ```
 
 ## Dataset Format
@@ -70,7 +67,7 @@ pixi run python inference.py \
 
 ## Output Format
 
-The results are saved as a CSV named:
+The results are saved as a CSV with the following columns:
 
 | Column             | Description                                       |
 | ------------------ | ------------------------------------------------- |
@@ -89,82 +86,123 @@ The results are saved as a CSV named:
 
 ----
 
-## PiMRef as Outlook Add‑in
+[//]: # (## PiMRef as Outlook Add‑in)
 
-Integrate PiMRef’s phishing detection directly into Outlook with a simple two-part setup:
+[//]: # ()
+[//]: # (Integrate PiMRef’s phishing detection into Outlook with a two‑part setup:)
 
-1. **Outlook Task Pane Add-in** – A client-side add-in that you sideload into Outlook.  
-2. **PiMRef Server** – A back-end service that handles phishing analysis requests.
+[//]: # ()
+[//]: # (1. **Outlook Task Pane Add-in** – A client-side add-in that you sideload into Outlook.  )
 
-### Step 1: Install the Outlook Add-in
+[//]: # (2. **PiMRef Server** – A back-end service that handles phishing analysis requests.)
 
-#### a. Scaffold the Office Add-in Project
+[//]: # ()
+[//]: # (### Step 1: Install the Outlook Add‑in)
 
-   1. **Install Yeoman and the Office generator**  
-       ```bash
-       npm install -g yo generator-office
-       ```
-   
-   2. **Create a new project**
-       ```bash
-       yo office
-       ```
-   
-   3. **When prompted, select:**
-    
-       **Project type:** `Office Add-in Task Pane`
-    
-       **Script type:** `TypeScript`
-    
-       **Host:** `Outlook`
-    
-       _This creates a skeleton Outlook add-in in a new directory._
+[//]: # ()
+[//]: # (#### a. Scaffold the Office Add‑in Project)
 
+[//]: # ()
+[//]: # (   1. **Install Yeoman and the Office generator**  )
 
-#### b. Replace with PiMRef Files
+[//]: # (       ```bash)
 
-In the generated project directory, overwrite the following with our versions from the addin/ folder:
+[//]: # (       npm install -g yo generator-office)
 
-- `manifest.json`
+[//]: # (       ```)
 
-- All files under `src/taskpane/`
+[//]: # (   )
+[//]: # (   2. **Create a new project**)
 
-- `assets/logo.png`
+[//]: # (       ```bash)
 
+[//]: # (       yo office)
 
-#### c. Run the Add-in Locally
-    
-1. **Install dependencies**
-    ```bash
-    npm install
-    ```
+[//]: # (       ```)
 
-2. **Start the dev server & sideload the add-in**
-    ```bash
-    npm start
-    ```
-- Starts Webpack on port `3000`
-- Automatically sideloads the add-in into your Outlook (Office 365 login required)
+[//]: # (   )
+[//]: # (   3. **When prompted, select:**)
 
-### Step 2: Set Up the PiMRef Server
+[//]: # (    )
+[//]: # (       **Project type:** `Office Add‑in Task Pane`)
 
-**Launch the server**
-```bash
-python app.py
-```
+[//]: # (       **Script type:** `TypeScript`)
 
-_The server will listen on port 5000 by default._
+[//]: # (       **Host:** `Outlook`)
 
-### Step 3: Use PiMRef in Outlook
+[//]: # (    )
+[//]: # (       _This creates a skeleton Outlook add‑in in a new directory._)
 
-1. Open **Microsoft Outlook (Desktop)**.
+[//]: # ()
+[//]: # ()
+[//]: # (#### b. Replace with PiMRef Files)
 
-2. Select any email.
+[//]: # ()
+[//]: # (In the generated project directory, overwrite the following with our versions from the `addin/` folder:)
 
-3. Click the **PiMRef Add-in** button in the ribbon, then choose **Show Task Pane**.
+[//]: # ()
+[//]: # (- `manifest.json`)
 
-4. The PiMRef pane will appear and begin analyzing the selected email in real time.
+[//]: # (- All files under `src/taskpane/`)
 
-# Citations
-If you run into any issues, please open an issue in this repository.
-Happy phishing defense! 🚀
+[//]: # (- `assets/logo.png`)
+
+[//]: # ()
+[//]: # ()
+[//]: # (#### c. Run the Add‑in Locally)
+
+[//]: # (    )
+[//]: # (1. **Install dependencies**)
+
+[//]: # (    ```bash)
+
+[//]: # (    npm install)
+
+[//]: # (    ```)
+
+[//]: # ()
+[//]: # (2. **Start the dev server & sideload the add‑in**)
+
+[//]: # (    ```bash)
+
+[//]: # (    npm start)
+
+[//]: # (    ```)
+
+[//]: # (- Starts Webpack on port `3000`)
+
+[//]: # (- Automatically sideloads the add‑in into your Outlook &#40;Office 365 login required&#41;)
+
+[//]: # ()
+[//]: # (### Step 2: Set Up the PiMRef Server)
+
+[//]: # ()
+[//]: # (**Launch the server**)
+
+[//]: # (```bash)
+
+[//]: # (python app.py)
+
+[//]: # (```)
+
+[//]: # ()
+[//]: # (_The server listens on port `5000` by default._)
+
+[//]: # ()
+[//]: # (### Step 3: Use PiMRef in Outlook)
+
+[//]: # ()
+[//]: # (1. Open **Microsoft Outlook &#40;Desktop&#41;**.)
+
+[//]: # (2. Select any email.)
+
+[//]: # (3. Click the **PiMRef Add‑in** button in the ribbon, then choose **Show Task Pane**.)
+
+[//]: # (4. The PiMRef pane appears and analyzes the selected email in real time.)
+
+[//]: # ()
+[//]: # (# Citations)
+
+[//]: # (If you run into any issues, please open an issue in this repository.)
+
+[//]: # (Happy phishing defense! 🚀)

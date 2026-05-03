@@ -145,8 +145,6 @@ def pst_to_eml(pff_file_path: str, output_dir: str):
     pff_file.close()
 
 
-
-
 class DomainUtils:
     def __init__(self):
         self.regional_tlds = self.get_regional_tlds_from_iana()
@@ -368,6 +366,12 @@ def process_entries(data: List[Dict], tokenizer: AutoTokenizer, label_to_id: Dic
 
     return processed_data
 
+def insert_invisible_char(text, invisible_char, idx:Optional[int]):
+    if len(text) < 3:
+        return text
+    if idx is None or idx < 1 or idx >= len(text) - 2:
+        idx = random.randint(1, len(text) - 2)
+    return text[:idx+1] + invisible_char + text[idx+1:]
 
 def repeat_char(text, idx:Optional[int]):
     """Add a repeating character."""
