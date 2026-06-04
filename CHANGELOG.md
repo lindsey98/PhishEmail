@@ -23,6 +23,12 @@ and this project aims to adhere to [Semantic Versioning](https://semver.org/spec
   conversion, plus `tests/test_email_io.py`.
 
 ### Changed
+- Split the 1,855-line `lib/reference_db/agent_utils.py` into focused modules:
+  `agent_constants.py` (config/regex/prompts), `agent_helpers.py` (deterministic
+  email/HTML/domain parsing, web fetch/BFS, DNS — **no OpenAI dependency**), and
+  `agent_llm.py` (OpenAI-backed phases/filters). `agent_utils.py` remains a thin
+  facade that re-exports the full public surface, so `from .agent_utils import …`
+  call sites are unchanged.
 - Cleaned up the core modules (`lib/reference_db/*`, `lib/encoder/IdentityBert.py`,
   `lib/utilities/*`, `lib/data/Dataset.py`, `lib/data/RenderDataset.py`):
   replaced the `from typing import *` star-import with explicit names, removed
