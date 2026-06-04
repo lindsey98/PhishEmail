@@ -41,7 +41,7 @@ def main(attacker, typo_type):
     with open(f'./datasets/{dataset_3_name}/annotated_all_augmented_50.json', 'r') as json_file:
         data_3 = json.load(json_file)
     dataset_4_name = "spam_archive_2023"
-    with open(f'./datasets/{dataset_4_name}_unique_annotation/annotated_annotator_augmented_50.json', 'r') as json_file:
+    with open(f'./datasets/{dataset_4_name}_unique_annotation/annotated_augmented_50.json', 'r') as json_file:
         data_4 = json.load(json_file)
     dataset_5_name = "augmented_internal_emails"
     with open(f'./datasets/{dataset_5_name}/annotate_all.json', 'r') as json_file:

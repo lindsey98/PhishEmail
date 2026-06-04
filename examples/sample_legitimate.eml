@@ -1,0 +1,16 @@
+From: GitHub <noreply@github.com>
+To: developer@example.com
+Subject: [GitHub] A third-party OAuth application has been added
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+
+Hi,
+
+A third-party OAuth application (Example App) was recently authorized to access
+your account.
+
+If this was you, no action is needed. If this was not you, you can revoke access
+in your account settings.
+
+Thanks,
+The GitHub Team

@@ -82,11 +82,5 @@ def lookup_emails(
     if not with_sources:
         return final_emails
 
-    by_email = {
-        (r.get("email") or "").lower(): (r.get("source_url") or "")
-        for r in final_src
-        if isinstance(r, dict)
-    }
-    return [
-        {"email": e, "source_url": by_email.get(e.lower(), "")} for e in final_emails
-    ]
+    by_email = {(r.get("email") or "").lower(): (r.get("source_url") or "") for r in final_src if isinstance(r, dict)}
+    return [{"email": e, "source_url": by_email.get(e.lower(), "")} for e in final_emails]

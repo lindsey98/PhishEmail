@@ -1,148 +1,22 @@
-import random
-import re
-from langdetect import detect, DetectorFactory, detect_langs
-DetectorFactory.seed = 42
-import langdetect
-from typing import *
-from transformers import AutoTokenizer
-from tldextract import tldextract
 import difflib
 import json
-from unidecode import unidecode
+import os
+import random
+import re
+from typing import Dict, List, Optional, Set, Tuple, Union
+
 import requests
 from bs4 import BeautifulSoup
-import os
-import mailbox
-from tqdm import tqdm
-from email import message_from_string
-from email.utils import parseaddr
-from bs4 import BeautifulSoup, NavigableString, Comment, Doctype, ProcessingInstruction
+from langdetect import DetectorFactory
+from tldextract import tldextract
+from transformers import AutoTokenizer
+from unidecode import unidecode
 
+# Email-container conversion helpers now live in the dependency-light email_io
+# module; re-exported here for backward compatibility.
+from .email_io import mbox_to_eml, msg_to_eml, pst_to_eml, resolve_email_input  # noqa: F401
 
-def mbox_to_eml(mbox_path: str, output_dir: str):
-    # Create output directory if it doesn't exist
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-
-    # Open the MBOX file
-    mbox = mailbox.mbox(mbox_path)
-
-    # Loop through all messages in the MBOX file
-    for i, message in tqdm(enumerate(mbox), desc="Exporting mbox to eml files"):
-        # Extract the message as a string
-        try:
-            msg_str = message.as_string()
-        except UnicodeEncodeError:
-            continue
-
-        # If no Message-ID, fall back to a fallback identifier (e.g., email index)
-        safe_message_id = f"email_{i + 1}"
-
-        # Create a filename for the .eml file using the Message-ID or fallback
-        eml_filename = os.path.join(output_dir, f"{safe_message_id}.eml")
-
-        # Save the message to an .eml file
-        try:
-            with open(eml_filename, 'w', encoding="utf-8") as eml_file:
-                eml_file.write(msg_str)
-        except UnicodeEncodeError:
-            os.remove(eml_filename)
-
-
-def pst_to_eml(pff_file_path: str, output_dir: str):
-    import pypff
-
-    def process_email(email, output_dir):
-        # Create .eml filename based on subject or a unique identifier
-        eml_filename = os.path.join(output_dir, f"{email.identifier}.eml")
-
-        with open(eml_filename, 'w', encoding='utf-8') as eml_file:
-            # # Write headers
-            if email.transport_headers:
-                eml_file.write(email.transport_headers)
-                eml_file.write("\n")
-            else:
-                headers = ''
-                sender_name = email.get_sender_name() if hasattr(email, 'get_sender_name') else "Unknown"
-                sender_attributes = parseaddr(message_from_string(email.transport_headers).get("From", ""))
-                if len(sender_attributes):
-                    sender_email = sender_attributes[1]
-                else:
-                    sender_email = ""
-                headers += f"From: {sender_name} <{sender_email}>\n"
-                headers += f"Date: {email.delivery_time}\n" if hasattr(email, 'delivery_time') else 'Date: \n'
-                headers += f"Subject: {email.subject}\n" if hasattr(email, 'subject') else 'Subject: \n'
-
-                # Determine content type and charset
-                content_type = 'text/plain'
-                charset = 'utf-8'  # Assuming UTF-8 for simplicity; adjust as necessary
-
-                # Add content type and charset to headers
-                headers += f"Content-Type: {content_type}; charset={charset}\n"
-                headers += f"Content-Transfer-Encoding: 8bit\n"  # or 'base64' for binary content
-                headers += '\n'  # Ensure there's a blank line after headers
-                eml_file.write(headers)
-
-            # Write email body
-            # Check if the email has an HTML body and decode appropriately
-            if email.html_body:
-                soup = BeautifulSoup(email.html_body, 'html.parser')
-                for script_or_style in soup(['script', 'style']):
-                    script_or_style.decompose()
-
-                # Remove DOCTYPE and comments
-                for element in soup.contents:
-                    if isinstance(element, Comment) or isinstance(element, Doctype):
-                        element.extract()
-
-                text_parts = []
-                for element in soup.descendants:
-                    if isinstance(element, NavigableString):
-                        # Add text directly, but strip to avoid excessive whitespace
-                        stripped_text = element.strip()
-                        if stripped_text:
-                            text_parts.append(stripped_text)
-                email_body = '. '.join(text_parts)
-
-            elif email.plain_text_body:
-                try:
-                    # Decode plain text body if it's binary
-                    email_body = email.plain_text_body.decode('utf-8', errors='replace')
-                except UnicodeDecodeError:
-                    email_body = email.plain_text_body.decode('iso-8859-1', errors='replace')  # Or 'windows-1252', 'shift_jis', etc.
-                except AttributeError:
-                    # Use the plain text body as is if it's already a string
-                    email_body = email.plain_text_body
-            else:
-                # Default to an empty body if none exists
-                email_body = ''
-
-            eml_file.write(email_body)
-
-    def extract_emails_and_folders(folder, output_dir):
-        # Iterate through items in the folder
-        for item in tqdm(folder.sub_items, desc="Exporting pst to eml files"):
-            if isinstance(item, pypff.folder):
-                # Recursively process subfolder
-                subfolder_output_dir = os.path.join(output_dir, item.name)
-                os.makedirs(subfolder_output_dir, exist_ok=True)
-                extract_emails_and_folders(item, subfolder_output_dir)
-            elif isinstance(item, pypff.message):
-                # Process email
-                process_email(item, output_dir)
-
-    # Open the pst file
-    pff_file = pypff.file()
-    pff_file.open(pff_file_path)
-
-    # Ensure output directory exists
-    os.makedirs(output_dir, exist_ok=True)
-
-    # Process root folder
-    root_folder = pff_file.get_root_folder()
-    extract_emails_and_folders(root_folder, output_dir)
-
-    pff_file.close()
+DetectorFactory.seed = 42
 
 
 class DomainUtils:
@@ -157,33 +31,32 @@ class DomainUtils:
             set: A set of regional TLDs.
         """
         url = "https://www.iana.org/domains/root/db"
-        response = requests.get(url, proxies={
-            "http": os.environ.get("http_proxy", None),
-            "https": os.environ.get("https_proxy", None)
-        })
+        response = requests.get(
+            url, proxies={"http": os.environ.get("http_proxy", None), "https": os.environ.get("https_proxy", None)}
+        )
         regional_tlds = set()
 
         if response.status_code == 200:
-            soup = BeautifulSoup(response.text, 'html.parser')
-            table = soup.find('table', {'id': 'tld-table'})
+            soup = BeautifulSoup(response.text, "html.parser")
+            table = soup.find("table", {"id": "tld-table"})
             if table:
-                rows = table.find_all('tr')
+                rows = table.find_all("tr")
                 for row in rows:
-                    cols = row.find_all('td')
+                    cols = row.find_all("td")
                     if len(cols) >= 2:
-                        tld = cols[0].text.strip('.').lower()
+                        tld = cols[0].text.strip(".").lower()
                         tld_type = cols[1].text.strip().lower()
                         # Define criteria for regional TLDs based on type or sponsoring organization
-                        if tld_type in {'geographic', 'internationalized', 'sponsored'}:
+                        if tld_type in {"geographic", "internationalized", "sponsored"}:
                             regional_tlds.add(tld)
         return regional_tlds
 
     def is_regional_tld(self, suffix: str) -> bool:
-        return '.' in suffix
+        return "." in suffix
 
     @staticmethod
     def extract_domain_set(official_emails: List[str]) -> Set[str]:
-        return set([tldextract.extract(x).domain + '.' + tldextract.extract(x).suffix for x in official_emails])
+        return set([tldextract.extract(x).domain + "." + tldextract.extract(x).suffix for x in official_emails])
 
     @staticmethod
     def extract_domain_components(domain: str) -> tuple:
@@ -194,17 +67,16 @@ class DomainUtils:
     def contains_domain(text: str) -> Tuple[bool, Optional[Set[str]]]:
 
         # Search for potential domain patterns in the given text
-        matches = re.findall(r'\b(?:[a-zA-Z0-9-]+\s?\.\s?)+[a-zA-Z]{2,}\b', text)
+        matches = re.findall(r"\b(?:[a-zA-Z0-9-]+\s?\.\s?)+[a-zA-Z]{2,}\b", text)
 
         # Initialize tldextract with the latest TLDs list
-        tld_extract = tldextract.TLDExtract(cache_dir=True,
-                                            suffix_list_urls=tldextract.PUBLIC_SUFFIX_LIST_URLS)
+        tld_extract = tldextract.TLDExtract(cache_dir=True, suffix_list_urls=tldextract.PUBLIC_SUFFIX_LIST_URLS)
 
         # Clean up the matches by removing any spaces and checking if the TLD is valid
         cleaned_matches = set()
         for match in matches:
             # Remove any spaces within the domain
-            cleaned_match = match.replace(' ', '')
+            cleaned_match = match.replace(" ", "")
             # Extract the subdomain, domain, and suffix (TLD)
             ext = tld_extract(cleaned_match)
             tld = ext.suffix
@@ -212,7 +84,7 @@ class DomainUtils:
             # Check if the TLD is valid (non-empty and recognized)
             if tld:
                 # Reconstruct the full domain (excluding subdomains if needed)
-                full_domain = '.'.join(part for part in [ext.domain, tld] if part)
+                full_domain = ".".join(part for part in [ext.domain, tld] if part)
                 cleaned_matches.add(full_domain)
 
         # Return True if a domain name with a valid TLD is found, otherwise False
@@ -241,6 +113,7 @@ class DomainUtils:
         # If no overlap found
         return False
 
+
 def find_all_token_indices(all_tokens: List[str], entity_tokens: List[str]):
     entity_len = len(entity_tokens)
     indices = []
@@ -249,21 +122,26 @@ def find_all_token_indices(all_tokens: List[str], entity_tokens: List[str]):
     lower_entity_tokens = [token.lower() for token in entity_tokens]
 
     for i in range(len(lower_all_tokens) - entity_len + 1):
-        if lower_all_tokens[i:i + entity_len] == lower_entity_tokens:
+        if lower_all_tokens[i : i + entity_len] == lower_entity_tokens:
             indices.append((i, i + entity_len))
 
     return indices
 
+
 def find_first_last_indices(all_tokens: List[str], entity_tokens: List[str]):
     entity_len = len(entity_tokens)
     indices = []
+
+    # Lowercase the entity tokens too: all_tokens is compared in lowercase below,
+    # so leaving entity_tokens cased would miss any entity containing uppercase.
+    lower_entity_tokens = [token.lower() for token in entity_tokens]
 
     # Track the first and last occurrence indices
     first_index = None
     last_index = None
 
     for i in range(len(all_tokens) - entity_len + 1):
-        if [token.lower() for token in all_tokens[i:i + entity_len]] == entity_tokens:
+        if [token.lower() for token in all_tokens[i : i + entity_len]] == lower_entity_tokens:
             if first_index is None:
                 first_index = (i, i + entity_len)
             last_index = (i, i + entity_len)
@@ -276,6 +154,7 @@ def find_first_last_indices(all_tokens: List[str], entity_tokens: List[str]):
 
     return indices
 
+
 def tokenize_and_map(text: str, annotations: List[Dict], tokenizer: AutoTokenizer, label_to_id: Dict):
     # Tokenize text using a custom tokenizer function
     tokens = tokenizer.tokenize(text, truncation=False, add_special_tokens=False)
@@ -284,8 +163,8 @@ def tokenize_and_map(text: str, annotations: List[Dict], tokenizer: AutoTokenize
     tags = [label_to_id["O"]] * len(tokens)
 
     for annot in annotations:
-        entity = annot['text']
-        entity_cls = annot['labels'][0]
+        entity = annot["text"]
+        entity_cls = annot["labels"][0]
         entity_tokens = tokenizer.tokenize(entity, truncation=False, add_special_tokens=False)
 
         if entity_cls == "identity":
@@ -304,13 +183,14 @@ def tokenize_and_map(text: str, annotations: List[Dict], tokenizer: AutoTokenize
             continue
     return tokens, tags
 
-def filter_duplicates(strings: Union[List[str], Set[str]], threshold: float=0.5) -> List[List[str]]:
+
+def filter_duplicates(strings: Union[List[str], Set[str]], threshold: float = 0.5) -> List[List[str]]:
     clusters = []
     for string in strings:
         # Remove "from:" or any case variation with optional spaces
-        string = re.sub(r'(?i)from\s*:?', '', string)
+        string = re.sub(r"(?i)from\s*:?", "", string)
         # Remove leading "##"
-        string = re.sub(r'^\s*#+', '', string)
+        string = re.sub(r"^\s*#+", "", string)
         string = string.strip()
         if len(string) <= 1:
             continue
@@ -318,7 +198,7 @@ def filter_duplicates(strings: Union[List[str], Set[str]], threshold: float=0.5)
         # Check similarity with already filtered strings
         similar_found = False
         for i, f in enumerate(clusters):
-            if difflib.SequenceMatcher(None, string, f[0]).ratio() > threshold: # group into a cluster
+            if difflib.SequenceMatcher(None, string, f[0]).ratio() > threshold:  # group into a cluster
                 similar_found = True
                 # Add the string to the existing cluster
                 clusters[i].append(string)
@@ -328,27 +208,28 @@ def filter_duplicates(strings: Union[List[str], Set[str]], threshold: float=0.5)
 
     return clusters
 
+
 def process_entries(data: List[Dict], tokenizer: AutoTokenizer, label_to_id: Dict):
     seen_texts = set()
     processed_data = []
     for entry in data:
-        text = entry['text']
+        text = entry["text"]
         if text in seen_texts:
             continue  # Skip duplicates
         seen_texts.add(text)
 
-        annotations = entry.get('annotations', [])
+        annotations = entry.get("annotations", [])
         if len(annotations) == 0:
             continue
 
         entities = []
         for annot in annotations:
-            entity_cls = annot['labels'][0]
-            entity = annot['text']
-            if entity_cls == 'identity':
-                if entity.startswith('From:'):
-                    annot['text'] = re.sub(r"From:\s*", "", entity)
-                entities.append(annot['text'])
+            entity_cls = annot["labels"][0]
+            entity = annot["text"]
+            if entity_cls == "identity":
+                if entity.startswith("From:"):
+                    annot["text"] = re.sub(r"From:\s*", "", entity)
+                entities.append(annot["text"])
 
         entity_clusters = filter_duplicates(entities, threshold=0.3)
         if len(entity_clusters) > 2:
@@ -356,62 +237,103 @@ def process_entries(data: List[Dict], tokenizer: AutoTokenizer, label_to_id: Dic
 
         tokens, tags = tokenize_and_map(text, annotations, tokenizer, label_to_id)
 
-        processed_data.append({
-            "id": entry['Id'],
-            "tokens": tokens,
-            "ner_tags": tags,
-            "metadata": entry.get("Path", ""),  # Add metadata field
-            "text": text
-        })
+        processed_data.append(
+            {
+                "id": entry["Id"],
+                "tokens": tokens,
+                "ner_tags": tags,
+                "metadata": entry.get("Path", ""),  # Add metadata field
+                "text": text,
+            }
+        )
 
     return processed_data
 
-def insert_invisible_char(text, invisible_char, idx:Optional[int]):
+
+def insert_invisible_char(text, invisible_char, idx: Optional[int]):
     if len(text) < 3:
         return text
     if idx is None or idx < 1 or idx >= len(text) - 2:
         idx = random.randint(1, len(text) - 2)
-    return text[:idx+1] + invisible_char + text[idx+1:]
+    return text[: idx + 1] + invisible_char + text[idx + 1 :]
 
-def repeat_char(text, idx:Optional[int]):
+
+def repeat_char(text, idx: Optional[int]):
     """Add a repeating character."""
     if len(text) < 3:
         return text
     if idx is None or idx < 1 or idx >= len(text) - 2:
         idx = random.randint(1, len(text) - 2)
     char = text[idx]
-    return text[:idx] + char + char + text[idx+1:]
+    return text[:idx] + char + char + text[idx + 1 :]
 
-def delete_char(text, idx:Optional[int]):
+
+def delete_char(text, idx: Optional[int]):
     """Delete a character."""
     if len(text) < 3:
         return text
     if idx is None or idx < 1 or idx >= len(text) - 2:
         idx = random.randint(1, len(text) - 2)
-    return text[:idx] + text[idx+1:]
+    return text[:idx] + text[idx + 1 :]
 
-def switch_chars(text, idx:Optional[int]):
+
+def switch_chars(text, idx: Optional[int]):
     """Switch two adjacent characters."""
     if len(text) < 3:
         return text
     if idx is None or idx < 1 or idx >= len(text) - 2:
         idx = random.randint(1, len(text) - 2)
-    return text[:idx] + text[idx+1] + text[idx] + text[idx+2:]
+    return text[:idx] + text[idx + 1] + text[idx] + text[idx + 2 :]
 
-def replace_with_similar(text, idx:Optional[int]):
+
+def replace_with_similar(text, idx: Optional[int]):
     """Replace a character with a similar-looking Latin/Unicode character."""
     similar_chars = {
-        '-': '˗', '9': '৭', '8': 'Ȣ', '7': '𝟕', '6': 'б', '5': 'Ƽ', '4': 'Ꮞ', '3': 'Ʒ', '2': 'ᒿ', '1': 'l', '0': 'O',
-        "'": '`', 'a': 'ɑ', 'b': 'Ь', 'c': 'ϲ', 'd': 'ԁ', 'e': 'е', 'f': '𝚏', 'g': 'ɡ', 'h': 'հ', 'i': 'і', 'j': 'ϳ',
-        'k': '𝒌', 'l': 'ⅼ', 'm': 'ｍ', 'n': 'ո', 'o': 'о', 'p': 'р', 'q': 'ԛ', 'r': 'ⲅ', 's': 'ѕ', 't': '𝚝', 'u': 'ս',
-        'v': 'ѵ', 'w': 'ԝ', 'x': '×', 'y': 'у', 'z': 'ᴢ'
+        "-": "˗",
+        "9": "৭",
+        "8": "Ȣ",
+        "7": "𝟕",
+        "6": "б",
+        "5": "Ƽ",
+        "4": "Ꮞ",
+        "3": "Ʒ",
+        "2": "ᒿ",
+        "1": "l",
+        "0": "O",
+        "'": "`",
+        "a": "ɑ",
+        "b": "Ь",
+        "c": "ϲ",
+        "d": "ԁ",
+        "e": "е",
+        "f": "𝚏",
+        "g": "ɡ",
+        "h": "հ",
+        "i": "і",
+        "j": "ϳ",
+        "k": "𝒌",
+        "l": "ⅼ",
+        "m": "ｍ",
+        "n": "ո",
+        "o": "о",
+        "p": "р",
+        "q": "ԛ",
+        "r": "ⲅ",
+        "s": "ѕ",
+        "t": "𝚝",
+        "u": "ս",
+        "v": "ѵ",
+        "w": "ԝ",
+        "x": "×",
+        "y": "у",
+        "z": "ᴢ",
     }
     if len(text) < 3:
         return text
     if idx is None or idx < 1 or idx >= len(text) - 2:
         idx = random.randint(1, len(text) - 2)
     char = text[idx]
-    return text[:idx] + similar_chars.get(char, char) + text[idx+1:]
+    return text[:idx] + similar_chars.get(char, char) + text[idx + 1 :]
 
 
 def match_case(word, pattern):
@@ -432,7 +354,7 @@ def to_sentence_case(text):
     Capitalizes the first word and lowers the rest, except for proper nouns or acronyms.
     """
     # Tokenize based on whitespace or specific parse tokens
-    tokens = re.split(r'(\s+|\(|\)|,|\.|\;)', text)  # split but keep delimiters
+    tokens = re.split(r"(\s+|\(|\)|,|\.|\;)", text)  # split but keep delimiters
 
     # Capitalize first VB (or other sentence-starting token)
     capitalized = False
@@ -443,28 +365,29 @@ def to_sentence_case(text):
             capitalized = True
         else:
             new_tokens.append(token.lower())  # lowercase the rest
-    return ''.join(new_tokens)
+    return "".join(new_tokens)
 
 
 def remove_trailing_digits(s):
     # Use regex to replace trailing _digits with an empty string
-    return re.sub(r'_\d+$', '', s)
-
+    return re.sub(r"_\d+$", "", s)
 
 
 def clean_string(s: str) -> str:
     s = s.strip()
     # Define the pattern for unnecessary special characters
-    special_chars_pattern = r'[()\[\]:\*\^]'
+    special_chars_pattern = r"[()\[\]:\*\^]"
     # Remove the special characters from the string
-    s = re.sub(special_chars_pattern, '', s)
+    s = re.sub(special_chars_pattern, "", s)
     # normalization: todo
     # mеtамаsk
     return s
 
+
 def remove_urls(text):
-    pattern = r'\((https?://[^)]+)\)'
-    return re.sub(pattern, '', text)
+    pattern = r"\((https?://[^)]+)\)"
+    return re.sub(pattern, "", text)
+
 
 def normalization(text):
     transliterated = unidecode(text)
@@ -495,14 +418,15 @@ def parse_json(text, delimiter='{"text":'):
 
 
 def save_jsonl(data, filename):
-    with open(filename, 'w') as file:
+    with open(filename, "w") as file:
         for entry in data:
             json.dump(entry, file)
-            file.write('\n')
+            file.write("\n")
+
 
 def load_jsonl(filename):
     data = []
-    with open(filename, 'r') as file:
+    with open(filename, "r") as file:
         for line in file:
             data.append(json.loads(line))
     return data

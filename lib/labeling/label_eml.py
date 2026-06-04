@@ -1,8 +1,9 @@
 
 
 import re
-from bs4 import BeautifulSoup
 from email import message_from_file
+
+from bs4 import BeautifulSoup
 
 css_block = """
 .entity {
@@ -71,7 +72,7 @@ css_block = """
     visibility: visible;
     opacity: 1;
 }
-""" 
+"""
 
 # Function to wrap matches with <strong> tags
 def wrap_identity(match):
@@ -85,7 +86,7 @@ def wrap_sender(text, identity, is_inconsistent):
         return f"<span class='entity sender' data-class='Sender'>{text}<span class='popup alert'>Claims to be {identity} but sent from domain '{text.split('@')[-1].removesuffix('>')}'</span></span>"
     else:
         return f"<span class='entity sender' data-class='Sender'>{text}</span>"
-    
+
 def append_css_styling(html_content, css_block):
     # Check if there's a <head> section
     if "<head>" in html_content:
@@ -102,7 +103,7 @@ def unwrap_links(html_content):
         a_tag.unwrap()
     for span_tag in soup.find_all('span'):
         span_tag.unwrap()
-    
+
     return str(soup)
 
 def remove_images(html_content):
@@ -114,32 +115,35 @@ def remove_images(html_content):
 
 # Function to process and modify the text/html part
 def label_html(html_content, identities, actions):
-    # Escape strings to handle special characters
-    escaped_identities = [re.escape(s) for s in identities]
-    escaped_actions = [re.escape(s) for s in actions]
-    # Create a regex pattern to match any of the target strings
-    pattern_identities = r'(' + '|'.join(escaped_identities) + r')'
-    pattern_actions = r'(' + '|'.join(escaped_actions) + r')'
+    # Escape strings to handle special characters; skip empty strings so we never
+    # build an empty alternation like "()" — that matches every position and would
+    # wrap the entire document.
+    escaped_identities = [re.escape(s) for s in identities if s]
+    escaped_actions = [re.escape(s) for s in actions if s]
 
-    # Use re.sub to wrap matches
-    html_content = re.sub(pattern_identities, wrap_identity, html_content, flags=re.IGNORECASE)
-    html_content = re.sub(pattern_actions, wrap_actions, html_content, flags=re.IGNORECASE)
+    if escaped_identities:
+        pattern_identities = r'(' + '|'.join(escaped_identities) + r')'
+        html_content = re.sub(pattern_identities, wrap_identity, html_content, flags=re.IGNORECASE)
+    if escaped_actions:
+        pattern_actions = r'(' + '|'.join(escaped_actions) + r')'
+        html_content = re.sub(pattern_actions, wrap_actions, html_content, flags=re.IGNORECASE)
     return html_content
 
 def label_headers(sender, recipient, subject, identities, actions, is_inconsistent, matched_identity):
-    escaped_identities = [re.escape(s) for s in identities]
-    escaped_actions = [re.escape(s) for s in actions]
-
-    pattern_identities = r'(' + '|'.join(escaped_identities) + r')'
-    pattern_actions = r'(' + '|'.join(escaped_actions) + r')'
+    # Skip empty strings to avoid an empty "()" alternation matching everywhere.
+    escaped_identities = [re.escape(s) for s in identities if s]
+    escaped_actions = [re.escape(s) for s in actions if s]
 
     sender = wrap_sender(sender, matched_identity, is_inconsistent)
 
-    recipient = re.sub(pattern_identities, wrap_identity, recipient, flags=re.IGNORECASE)
-    recipient = re.sub(pattern_actions, wrap_actions, recipient, flags=re.IGNORECASE)
-
-    subject = re.sub(pattern_identities, wrap_identity, subject, flags=re.IGNORECASE)
-    subject = re.sub(pattern_actions, wrap_actions, subject, flags=re.IGNORECASE)
+    if escaped_identities:
+        pattern_identities = r'(' + '|'.join(escaped_identities) + r')'
+        recipient = re.sub(pattern_identities, wrap_identity, recipient, flags=re.IGNORECASE)
+        subject = re.sub(pattern_identities, wrap_identity, subject, flags=re.IGNORECASE)
+    if escaped_actions:
+        pattern_actions = r'(' + '|'.join(escaped_actions) + r')'
+        recipient = re.sub(pattern_actions, wrap_actions, recipient, flags=re.IGNORECASE)
+        subject = re.sub(pattern_actions, wrap_actions, subject, flags=re.IGNORECASE)
 
     return sender, recipient, subject
 # Open and process the .eml file
@@ -157,7 +161,7 @@ def label_eml_file(file: str, identities, actions):
             html_content = append_css_styling(html_content, css_block)
             html_content = unwrap_links(html_content)
             html_content = label_html(html_content, identities, actions)
-            
+
             part.set_payload(html_content)
 
     # Save the modified .eml file
@@ -188,7 +192,7 @@ def label_html_file(file: str, identities, actions):
             html_content = unwrap_links(html_content)
             html_content = remove_images(html_content)
             html_content = label_html(html_content, identities, actions)
-            
+
     output_html_path = file.removesuffix('.eml') + '_labelled.html'
     with open(output_html_path, "w") as output_file:
         html_content_with_css = append_css_styling(html_content, css_block)

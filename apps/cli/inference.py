@@ -1,16 +1,24 @@
 import os
-import time
-from tqdm import tqdm
+import sys
+
+# Make the project root (which contains the `lib/` package) importable when this
+# script is run directly, e.g. `python apps/cli/inference.py` from the repo root.
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)))
+
 import csv
-from lib.reference_db import CharacterBERT, IdentityMatcher, BaseFaissIPRetriever
-from lib.utilities import Logger, pst_to_eml, mbox_to_eml
-from lib.data import RenderDataset, OCR
+import time
 from datetime import datetime
 from pathlib import Path
+
 import click
+from tqdm import tqdm
+
 from lib.baselines import dfence, helphed
+from lib.config import Config
+from lib.data import OCR, RenderDataset
+from lib.reference_db import IdentityMatcher
+from lib.utilities import Logger, resolve_email_input
 from lib.utilities.data_utils import DomainUtils
-from config import Config
 
 TODAY = datetime.today()
 TODAY_DATE = TODAY.strftime("%Y-%m-%d")
@@ -65,7 +73,7 @@ def _load_existing_rows(csv_path: str):
 
 
 @click.command()
-@click.option("--email_dir", help="Dir containing all the .eml files", required=True, type=str)
+@click.option("--email_dir", help="A directory of emails, a single .eml/.txt file, or a .mbox/.pst/.msg container", required=True, type=str)
 @click.option("--save_vis", help="Save the visualized results or not", is_flag=True, show_default=True, default=False)
 @click.option("--vis_dir", help="Where to save the visualized result", default='./datasets/vis', type=str)
 @click.option("--output_csv", default=f'{TODAY_STR}_results.csv', help="Output txt path")
@@ -95,17 +103,17 @@ def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed, auto
                                   threshold=Config.thre,
                                   relax_match=True)  # todo: relax_match!
 
-    if '.mbox' in email_dir:
-        mbox_to_eml(email_dir, email_dir.replace('.mbox', ''))
-        desc_folder = email_dir.replace('.mbox', '')
-    elif email_dir.endswith('.pst'):
-        pst_to_eml(email_dir, email_dir.replace('.pst', ''))
-        desc_folder = email_dir.replace('.pst', '')
-    else:
-        desc_folder = email_dir
+    # Accept a directory, a single .eml/.txt, or a .mbox/.pst/.msg container;
+    # everything is normalized to what RenderDataset can load.
+    email_source = resolve_email_input(email_dir)
+
+    # Derive a stable directory prefix for the (transient) render dump dir.
+    dump_base = email_dir.rstrip('/').rstrip('\\')
+    if not os.path.isdir(email_dir):
+        dump_base = os.path.splitext(dump_base)[0]
 
     ocr_model = OCR()
-    dataset = RenderDataset(desc_folder, ocr_model=ocr_model, dumpDir=desc_folder + '_imgs', save_imgs=False, translate_on=auto_translate)
+    dataset = RenderDataset(email_source, ocr_model=ocr_model, dumpDir=dump_base + '_imgs', save_imgs=False, translate_on=auto_translate)
 
     csv_file_path = output_csv
     if save_vis:
@@ -133,9 +141,6 @@ def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed, auto
         # Fast in-memory skip — no more per-iteration file reads.
         if email_file_path_iter in seen_paths:
             continue
-
-        # if email_file_path_iter != 'datasets/field/user/inbox/mbox/2099076.eml':
-        #     continue
 
         email_file_path, (sender_name, sender_address), \
             (to_names, to_addresses), reply_to_address, \

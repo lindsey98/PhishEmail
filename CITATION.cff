@@ -1,0 +1,31 @@
+# This CITATION.cff lets GitHub render a "Cite this repository" button and lets
+# tools export BibTeX/APA automatically.
+# TODO before publishing: replace every `TODO` below with real metadata
+# (authors, year, venue, arXiv ID / DOI). See https://citation-file-format.github.io
+cff-version: 1.2.0
+message: "If you use PiMRef in your research, please cite both the software and the paper below."
+title: "PiMRef: Detecting and Explaining Ever-evolving Spear-Phishing Emails with Knowledge-Base Invariants"
+type: software
+repository-code: "https://github.com/your-org/PhishEmail"
+license: CC-BY-NC-4.0
+authors:
+  # TODO: list the real authors, in order.
+  - given-names: "TODO-FirstName"
+    family-names: "TODO-LastName"
+    # orcid: "https://orcid.org/0000-0000-0000-0000"
+# Optional: pin the version/date you are releasing.
+# version: "0.1.0"
+# date-released: "TODO-YYYY-MM-DD"
+
+# The paper to cite preferentially.
+preferred-citation:
+  type: article            # TODO: "article" for journal/arXiv, "conference-paper" for proceedings
+  title: "PiMRef: Detecting and Explaining Ever-evolving Spear-Phishing Emails with Knowledge-Base Invariants"
+  authors:
+    - given-names: "TODO-FirstName"
+      family-names: "TODO-LastName"
+  year: TODO-YYYY          # e.g. 2025
+  # journal: "TODO journal / arXiv"
+  # collection-title: "TODO proceedings (for conference papers)"
+  # doi: "TODO"
+  # url: "https://arxiv.org/abs/TODO"
