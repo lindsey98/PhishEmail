@@ -1,5 +1,5 @@
 --find-links https://download.pytorch.org/whl/torch_stable.html
-beautifulsoup4==4.9.1
+beautifulsoup4==4.14.3
 beautifultable==0.8.0
 tldextract==2.2.2
 transformers==2.11.0
