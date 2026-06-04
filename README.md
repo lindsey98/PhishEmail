@@ -114,29 +114,35 @@ call‑to‑action(s), and the domain mismatch that triggered the verdict.
 
 ## Dataset Format
 
-**Prepare your email data in one of two ways:**
+`--email_dir` accepts any of the following — they are all normalized
+automatically, so you don't need to pre-convert anything:
 
-### Option 1: Folder of `.eml` or `.txt` files
-    ```text
-    maildir/
-    ├─ 1.eml
-    ├─ 2.eml
-    ├─ 3.txt
-    └─ ...
-    ```
+| Input | Notes |
+| --- | --- |
+| **Folder** of `.eml` / `.txt` files | Scanned recursively. Any `.mbox`/`.pst`/`.msg` files found inside are expanded too. |
+| A **single** `.eml` / `.txt` file | The full raw email (headers + body). |
+| A **`.mbox`** mailbox export | Each message is extracted to its own `.eml`. |
+| A **`.pst`** Outlook archive | Requires the optional `pypff` backend (`pip install libpff-python`). |
+| A **`.msg`** Outlook message | Supported via the `extract-msg` package (installed by default). |
 
-> Each file contains the full raw email (headers + body).
+```text
+maildir/
+├─ 1.eml
+├─ 2.eml
+├─ 3.txt
+└─ ...
+```
 
-### Option 2: Mailbox export
-
-- Export your mailbox to a **`.mbox`** or **`.pst`** file.
+Unsupported file types raise a clear error listing the accepted formats.
 
 ## Run Inference
 
 ```bash
-pixi run inference --email_dir [path/to/emails or .mbox/.pst file]
+pixi run inference --email_dir [folder | file.eml | mailbox.mbox | archive.pst | message.msg]
 # equivalently: pixi run python apps/cli/inference.py --email_dir [...]
 ```
+
+A ready-to-run example lives in [`examples/`](examples/).
 
 ### Options
 

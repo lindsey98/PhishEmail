@@ -45,6 +45,7 @@ faiss-cpu = "*"
 "paddlepaddle" = "*"
 "paddleocr"= "*"
 "playwright" = "*"
+"extract-msg" = "*"
 "pdfkit" = { git = "https://github.com/akhilnarang/python-pdfkit.git", rev="add-timeout-option" }
 
 [tasks]

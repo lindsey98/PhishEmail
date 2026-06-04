@@ -15,6 +15,19 @@ and this project aims to adhere to [Semantic Versioning](https://semver.org/spec
 - Tooling config: `pyproject.toml` (ruff/black/pytest), `.pre-commit-config.yaml`,
   `.editorconfig`.
 - `examples/` with synthetic sample emails and a quickstart.
+- Support for **Outlook `.msg`** files and a unified `resolve_email_input()`
+  dispatcher that accepts a folder, a single `.eml`/`.txt`, or a
+  `.mbox`/`.pst`/`.msg` container (directories containing archives are expanded
+  and merged). Unsupported inputs now raise a clear, actionable error.
+- `lib/utilities/email_io.py`: a dependency-light home for all email-format
+  conversion, plus `tests/test_email_io.py`.
+
+### Changed
+- Decoupled email I/O and logging from the heavy ML utilities: importing
+  `lib.utilities` (and the email-conversion helpers) no longer pulls in
+  `transformers`/`langdetect`/etc.
+- Removed a ~257-line dead commented-out duplicate class from
+  `lib/data/RenderDataset.py`.
 - "How It Works" section in the README documenting the detection pipeline,
   the inference CLI options, and the `OPENAI_API_KEY` requirement for the
   knowledge-base expansion agent.
@@ -43,5 +56,8 @@ and this project aims to adhere to [Semantic Versioning](https://semver.org/spec
 - `label_html`/`label_headers` no longer build an empty regex alternation when
   the identities/actions list is empty (which previously matched and wrapped the
   entire document).
+- Fragile email-format dispatch in the CLI (`'.mbox' in path` substring match and
+  `path.replace('.mbox','')`) replaced with robust suffix handling; `.pst` now
+  raises a clear "install pypff" message instead of an opaque import error.
 
 [Unreleased]: https://github.com/your-org/PhishEmail/commits/main

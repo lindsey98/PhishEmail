@@ -17,7 +17,7 @@ from lib.baselines import dfence, helphed
 from lib.config import Config
 from lib.data import OCR, RenderDataset
 from lib.reference_db import IdentityMatcher
-from lib.utilities import Logger, mbox_to_eml, pst_to_eml
+from lib.utilities import Logger, resolve_email_input
 from lib.utilities.data_utils import DomainUtils
 
 TODAY = datetime.today()
@@ -73,7 +73,7 @@ def _load_existing_rows(csv_path: str):
 
 
 @click.command()
-@click.option("--email_dir", help="Dir containing all the .eml files", required=True, type=str)
+@click.option("--email_dir", help="A directory of emails, a single .eml/.txt file, or a .mbox/.pst/.msg container", required=True, type=str)
 @click.option("--save_vis", help="Save the visualized results or not", is_flag=True, show_default=True, default=False)
 @click.option("--vis_dir", help="Where to save the visualized result", default='./datasets/vis', type=str)
 @click.option("--output_csv", default=f'{TODAY_STR}_results.csv', help="Output txt path")
@@ -103,17 +103,17 @@ def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed, auto
                                   threshold=Config.thre,
                                   relax_match=True)  # todo: relax_match!
 
-    if '.mbox' in email_dir:
-        mbox_to_eml(email_dir, email_dir.replace('.mbox', ''))
-        desc_folder = email_dir.replace('.mbox', '')
-    elif email_dir.endswith('.pst'):
-        pst_to_eml(email_dir, email_dir.replace('.pst', ''))
-        desc_folder = email_dir.replace('.pst', '')
-    else:
-        desc_folder = email_dir
+    # Accept a directory, a single .eml/.txt, or a .mbox/.pst/.msg container;
+    # everything is normalized to what RenderDataset can load.
+    email_source = resolve_email_input(email_dir)
+
+    # Derive a stable directory prefix for the (transient) render dump dir.
+    dump_base = email_dir.rstrip('/').rstrip('\\')
+    if not os.path.isdir(email_dir):
+        dump_base = os.path.splitext(dump_base)[0]
 
     ocr_model = OCR()
-    dataset = RenderDataset(desc_folder, ocr_model=ocr_model, dumpDir=desc_folder + '_imgs', save_imgs=False, translate_on=auto_translate)
+    dataset = RenderDataset(email_source, ocr_model=ocr_model, dumpDir=dump_base + '_imgs', save_imgs=False, translate_on=auto_translate)
 
     csv_file_path = output_csv
     if save_vis:
