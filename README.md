@@ -37,8 +37,35 @@ Welcome to **PiMRef**: **Detecting and Explaining Ever‑evolving Spear‑Phishi
    cd PhishEmail/
    pixi install
    pixi run playwright install chromium  # Email rendering uses headless Chromium
-   bash get_model.sh  # Downloads and extracts pre-trained model checkpoints
+   bash scripts/get_model.sh  # or: pixi run get-model — downloads & extracts checkpoints
    ```
+
+## 📁 Project Structure
+
+```text
+PhishEmail/
+├─ apps/                 # Runnable entry points
+│  ├─ cli/inference.py   # Batch inference CLI  (pixi run inference)
+│  └─ server/app.py      # Flask analysis server (pixi run serve)
+├─ lib/                  # Importable package
+│  ├─ config.py          # Model/checkpoint configuration & knowledge base loading
+│  ├─ data/              # Email parsing, rendering & OCR
+│  ├─ encoder/           # Identity NER model (IdentityBert)
+│  ├─ decoder/           # LLaMA-based components
+│  ├─ reference_db/      # CharacterBERT matcher & identity knowledge base
+│  ├─ labeling/          # HTML/header annotation helpers
+│  ├─ baselines/         # Baseline detectors (D-Fence, HelpHed, …)
+│  ├─ adversary/         # Adversarial attack generation/evaluation
+│  └─ utilities/         # Shared helpers (logging, data utils)
+├─ addin/                # Outlook task-pane add-in (frontend)
+├─ scripts/              # Operational scripts (get_model.sh)
+├─ tests/                # Test suite (pixi run test)
+├─ pixi.toml             # Environment & task definitions
+└─ README.md
+```
+
+> All commands are run from the project root so the relative `./checkpoints`,
+> `./datasets`, and `./lib` resource paths resolve correctly.
 
 ## Dataset Format
 
@@ -62,8 +89,8 @@ Welcome to **PiMRef**: **Detecting and Explaining Ever‑evolving Spear‑Phishi
 ## Run Inference
 
 ```bash
-pixi run python inference.py \
-  --email_dir [path/to/emails or .mbox/.pst file]
+pixi run inference --email_dir [path/to/emails or .mbox/.pst file]
+# equivalently: pixi run python apps/cli/inference.py --email_dir [...]
 ```
 
 ## Output Format
@@ -182,7 +209,7 @@ The results are saved as a CSV with the following columns:
 
 [//]: # (```bash)
 
-[//]: # (python app.py)
+[//]: # (pixi run serve  # or: python apps/server/app.py)
 
 [//]: # (```)
 

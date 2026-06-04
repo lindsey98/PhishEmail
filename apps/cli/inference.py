@@ -1,4 +1,10 @@
 import os
+import sys
+
+# Make the project root (which contains the `lib/` package) importable when this
+# script is run directly, e.g. `python apps/cli/inference.py` from the repo root.
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)))
+
 import time
 from tqdm import tqdm
 import csv
@@ -10,7 +16,7 @@ from pathlib import Path
 import click
 from lib.baselines import dfence, helphed
 from lib.utilities.data_utils import DomainUtils
-from config import Config
+from lib.config import Config
 
 TODAY = datetime.today()
 TODAY_DATE = TODAY.strftime("%Y-%m-%d")

@@ -19,6 +19,7 @@ pandas = "*"
 nltk = "*"
 tqdm = "*"
 unidecode = "*"
+pytest = "*"
 accelerate = "*"
 bitsandbytes = "*"
 langdetect = "*"
@@ -45,6 +46,14 @@ faiss-cpu = "*"
 "paddleocr"= "*"
 "playwright" = "*"
 "pdfkit" = { git = "https://github.com/akhilnarang/python-pdfkit.git", rev="add-timeout-option" }
+
+[tasks]
+# All tasks run from the project root so the relative ./checkpoints, ./datasets
+# and ./lib resource paths resolve correctly.
+inference = "python apps/cli/inference.py"
+serve = "python apps/server/app.py"
+get-model = "bash scripts/get_model.sh"
+test = "pytest -q"
 
 [tool.pixi.feature.cuda]
 system-requirements = {cuda = "12.1"}
