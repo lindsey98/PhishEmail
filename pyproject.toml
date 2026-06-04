@@ -1,0 +1,36 @@
+# Tooling configuration only. Environment & dependencies are managed by Pixi
+# (see pixi.toml); this file is not used for packaging/installation.
+
+[tool.ruff]
+line-length = 120
+target-version = "py38"
+# Experimental / research subtrees are linted on a best-effort (advisory) basis
+# only; they are excluded from the default `ruff check .` run while they are
+# cleaned up incrementally.
+extend-exclude = [
+    "lib/adversary",
+    "lib/baselines",
+    "lib/decoder",
+]
+
+[tool.ruff.lint]
+# E/W: pycodestyle, F: pyflakes, I: isort. A pragmatic, high-signal default.
+select = ["E", "F", "W", "I"]
+ignore = [
+    "E501",  # line too long — handled by the formatter, not enforced here
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Package __init__ files re-export their public API.
+"__init__.py" = ["F401", "F403"]
+# Entry points insert the project root on sys.path before importing `lib`.
+"apps/**" = ["E402"]
+
+[tool.black]
+line-length = 120
+target-version = ["py38"]
+extend-exclude = "/(lib/adversary|lib/baselines|lib/decoder)/"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

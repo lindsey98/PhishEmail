@@ -1,0 +1,17 @@
+From: PayPal Service <service@account-verify.example>
+To: customer@example.com
+Subject: Your PayPal account has been limited
+Content-Type: text/html; charset="utf-8"
+MIME-Version: 1.0
+
+<html>
+  <body>
+    <p>Dear Customer,</p>
+    <p>We detected unusual activity and your <b>PayPal</b> account has been
+       temporarily limited.</p>
+    <p>Please
+       <a href="http://paypal-secure.account-verify.example/login">verify your
+       account</a> within 24 hours to restore full access.</p>
+    <p>Thank you,<br/>The PayPal Team</p>
+  </body>
+</html>

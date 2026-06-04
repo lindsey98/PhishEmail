@@ -10,6 +10,11 @@ and this project aims to adhere to [Semantic Versioning](https://semver.org/spec
 ### Added
 - Community-health files: `LICENSE` (CC BY-NC 4.0), `CONTRIBUTING.md`,
   `CODE_OF_CONDUCT.md`, `SECURITY.md`, `CHANGELOG.md`, and `CITATION.cff`.
+- GitHub Actions CI (ruff lint + dependency-light tests), Dependabot config,
+  issue/PR templates, `CODEOWNERS`, and README badges.
+- Tooling config: `pyproject.toml` (ruff/black/pytest), `.pre-commit-config.yaml`,
+  `.editorconfig`.
+- `examples/` with synthetic sample emails and a quickstart.
 - "How It Works" section in the README documenting the detection pipeline,
   the inference CLI options, and the `OPENAI_API_KEY` requirement for the
   knowledge-base expansion agent.
@@ -35,5 +40,8 @@ and this project aims to adhere to [Semantic Versioning](https://semver.org/spec
   on every startup.
 - Case-sensitivity mismatch in entity index matching during NER preprocessing.
 - `IndexError` guard in inline-image reference fixing in the server.
+- `label_html`/`label_headers` no longer build an empty regex alternation when
+  the identities/actions list is empty (which previously matched and wrapped the
+  entire document).
 
 [Unreleased]: https://github.com/your-org/PhishEmail/commits/main

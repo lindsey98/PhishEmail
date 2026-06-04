@@ -5,20 +5,21 @@ import sys
 # script is run directly, e.g. `python apps/server/app.py` from the repo root.
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)))
 
-import string
-from flask import Flask, jsonify, request, send_from_directory
-from flask_cors import CORS
-from lib.data import RenderDataset, OCR
-from lib.reference_db import IdentityMatcher
-from lib.config import Config
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from email.mime.image import MIMEImage
-from lib.labeling import label_html_file, label_headers
-from nltk.corpus import stopwords
 import base64
 import re
+import string
+from email.mime.image import MIMEImage
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
+from flask import Flask, jsonify, request, send_from_directory
+from flask_cors import CORS
+from nltk.corpus import stopwords
+
+from lib.config import Config
+from lib.data import OCR, RenderDataset
+from lib.labeling import label_headers, label_html_file
+from lib.reference_db import IdentityMatcher
 
 app = Flask(__name__)
 CORS(app)
@@ -43,7 +44,7 @@ def email_address_format(email):
         return f"{email['displayName']} <{email['emailAddress']}>"
     else:
         return email['emailAddress']
-    
+
 def fix_image_refs(body, name):
     pattern = rf'{re.escape(name)}(@[\w.]+(?=["\']))'
     matches = re.findall(pattern, body)
@@ -96,7 +97,7 @@ def build_mime_email(email_json):
                 mime_image.add_header('Content-ID', f"<{image['name']}>")  # Reference as <image0>, <image1>, etc.
                 mime_image.add_header('Content-Disposition', 'inline', filename=image['name'])
                 msg.attach(mime_image)
-    
+
     else:
         body = email_json['body']
         msg.attach(MIMEText(body, 'html'))
@@ -132,13 +133,13 @@ def process_email():
                                                                                        relations=relations,
                                                                                        sender_domains=sender_domains,
                                                                                        recipient_domains=recipient_domains)
-    
+
 
     def remove_trailing_punctuation_and_whitespace(s):
         return s.rstrip(string.punctuation + string.whitespace)
     identities_clean = [identity for identity in identities if identity not in stop_words and identity not in string.punctuation]
     actions_clean = [remove_trailing_punctuation_and_whitespace(action) for action in actions if action not in stop_words and action not in string.punctuation]
-    
+
     print(identities_clean)
     print(actions_clean)
 
@@ -153,15 +154,15 @@ def process():
         is_inconsistent, matched_identity, actions, identities = process_email()
         labelled_eml = label_html_file('addin/temp.eml', identities, actions)
         labelled_sender, labelled_recipient, labelled_subject = label_headers(sender, recipient, subject, identities, actions, is_inconsistent, matched_identity)
-        response = jsonify({"status": "success", 
-                            "isInconsistent": is_inconsistent, 
+        response = jsonify({"status": "success",
+                            "isInconsistent": is_inconsistent,
                             "matchedIdentity": matched_identity if isinstance(matched_identity, str) else list(matched_identity)[0],
                             "identities": list(identities),
                             "actions": list(actions),
                             "labelledHTML": labelled_eml,
                             "labelledSender": labelled_sender,
                             "labelledRecipient": labelled_recipient,
-                            "labelledSubject": labelled_subject 
+                            "labelledSubject": labelled_subject
                             })
         return response
     except Exception as e:

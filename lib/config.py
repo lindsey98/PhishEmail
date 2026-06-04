@@ -1,10 +1,13 @@
-from lib.reference_db import CharacterBERT, BaseFaissIPRetriever
-from lib.encoder import IdentityBert, Visualizer
-import os
-from tqdm import tqdm
-import numpy as np
 import json
+import os
+
+import numpy as np
+from tqdm import tqdm
+
+from lib.encoder import IdentityBert, Visualizer
+from lib.reference_db import BaseFaissIPRetriever, CharacterBERT
 from lib.utilities import Logger
+
 
 class Config:
 

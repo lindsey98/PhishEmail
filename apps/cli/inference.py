@@ -5,18 +5,20 @@ import sys
 # script is run directly, e.g. `python apps/cli/inference.py` from the repo root.
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)))
 
-import time
-from tqdm import tqdm
 import csv
-from lib.reference_db import CharacterBERT, IdentityMatcher, BaseFaissIPRetriever
-from lib.utilities import Logger, pst_to_eml, mbox_to_eml
-from lib.data import RenderDataset, OCR
+import time
 from datetime import datetime
 from pathlib import Path
+
 import click
+from tqdm import tqdm
+
 from lib.baselines import dfence, helphed
-from lib.utilities.data_utils import DomainUtils
 from lib.config import Config
+from lib.data import OCR, RenderDataset
+from lib.reference_db import IdentityMatcher
+from lib.utilities import Logger, mbox_to_eml, pst_to_eml
+from lib.utilities.data_utils import DomainUtils
 
 TODAY = datetime.today()
 TODAY_DATE = TODAY.strftime("%Y-%m-%d")
