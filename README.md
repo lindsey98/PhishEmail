@@ -179,6 +179,39 @@ columns are also populated: `dfence_pred`, `dfence_runtime`,
 
 ----
 
+## 🤝 Contributing
+
+Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for the
+development setup and pull-request guidelines, and note our
+[Code of Conduct](CODE_OF_CONDUCT.md). For security issues, see
+[SECURITY.md](SECURITY.md).
+
+## 📜 Citation
+
+If you use PiMRef in your research, please cite it. A machine-readable
+[`CITATION.cff`](CITATION.cff) is provided (powering GitHub's "Cite this
+repository" button), and a BibTeX entry is below.
+
+> **Note:** the citation metadata is currently a scaffold — replace the `TODO`
+> fields with the final authors, year, venue, and arXiv/DOI before publishing.
+
+```bibtex
+@article{pimref,
+  title   = {PiMRef: Detecting and Explaining Ever-evolving Spear-Phishing Emails with Knowledge-Base Invariants},
+  author  = {TODO-LastName, TODO-FirstName and others},
+  year    = {TODO-YYYY},
+  journal = {TODO (arXiv / venue)},
+  url     = {https://github.com/your-org/PhishEmail}
+}
+```
+
+## ⚖️ License
+
+This project is licensed under the **Creative Commons Attribution-NonCommercial
+4.0 International (CC BY-NC 4.0)** license — see [LICENSE](LICENSE) for the full
+text. In short: you may share and adapt the material with attribution, but **not
+for commercial purposes**. For commercial licensing, please contact the authors.
+
 [//]: # (## PiMRef as Outlook Add‑in)
 
 [//]: # ()
