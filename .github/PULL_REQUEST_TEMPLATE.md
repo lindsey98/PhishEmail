@@ -18,7 +18,7 @@
 
 ## Checklist
 
-- [ ] I ran `pixi run test` (and `ruff check apps tests lib/config.py lib/labeling`) locally.
+- [ ] I ran `pixi run test` and `ruff check` (see the enforced scope in `.github/workflows/ci.yml`) locally.
 - [ ] I updated documentation (README/docstrings) for any user-facing change.
 - [ ] I added/updated tests where practical.
 - [ ] My commits have clear messages and the PR is focused on one logical change.

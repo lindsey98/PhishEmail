@@ -31,7 +31,10 @@ jobs:
         run: python -m pip install --upgrade pip ruff pytest beautifulsoup4
 
       - name: Lint (enforced scope)
-        run: ruff check apps tests lib/config.py lib/labeling
+        run: >
+          ruff check apps tests
+          lib/config.py lib/labeling
+          lib/utilities lib/data lib/reference_db lib/encoder/IdentityBert.py
 
       - name: Lint (full repo, advisory)
         continue-on-error: true

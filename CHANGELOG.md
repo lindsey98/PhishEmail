@@ -23,6 +23,12 @@ and this project aims to adhere to [Semantic Versioning](https://semver.org/spec
   conversion, plus `tests/test_email_io.py`.
 
 ### Changed
+- Cleaned up the core modules (`lib/reference_db/*`, `lib/encoder/IdentityBert.py`,
+  `lib/utilities/*`, `lib/data/Dataset.py`, `lib/data/RenderDataset.py`):
+  replaced the `from typing import *` star-import with explicit names, removed
+  dead/duplicate imports and dead variables/comments, fixed a bare `except`,
+  and applied consistent formatting — all behavior-preserving. These paths are
+  now part of the enforced CI lint scope.
 - Decoupled email I/O and logging from the heavy ML utilities: importing
   `lib.utilities` (and the email-conversion helpers) no longer pulls in
   `transformers`/`langdetect`/etc.

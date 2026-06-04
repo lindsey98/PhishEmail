@@ -1,21 +1,25 @@
 # Functions are adapted from Huggingface's transformers library:
 # https://github.com/allenai/allennlp/
 
-""" Defines the main CharacterBERT PyTorch class. """
-from torch import nn
-from transformers.models.bert.modeling_bert import BertPreTrainedModel, BertEncoder, BertPooler
-from typing import Dict, Callable, List, Any
+"""Defines the main CharacterBERT PyTorch class."""
+
+from typing import Any, Callable, Dict, List
+
 import numpy
 import torch
+from torch import nn
+from transformers.models.bert.modeling_bert import BertEncoder, BertPooler, BertPreTrainedModel
+
 PADDING_VALUE = 0
 
 
 def _make_bos_eos(
-        character: int,
-        padding_character: int,
-        beginning_of_word_character: int,
-        end_of_word_character: int,
-        max_word_length: int):
+    character: int,
+    padding_character: int,
+    beginning_of_word_character: int,
+    end_of_word_character: int,
+    max_word_length: int,
+):
 
     char_ids = [padding_character] * max_word_length
     char_ids[0] = beginning_of_word_character
@@ -114,9 +118,7 @@ class CharacterMapper:
         elif word == CharacterMapper.pad_token:
             char_ids = CharacterMapper.pad_characters
         else:
-            word_encoded = word.encode("utf-8", "ignore")[
-                : (CharacterMapper.max_word_length - 2)
-            ]
+            word_encoded = word.encode("utf-8", "ignore")[: (CharacterMapper.max_word_length - 2)]
             char_ids = [CharacterMapper.padding_character] * CharacterMapper.max_word_length
             char_ids[0] = CharacterMapper.beginning_of_word_character
             for k, chr_id in enumerate(word_encoded, start=1):
@@ -147,15 +149,14 @@ class CharacterIndexer:
             maxlen = max(map(len, batch))
         batch_indices = [self.tokens_to_indices(tokens) for tokens in batch]
         padded_batch = [
-            pad_sequence_to_length(
-                indices, maxlen,
-                default_value=self._default_value_for_padding)
+            pad_sequence_to_length(indices, maxlen, default_value=self._default_value_for_padding)
             for indices in batch_indices
         ]
         if as_tensor:
             return torch.LongTensor(padded_batch)
         else:
             return padded_batch
+
 
 class Highway(torch.nn.Module):
     """
@@ -186,9 +187,7 @@ class Highway(torch.nn.Module):
     ) -> None:
         super().__init__()
         self._input_dim = input_dim
-        self._layers = torch.nn.ModuleList(
-            [torch.nn.Linear(input_dim, input_dim * 2) for _ in range(num_layers)]
-        )
+        self._layers = torch.nn.ModuleList([torch.nn.Linear(input_dim, input_dim * 2) for _ in range(num_layers)])
         self._activation = activation
         for layer in self._layers:
             # We should bias the highway layer to just carry its input forward.  We do that by
@@ -210,32 +209,23 @@ class Highway(torch.nn.Module):
             current_input = gate * linear_part + (1 - gate) * nonlinear_part
         return current_input
 
+
 class CharacterCNN(torch.nn.Module):
     """
     Computes context insensitive token representations from each token's characters.
     """
 
-    def __init__(self,
-            output_dim: int = 768,
-            requires_grad: bool = True) -> None:
+    def __init__(self, output_dim: int = 768, requires_grad: bool = True) -> None:
         super().__init__()
 
         self._options = {
-            'char_cnn': {
-                'activation': 'relu',
-                'filters': [
-                    [1, 32],
-                    [2, 32],
-                    [3, 64],
-                    [4, 128],
-                    [5, 256],
-                    [6, 512],
-                    [7, 1024]
-                    ],
-                'n_highway': 2,
-                'embedding': {'dim': 16},
-                'n_characters': 262,
-                'max_characters_per_token': 50
+            "char_cnn": {
+                "activation": "relu",
+                "filters": [[1, 32], [2, 32], [3, 64], [4, 128], [5, 256], [6, 512], [7, 1024]],
+                "n_highway": 2,
+                "embedding": {"dim": 16},
+                "n_characters": 262,
+                "max_characters_per_token": 50,
             }
         }
         self.output_dim = output_dim
@@ -247,9 +237,7 @@ class CharacterCNN(torch.nn.Module):
         self._beginning_of_sentence_characters = torch.from_numpy(
             numpy.array(CharacterMapper.beginning_of_sentence_characters) + 1
         )
-        self._end_of_sentence_characters = torch.from_numpy(
-            numpy.array(CharacterMapper.end_of_sentence_characters) + 1
-        )
+        self._end_of_sentence_characters = torch.from_numpy(numpy.array(CharacterMapper.end_of_sentence_characters) + 1)
 
     def _init_weights(self):
         self._init_char_embedding()
@@ -259,15 +247,11 @@ class CharacterCNN(torch.nn.Module):
 
     def _init_char_embedding(self):
         weights = numpy.zeros(
-            (
-                self._options["char_cnn"]["n_characters"] + 1,
-                self._options["char_cnn"]["embedding"]["dim"]
-            ),
-            dtype="float32")
-        weights[-1, :] *= 0.  # padding
-        self._char_embedding_weights = torch.nn.Parameter(
-            torch.FloatTensor(weights), requires_grad=self.requires_grad
+            (self._options["char_cnn"]["n_characters"] + 1, self._options["char_cnn"]["embedding"]["dim"]),
+            dtype="float32",
         )
+        weights[-1, :] *= 0.0  # padding
+        self._char_embedding_weights = torch.nn.Parameter(torch.FloatTensor(weights), requires_grad=self.requires_grad)
 
     def _init_cnn_weights(self):
         cnn_options = self._options["char_cnn"]
@@ -276,9 +260,7 @@ class CharacterCNN(torch.nn.Module):
 
         convolutions = []
         for i, (width, num) in enumerate(filters):
-            conv = torch.nn.Conv1d(
-                in_channels=char_embed_dim, out_channels=num,
-                kernel_size=width, bias=True)
+            conv = torch.nn.Conv1d(in_channels=char_embed_dim, out_channels=num, kernel_size=width, bias=True)
             conv.weight.requires_grad = self.requires_grad
             conv.bias.requires_grad = self.requires_grad
             convolutions.append(conv)
@@ -323,12 +305,9 @@ class CharacterCNN(torch.nn.Module):
             Shape ``(batch_size, sequence_length, embedding_dim)`` tensor with context
             insensitive token representations.
         """
-        # Add BOS/EOS
-        mask = ((inputs > 0).long().sum(dim=-1) > 0).long()
-        #character_ids_with_bos_eos, mask_with_bos_eos = add_sentence_boundary_token_ids(
-        #    inputs, mask, self._beginning_of_sentence_characters, self._end_of_sentence_characters
-        #)
-        character_ids_with_bos_eos, mask_with_bos_eos = inputs, mask
+        # NOTE: sentence-boundary (BOS/EOS) tokens are intentionally not added here;
+        # the raw character ids are used directly.
+        character_ids_with_bos_eos = inputs
 
         # the character id embedding
         max_chars_per_token = self._options["char_cnn"]["max_characters_per_token"]
@@ -371,15 +350,15 @@ class CharacterCNN(torch.nn.Module):
 
         return token_embedding.view(batch_size, sequence_length, -1)
 
+
 class BertCharacterEmbeddings(nn.Module):
-    """ Construct the embeddings from char-cnn, position and token_type embeddings. """
+    """Construct the embeddings from char-cnn, position and token_type embeddings."""
+
     def __init__(self, config):
         super(BertCharacterEmbeddings, self).__init__()
 
         # This is the module that computes word embeddings from a token's characters
-        self.word_embeddings = CharacterCNN(
-            requires_grad=True,
-            output_dim=config.hidden_size)
+        self.word_embeddings = CharacterCNN(requires_grad=True, output_dim=config.hidden_size)
 
         self.position_embeddings = nn.Embedding(config.max_position_embeddings, config.hidden_size)
         self.token_type_embeddings = nn.Embedding(config.type_vocab_size, config.hidden_size)
@@ -408,8 +387,9 @@ class BertCharacterEmbeddings(nn.Module):
 
 
 class CharacterBertModel(BertPreTrainedModel):
-    """ BertModel using char-cnn embeddings instead of wordpiece embeddings. """
-    _CallerPrefix = 'CharacterBertModel'
+    """BertModel using char-cnn embeddings instead of wordpiece embeddings."""
+
+    _CallerPrefix = "CharacterBertModel"
 
     def __init__(self, config):
         super().__init__(config)
@@ -441,13 +421,13 @@ class CharacterBertModel(BertPreTrainedModel):
         inputs_embeds=None,
         encoder_hidden_states=None,
         encoder_attention_mask=None,
-        **kwargs
+        **kwargs,
     ):
 
         if input_ids is not None and inputs_embeds is not None:
             raise ValueError("You cannot specify both input_ids and inputs_embeds at the same time")
         elif input_ids is not None:
-            input_shape = input_ids[:,:,0].size()
+            input_shape = input_ids[:, :, 0].size()
         elif inputs_embeds is not None:
             input_shape = inputs_embeds.size()[:-1]
         else:
@@ -539,8 +519,7 @@ class CharacterBertModel(BertPreTrainedModel):
             head_mask = [None] * self.config.num_hidden_layers
 
         embedding_output = self.embeddings(
-            input_ids=input_ids, position_ids=position_ids,
-            token_type_ids=token_type_ids
+            input_ids=input_ids, position_ids=position_ids, token_type_ids=token_type_ids
         )
         encoder_outputs = self.encoder(
             embedding_output,
@@ -552,8 +531,8 @@ class CharacterBertModel(BertPreTrainedModel):
         sequence_output = encoder_outputs[0]
         pooled_output = self.pooler(sequence_output)
 
-        outputs = (sequence_output, pooled_output,) + encoder_outputs[
-            1:
-        ]  # add hidden_states and attentions if they are here
+        outputs = (
+            sequence_output,
+            pooled_output,
+        ) + encoder_outputs[1:]  # add hidden_states and attentions if they are here
         return outputs  # sequence_output, pooled_output, (hidden_states), (attentions)
-

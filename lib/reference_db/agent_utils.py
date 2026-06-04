@@ -5,6 +5,7 @@ DNS, LLM prompts, filtering). Imported by knowledge_base_agent.
 Integrates concepts from agent_improve_recall / filter /
 extract_official_domains_from_urls (no sibling imports).
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -19,7 +20,7 @@ import urllib.error
 import urllib.request
 from collections import deque
 from html.parser import HTMLParser
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Optional, Set, Tuple
 from urllib.parse import unquote, urljoin, urlparse
 
 try:
@@ -56,9 +57,7 @@ FETCH_CONCURRENCY = 4
 FETCH_TIMEOUT_SEC = 20
 FETCH_MAX_BODY_BYTES = 2_000_000
 _FETCH_UA = (
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-    "AppleWebKit/537.36 (KHTML, like Gecko) "
-    "Chrome/120.0.0.0 Safari/537.36"
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 )
 
 USE_RECALL_LINK_TREE = True
@@ -311,9 +310,7 @@ def _ensure_api_key() -> None:
         except OSError:
             continue
     if not os.environ.get("OPENAI_API_KEY"):
-        raise RuntimeError(
-            "OPENAI_API_KEY is not set and could not be read from datasets/openai_key.txt"
-        )
+        raise RuntimeError("OPENAI_API_KEY is not set and could not be read from datasets/openai_key.txt")
 
 
 def _jitter_delay(attempt: int) -> float:
@@ -648,13 +645,7 @@ async def _fetch_sitemap_urls(
         try:
             segs = [s for s in urlparse(u).path.split("/") if s]
             depth = len(segs)
-            leaf_penalty = (
-                1
-                if segs
-                and len(segs[-1]) <= 4
-                and re.fullmatch(r"[A-Za-z0-9]{1,4}", segs[-1])
-                else 0
-            )
+            leaf_penalty = 1 if segs and len(segs[-1]) <= 4 and re.fullmatch(r"[A-Za-z0-9]{1,4}", segs[-1]) else 0
         except Exception:
             depth, leaf_penalty = 99, 0
         return (-_link_priority_for_email_hunt(u), leaf_penalty, depth)
@@ -802,14 +793,19 @@ def _naive_registrable_domain_for_plan(hostname: str) -> str:
     parts = hostname.lower().strip().split(".")
     if len(parts) < 2:
         return hostname.lower()
-    if len(parts) >= 3 and len(parts[-1]) == 2 and parts[-2] in (
-        "com",
-        "co",
-        "gov",
-        "ac",
-        "org",
-        "net",
-        "edu",
+    if (
+        len(parts) >= 3
+        and len(parts[-1]) == 2
+        and parts[-2]
+        in (
+            "com",
+            "co",
+            "gov",
+            "ac",
+            "org",
+            "net",
+            "edu",
+        )
     ):
         return ".".join(parts[-3:])
     return ".".join(parts[-2:])
@@ -889,12 +885,7 @@ def _naive_registrable_domain(hostname: str) -> str:
     suf2 = ".".join(parts[-2:])
     if suf2 in _NAIVE_MULTI_LABEL_SUFFIXES and len(parts) >= 3:
         return ".".join(parts[-3:])
-    if (
-        len(parts) >= 3
-        and parts[-2] == "co"
-        and len(parts[-1]) == 2
-        and parts[-1].isalpha()
-    ):
+    if len(parts) >= 3 and parts[-2] == "co" and len(parts[-1]) == 2 and parts[-1].isalpha():
         return ".".join(parts[-3:])
     return ".".join(parts[-2:])
 
@@ -1040,11 +1031,7 @@ def _build_effective_identity_cores(
                 eff.add(dn)
 
     llm_frozen = set(eff)
-    allowed_norm = [
-        _normalize_domain(a)
-        for a in (allowed_domains or [])
-        if isinstance(a, str) and a.strip()
-    ]
+    allowed_norm = [_normalize_domain(a) for a in (allowed_domains or []) if isinstance(a, str) and a.strip()]
     allowed_set = set(allowed_norm)
 
     hosts_seen: Set[str] = set()
@@ -1488,13 +1475,11 @@ async def _fetch_and_bfs_playwright(
     allowed_set: Set[str],
 ) -> Tuple[Dict[str, Tuple[str, str]], Dict[str, Any]]:
     try:
-        from playwright.async_api import async_playwright
         from playwright.async_api import TimeoutError as PWTimeout
+        from playwright.async_api import async_playwright
     except ImportError as exc:
         raise ImportError(
-            "playwright 未安装。请运行：\n"
-            "  pip install playwright\n"
-            "  playwright install chromium"
+            "playwright 未安装。请运行：\n  pip install playwright\n  playwright install chromium"
         ) from exc
 
     stats: Dict[str, Any] = {
@@ -1651,9 +1636,7 @@ async def _run_fetch_merge_async(
             email_src_map[k] = (e, "")
             merged_order.append(e)
 
-    merged_src = [
-        {"email": em, "source_url": email_src_map.get(em.lower(), ("", ""))[1]} for em in merged_order
-    ]
+    merged_src = [{"email": em, "source_url": email_src_map.get(em.lower(), ("", ""))[1]} for em in merged_order]
     return merged_order, merged_src
 
 
@@ -1852,4 +1835,3 @@ def _extract_official_email_domains_post_filter(
 
     valid_from_urls = _classify_official_domains_from_urls_sync(client, org, candidate_domains)
     return _merge_official_email_domains(plan, filtered_emails, valid_from_urls)
-

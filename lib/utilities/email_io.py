@@ -27,6 +27,7 @@ def _tqdm(iterable, **kwargs):
     """Use tqdm if available, otherwise fall back to a no-op wrapper."""
     try:
         from tqdm import tqdm
+
         return tqdm(iterable, **kwargs)
     except ImportError:
         return iterable
@@ -76,8 +77,7 @@ def msg_to_eml(msg_path: str, output_dir: str) -> List[str]:
         import extract_msg
     except ImportError as exc:  # pragma: no cover - depends on optional install
         raise RuntimeError(
-            "Reading .msg files requires the 'extract-msg' package. "
-            "Install it with: pip install extract-msg"
+            "Reading .msg files requires the 'extract-msg' package. Install it with: pip install extract-msg"
         ) from exc
 
     os.makedirs(output_dir, exist_ok=True)
@@ -104,8 +104,7 @@ def pst_to_eml(pff_file_path: str, output_dir: str) -> List[str]:
         import pypff
     except ImportError as exc:  # pragma: no cover - depends on optional install
         raise RuntimeError(
-            "Reading .pst files requires the 'pypff' package. "
-            "Install it with: pip install libpff-python"
+            "Reading .pst files requires the 'pypff' package. Install it with: pip install libpff-python"
         ) from exc
 
     written: List[str] = []
@@ -215,10 +214,7 @@ def resolve_email_input(path: str) -> Union[str, List[str]]:
             if not produced:
                 raise ValueError(f"No emails could be extracted from {path!r}.")
             return produced
-        raise ValueError(
-            f"Unsupported email file {path!r}. Supported extensions: "
-            f"{', '.join(SUPPORTED_EXTENSIONS)}."
-        )
+        raise ValueError(f"Unsupported email file {path!r}. Supported extensions: {', '.join(SUPPORTED_EXTENSIONS)}.")
 
     if os.path.isdir(path):
         convertibles = [

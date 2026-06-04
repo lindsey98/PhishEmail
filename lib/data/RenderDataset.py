@@ -1,19 +1,19 @@
 import email
 import email.header
+import html
 import os
 import re
-import email
-import email.header
-import hashlib
-import html
-from ..data import EmailDataset, OCR
+from typing import List, Tuple, Union
+
+from ..data import OCR, EmailDataset
 from ..utilities import Logger
 from ..utilities.data_utils import normalization
-from typing import Union, Tuple, List
+
 # Playwright is imported lazily inside html_to_png_playwright() so that this
 # module can be imported even if the playwright browsers are not yet installed;
 # rendering then degrades gracefully to the visible-text fallback.
 # Setup: `pip install playwright` then `playwright install chromium`
+
 
 class RenderDataset(EmailDataset):
     _CallerPrefix = "Dataset Loader (render the eml)"
@@ -33,6 +33,7 @@ class RenderDataset(EmailDataset):
 
         try:
             from playwright.sync_api import sync_playwright
+
             with sync_playwright() as p:
                 browser = p.chromium.launch()
                 context = browser.new_context(
@@ -44,9 +45,7 @@ class RenderDataset(EmailDataset):
 
                 # Measure the actual content height
                 content_h = page.evaluate(
-                    "() => Math.max("
-                    "document.body.scrollHeight, "
-                    "document.documentElement.scrollHeight)"
+                    "() => Math.max(document.body.scrollHeight, document.documentElement.scrollHeight)"
                 )
                 clip_h = min(content_h, MAX_HEIGHT)
 
@@ -75,9 +74,21 @@ class RenderDataset(EmailDataset):
 
         # 1) Remove zero-width and bidi control characters
         zero_width_chars = [
-            "\u200b", "\u200c", "\u200d", "\u200e", "\u200f",
-            "\u202a", "\u202b", "\u202c", "\u202d", "\u202e",
-            "\u2060", "\u2066", "\u2067", "\u2068", "\u2069",
+            "\u200b",
+            "\u200c",
+            "\u200d",
+            "\u200e",
+            "\u200f",
+            "\u202a",
+            "\u202b",
+            "\u202c",
+            "\u202d",
+            "\u202e",
+            "\u2060",
+            "\u2066",
+            "\u2067",
+            "\u2068",
+            "\u2069",
             "\ufeff",
         ]
         for ch in zero_width_chars:
@@ -103,10 +114,7 @@ class RenderDataset(EmailDataset):
             "text-indent: -9999px",
         ]
 
-        span_re = re.compile(
-            r'<span\b[^>]*style=(["\'])(?P<style>.*?)\1[^>]*>.*?</span>',
-            re.IGNORECASE | re.DOTALL
-        )
+        span_re = re.compile(r'<span\b[^>]*style=(["\'])(?P<style>.*?)\1[^>]*>.*?</span>', re.IGNORECASE | re.DOTALL)
 
         def remove_hidden_span(m: re.Match) -> str:
             style = m.group("style").lower()
@@ -125,14 +133,9 @@ class RenderDataset(EmailDataset):
             if any(k in lower_style for k in suspicious_keys):
                 # Remove style attribute entirely
                 return ""
-            return f' style={quote}{style}{quote}'
+            return f" style={quote}{style}{quote}"
 
-        html_body = re.sub(
-            r'style=(["\'])(.*?)\1',
-            strip_bad_style_attr,
-            html_body,
-            flags=re.IGNORECASE | re.DOTALL
-        )
+        html_body = re.sub(r'style=(["\'])(.*?)\1', strip_bad_style_attr, html_body, flags=re.IGNORECASE | re.DOTALL)
 
         return html_body
 
@@ -148,8 +151,8 @@ class RenderDataset(EmailDataset):
           - Return (image_path or False, visible_text_fallback).
         """
 
-        textTypes = ['text/plain', 'text/html']
-        imageTypes = ['image/gif', 'image/jpeg', 'image/png']
+        textTypes = ["text/plain", "text/html"]
+        imageTypes = ["image/gif", "image/jpeg", "image/png"]
         # You *can* use PDFs/attachments separately if you want, but for pure
         # anti-salting you usually only care about main body rendering.
         # pdfTypes = ['application/pdf']
@@ -162,37 +165,37 @@ class RenderDataset(EmailDataset):
         for part in msg.walk():
             mimeType = part.get_content_type()
             if part.is_multipart():
-                Logger.spit('[INFO] Multipart found, continue', debug=True)
+                Logger.spit("[INFO] Multipart found, continue", debug=True)
                 continue
 
-            Logger.spit('[INFO] Found MIME part: %s' % mimeType, debug=True)
+            Logger.spit("[INFO] Found MIME part: %s" % mimeType, debug=True)
 
             # -------- text --------
             if mimeType in textTypes:
-                charset = part.get_content_charset('utf-8')
+                charset = part.get_content_charset("utf-8")
                 raw_email_content = part.get_payload(decode=True)
-                transfer_encoding = part.get('Content-Transfer-Encoding', '').lower()
+                transfer_encoding = part.get("Content-Transfer-Encoding", "").lower()
 
                 if raw_email_content:
-                    if transfer_encoding == 'quoted-printable':
+                    if transfer_encoding == "quoted-printable":
                         payload = self.decode_quoted_printable(raw_email_content, charset)
                     else:
                         try:
-                            payload = raw_email_content.decode(charset, 'replace')
+                            payload = raw_email_content.decode(charset, "replace")
                         except LookupError:
-                            payload = raw_email_content.decode('utf-8', 'replace')
+                            payload = raw_email_content.decode("utf-8", "replace")
                 else:
                     payload = raw_email_content
 
                 # Basic cleanup of control chars that break layout
-                dirtyChars = ['\r']
+                dirtyChars = ["\r"]
                 if isinstance(payload, bytes):
                     payload = str(payload)
                 for char in dirtyChars:
-                    payload = payload.replace(char, '')
+                    payload = payload.replace(char, "")
 
                 # Convert text/plain to simple HTML, keep text/html as-is
-                if mimeType == 'text/plain':
+                if mimeType == "text/plain":
                     safe_text = html.escape(payload or "")
                     html_fragment = f"<pre>{safe_text}</pre>"
                 else:  # text/html
@@ -201,16 +204,16 @@ class RenderDataset(EmailDataset):
                 body_html_fragments.append(html_fragment)
 
             elif mimeType in imageTypes:
-                Logger.spit('[INFO] image/* part found; currently ignored for main body rendering', debug=True)
+                Logger.spit("[INFO] image/* part found; currently ignored for main body rendering", debug=True)
                 continue
 
         # Build final HTML for the body
         html_visible_text = ""
-        resultImagePath = os.path.join(self.dumpDir, f'{dumpName}.png')
+        resultImagePath = os.path.join(self.dumpDir, f"{dumpName}.png")
 
         if body_html_fragments:
             # Join fragments with a simple separator
-            combined_body_html  = "\n<hr />\n".join(body_html_fragments)
+            combined_body_html = "\n<hr />\n".join(body_html_fragments)
             sanitized_body_html = self.sanitize_html(combined_body_html)
 
             # Wrap with a controlled stylesheet to neutralize obfuscating formatting
@@ -256,16 +259,16 @@ class RenderDataset(EmailDataset):
     # ---------------------- Dataset logic ---------------------- #
     def __getitem__(self, idx):
         email_file_path = self.file_list[idx]
-        email_content   = self.load_email_content(email_file_path)
+        email_content = self.load_email_content(email_file_path)
 
         headers = str(email_content._headers)
 
         sender_name, sender_address = self.extract_sender(email_content)
-        to_names, to_addresses      = self.extract_recipients(email_content)
+        to_names, to_addresses = self.extract_recipients(email_content)
         # Drop the sender's own address from the recipient list. sender_address is a
         # single string, so wrap it in a set literal — set(sender_address) would
         # iterate the string into individual characters.
-        to_addresses     = list(set(to_addresses) - {sender_address})
+        to_addresses = list(set(to_addresses) - {sender_address})
         reply_to_address = self.extract_reply_to_address(email_content)
         if reply_to_address is None:
             reply_to_address = sender_address
@@ -273,7 +276,7 @@ class RenderDataset(EmailDataset):
         subject = self.extract_subject(email_content)
         subject = self.auto_translate(subject)
         sender_name = normalization(sender_name)
-        subject     = normalization(subject)
+        subject = normalization(subject)
 
         text_content, html_content_orig = self.extract_text_content(email_content)
 
@@ -307,7 +310,7 @@ class RenderDataset(EmailDataset):
         )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     rootDir = "./temp.eml"
     dumpDir = "./datasets/phishpot_imgs/"
     Logger.set_debug_on()
@@ -315,8 +318,14 @@ if __name__ == '__main__':
     dataset = RenderDataset(rootDir, ocr_model=ocr_model, dumpDir=dumpDir)
 
     for i in range(len(dataset)):
-        email_file_path, (sender_name, sender_address), \
-        (to_names, to_addresses), reply_to_address, \
-        subject, email_body_text, header =   dataset[i]
+        (
+            email_file_path,
+            (sender_name, sender_address),
+            (to_names, to_addresses),
+            reply_to_address,
+            subject,
+            email_body_text,
+            header,
+        ) = dataset[i]
 
         print()
