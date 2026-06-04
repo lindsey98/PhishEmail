@@ -67,6 +67,46 @@ PhishEmail/
 > All commands are run from the project root so the relative `./checkpoints`,
 > `./datasets`, and `./lib` resource paths resolve correctly.
 
+## 🔎 How It Works
+
+PiMRef frames phishing detection as an **identity consistency check** rather than
+content classification — which is what makes it robust to ever‑evolving,
+AIGC‑generated phishing. Each email flows through four stages:
+
+1. **Identity & intent recognition (NER).** A fine‑tuned token‑classification
+   model (`lib/encoder/IdentityBert.py`) reads the subject, sender name, and body
+   and extracts three things:
+   - **Claimed identities** — the brand/organization the email purports to be
+     from (e.g. *PayPal*, *Alibaba*).
+   - **Internal relations** — claimed internal roles (e.g. *IT Support*, *HR team*).
+   - **Call‑to‑action instructions** — engagement prompts (click a link, open an
+     attachment, reply with credentials), plus any URL that immediately follows a
+     CTA (the "next step of engagement").
+
+2. **Knowledge‑base matching (+ expansion agent).** Each claimed identity is
+   matched against a CharacterBERT identity knowledge base (`lib/reference_db/`)
+   via FAISS nearest‑neighbour search, yielding the identity's *official* email
+   domains. If an identity is **not present** in the knowledge base, the
+   **expansion agent** (`lib/reference_db/db_expansion_agent.py`) searches the web
+   for the organization's official domains and caches them for reuse. *(The agent
+   uses the OpenAI API — see [Run Inference](#run-inference).)*
+
+3. **Consistency check.** The sender domain (unioned with the Reply‑To /
+   call‑to‑action URL domains) is compared against the claimed identity's official
+   domains. A mismatch means the email claims one identity but is sent/answered
+   from an unrelated domain — the core impostor signal. Claimed internal roles are
+   checked analogously: an internal role arriving from a domain outside the
+   recipient's own organization is flagged.
+
+4. **Intent gating (false‑positive reduction).** An identity mismatch alone is
+   **not** reported as phishing. The email is flagged only when it **also**
+   contains at least one call‑to‑action — a legitimate‑but‑misconfigured sender
+   with no actionable request is treated as benign. This `check_action` gate
+   substantially reduces false positives.
+
+Every prediction is explainable: it carries the matched identity, the recognized
+call‑to‑action(s), and the domain mismatch that triggered the verdict.
+
 ## Dataset Format
 
 **Prepare your email data in one of two ways:**
@@ -93,24 +133,49 @@ pixi run inference --email_dir [path/to/emails or .mbox/.pst file]
 # equivalently: pixi run python apps/cli/inference.py --email_dir [...]
 ```
 
+### Options
+
+| Flag               | Default                   | Description                                                              |
+| ------------------ | ------------------------- | ----------------------------------------------------------------------- |
+| `--email_dir`      | *(required)*              | Folder of `.eml`/`.txt`, or a single `.mbox` / `.pst` file.             |
+| `--output_csv`     | `<timestamp>_results.csv` | Where to write results. Re‑running with the same path **resumes**, skipping emails already in the file. |
+| `--save_vis`       | off                       | Save per‑email HTML visualizations of the recognized entities.          |
+| `--vis_dir`        | `./datasets/vis`          | Output directory for the visualizations.                                |
+| `--auto_translate` | off                       | Translate non‑English emails (subject + body) before analysis.          |
+| `--run_dfence`     | off                       | Also run the D‑Fence baseline for comparison.                           |
+| `--run_helphed`    | off                       | Also run the HelpHed baseline for comparison.                           |
+
+> **Knowledge‑base expansion requires an OpenAI API key.** When an identity is
+> not already in the knowledge base, the expansion agent calls the OpenAI API.
+> Set `OPENAI_API_KEY` in your environment (or place the key in
+> `datasets/openai_key.txt`). Expansion is toggled by `knowledge_expansion_on` in
+> `lib/config.py` (default `True` for the CLI; the Outlook server runs with it
+> disabled). If you don't need expansion, leave it off and no key is required.
+
 ## Output Format
 
 The results are saved as a CSV with the following columns:
 
-| Column             | Description                                       |
-| ------------------ | ------------------------------------------------- |
-| email\_file\_path  | Path to the email file                            |
-| sender\_name       | Sender’s name                                     |
-| sender\_address    | Sender’s email address                            |
-| to\_names          | Recipient name(s)                                 |
-| to\_addresses      | Recipient email address(es)                       |
-| subject            | Email subject                                     |
-| sender\_identities | Recognized sender identity                        |
-| sender\_relations  | Recognized sender–recipient relations             |
-| required\_actions  | Next-step instructions extracted from the email   |
-| matched\_identity  | Imitated brand or status (e.g., “Consistent”)     |
-| our\_pred          | True if predicted Phish                           |
-| our\_runtime       | Time taken for identity extraction & matching (s) |
+| Column                    | Description                                                  |
+| ------------------------- | ----------------------------------------------------------- |
+| email\_file\_path         | Path to the email file                                      |
+| sender\_name              | Sender’s name                                                |
+| sender\_address           | Sender’s email address                                      |
+| to\_names                 | Recipient name(s)                                            |
+| to\_addresses             | Recipient email address(es)                                 |
+| subject                   | Email subject                                                |
+| sender\_identities        | Claimed brand/organization identities recognized by the NER |
+| sender\_relation          | Claimed internal role(s) (e.g., IT Support, HR team)        |
+| required\_actions         | Call‑to‑action instructions extracted from the email        |
+| next\_step\_of\_engagement | URL after a CTA, or the Reply‑To address, used in the domain check |
+| matched\_identity         | Imitated brand/role, or a status (e.g., “Consistent”)       |
+| our\_pred                 | `True` if predicted Phish                                   |
+| our\_runtime              | Time taken for identity extraction & matching (s)           |
+
+When `--run_dfence` and/or `--run_helphed` are passed, the corresponding baseline
+columns are also populated: `dfence_pred`, `dfence_runtime`,
+`helphed_stacking_pred`, `helphed_stacking_runtime`, `helphed_voting_pred`,
+`helphed_voting_runtime` (otherwise left empty).
 
 ----
 
