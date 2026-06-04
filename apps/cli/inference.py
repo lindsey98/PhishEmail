@@ -142,9 +142,6 @@ def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed, auto
         if email_file_path_iter in seen_paths:
             continue
 
-        # if email_file_path_iter != 'datasets/field/user/inbox/mbox/2099076.eml':
-        #     continue
-
         email_file_path, (sender_name, sender_address), \
             (to_names, to_addresses), reply_to_address, \
             subject, email_body_text, header = dataset[it]  # fixme: the GoogleTranslator may take some time
