@@ -1,13 +1,20 @@
+import os
+import sys
+
+# Make the project root (which contains the `lib/` package) importable when this
+# script is run directly, e.g. `python apps/server/app.py` from the repo root.
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)))
+
 import string
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from lib.data import RenderDataset, OCR
 from lib.reference_db import IdentityMatcher
-from inference import Config
+from lib.config import Config
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
-from label_eml import label_html_file, label_headers
+from lib.labeling import label_html_file, label_headers
 from nltk.corpus import stopwords
 import base64
 import re

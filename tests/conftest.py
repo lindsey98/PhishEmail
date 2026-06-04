@@ -1,0 +1,8 @@
+import os
+import sys
+
+# Ensure the project root (which contains the `lib/` package) is importable
+# regardless of where pytest is invoked from.
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
