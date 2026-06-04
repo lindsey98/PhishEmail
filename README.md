@@ -33,9 +33,10 @@ Welcome to **PiMRef**: **Detecting and Explaining Ever‑evolving Spear‑Phishi
 2. **Clone & Install Dependencies**  
    ```bash
    sudo apt-get update
-   sudo apt-get install -y poppler-utils wkhtmltopdf
+   sudo apt-get install -y poppler-utils
    cd PhishEmail/
    pixi install
+   pixi run playwright install chromium  # Email rendering uses headless Chromium
    bash get_model.sh  # Downloads and extracts pre-trained model checkpoints
    ```
 

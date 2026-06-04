@@ -10,9 +10,10 @@ from ..data import EmailDataset, OCR
 from ..utilities import Logger
 from ..utilities.data_utils import normalization
 from typing import Union, Tuple, List
-from playwright.sync_api import sync_playwright
-# pip install playwright
-# playwright install
+# Playwright is imported lazily inside html_to_png_playwright() so that this
+# module can be imported even if the playwright browsers are not yet installed;
+# rendering then degrades gracefully to the visible-text fallback.
+# Setup: `pip install playwright` then `playwright install chromium`
 
 class RenderDataset(EmailDataset):
     _CallerPrefix = "Dataset Loader (render the eml)"
@@ -261,8 +262,10 @@ class RenderDataset(EmailDataset):
 
         sender_name, sender_address = self.extract_sender(email_content)
         to_names, to_addresses      = self.extract_recipients(email_content)
-        # fixme: kick sender_address out?
-        to_addresses     = list(set(to_addresses) - set(sender_address))
+        # Drop the sender's own address from the recipient list. sender_address is a
+        # single string, so wrap it in a set literal — set(sender_address) would
+        # iterate the string into individual characters.
+        to_addresses     = list(set(to_addresses) - {sender_address})
         reply_to_address = self.extract_reply_to_address(email_content)
         if reply_to_address is None:
             reply_to_address = sender_address

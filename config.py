@@ -116,20 +116,34 @@ class Config:
     except (FileNotFoundError, json.JSONDecodeError) as e:
         Logger.spit(f'Error loading identity map: {e}', caller_prefix="Main", warning=True)
         raise
-    ref_embed_list = np.load(REF_IDENTITY_REPS) if os.path.exists(REF_IDENTITY_REPS) else None
-
-    index_reps = np.empty((0, 768))
-    batch_size = 128
-    tags = []
     brand_name_list = list(brand_domain_map.keys())
-    for i in tqdm(range(0, len(brand_name_list), batch_size), desc="Caching the knowledge base embeddings"):
-        batch = brand_name_list[i:min(i + batch_size, len(brand_name_list))]  # Get the next batch of brand names
-        batch_embeddings, _ = matching_model(batch)
-        batch_embeddings = batch_embeddings.cpu().numpy()  # Predict embeddings for the batch
-        index_reps = np.concatenate((index_reps, batch_embeddings), axis=0)  # Append new embeddings
-        tags.extend(batch)  # Collect tags
-    np.save(REF_IDENTITY_NAMES, np.asarray(tags))
-    np.save(REF_IDENTITY_REPS, index_reps)
+
+    # Reuse the cached knowledge-base embeddings when they are present and still
+    # match the current brand map. Recomputing them on every startup (the previous
+    # behaviour) is expensive and made the os.path.exists()/np.load() cache check a
+    # no-op. We only recompute when the cache is missing or stale.
+    cache_valid = (
+        os.path.exists(REF_IDENTITY_REPS)
+        and os.path.exists(REF_IDENTITY_NAMES)
+        and len(np.load(REF_IDENTITY_NAMES)) == len(brand_name_list)
+    )
+
+    if cache_valid:
+        Logger.spit('Reusing cached knowledge base embeddings', caller_prefix="Main", debug=True)
+        tags = np.load(REF_IDENTITY_NAMES).tolist()
+        index_reps = np.load(REF_IDENTITY_REPS)
+    else:
+        index_reps = np.empty((0, 768))
+        batch_size = 128
+        tags = []
+        for i in tqdm(range(0, len(brand_name_list), batch_size), desc="Caching the knowledge base embeddings"):
+            batch = brand_name_list[i:min(i + batch_size, len(brand_name_list))]  # Get the next batch of brand names
+            batch_embeddings, _ = matching_model(batch)
+            batch_embeddings = batch_embeddings.cpu().numpy()  # Predict embeddings for the batch
+            index_reps = np.concatenate((index_reps, batch_embeddings), axis=0)  # Append new embeddings
+            tags.extend(batch)  # Collect tags
+        np.save(REF_IDENTITY_NAMES, np.asarray(tags))
+        np.save(REF_IDENTITY_REPS, index_reps)
 
     tags = [x.lower() for x in Internal_Relations]
     embed, _ = matching_model(tags)

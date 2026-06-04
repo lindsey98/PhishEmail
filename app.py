@@ -39,8 +39,10 @@ def email_address_format(email):
     
 def fix_image_refs(body, name):
     pattern = rf'{re.escape(name)}(@[\w.]+(?=["\']))'
-    match = re.findall(pattern, body)[0]
-    return body.replace(match, '')
+    matches = re.findall(pattern, body)
+    if not matches:
+        return body
+    return body.replace(matches[0], '')
 
 def build_mime_email(email_json):
 
