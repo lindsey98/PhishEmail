@@ -1,4 +1,4 @@
-"""Configuration, regexes, and LLM prompt strings for the KB expansion agent."""
+"""Configuration, regexes and LLM prompt strings for the KB expansion agent."""
 
 from __future__ import annotations
 

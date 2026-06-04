@@ -1,8 +1,7 @@
 """Supporting utilities for the knowledge-base expansion agent.
 
-Thin facade: the implementation lives in :mod:`agent_constants`,
-:mod:`agent_helpers` and :mod:`agent_llm`. Re-exported here so existing
-``from .agent_utils import ...`` call sites keep working unchanged.
+Thin facade: implementation lives in agent_constants, agent_helpers, agent_web
+and agent_llm. Re-exported so existing ``from .agent_utils import ...`` works.
 """
 
 from __future__ import annotations
@@ -67,21 +66,13 @@ from .agent_helpers import (  # noqa: F401
     _build_effective_identity_cores,
     _clean_emails,
     _decode_cloudflare_cfemail_hex,
-    _dns_resolver_for_server,
     _domain_labels,
     _email_registrable_host,
     _extract_emails_from_html_page,
     _extract_emails_from_text,
     _extract_etld1_from_email,
     _extract_etld1_from_url,
-    _fetch_and_bfs_playwright,
-    _fetch_and_bfs_urllib,
-    _fetch_merge_page_emails,
-    _fetch_sitemap_urls,
-    _fetch_url_text,
     _filter_candidate_urls,
-    _filter_final_emails_by_dns,
-    _filter_final_emails_by_dns_async,
     _fuzzy_brand_sibling,
     _get_attr,
     _host_matches_allowed,
@@ -93,7 +84,6 @@ from .agent_helpers import (  # noqa: F401
     _is_email,
     _jitter_delay,
     _link_priority_for_email_hunt,
-    _mail_domain_exists_in_dns_sync,
     _naive_registrable_domain,
     _naive_registrable_domain_for_plan,
     _noise_augment_blocklisted,
@@ -102,10 +92,8 @@ from .agent_helpers import (  # noqa: F401
     _parse_json_strict,
     _parse_mailto_href,
     _parse_page_links,
-    _parse_sitemap_locs,
     _registered_domain_etld1,
     _reject_standalone_grants_program_apex,
-    _run_fetch_merge_async,
     _site_root_url,
     _standalone_at_domain_to_email,
     _strip_trailing_junk,
@@ -128,4 +116,17 @@ from .agent_llm import (  # noqa: F401
     _retry_sync,
     _sources_map_from_rows,
     _web_tools,
+)
+from .agent_web import (  # noqa: F401
+    _dns_resolver_for_server,
+    _fetch_and_bfs_playwright,
+    _fetch_and_bfs_urllib,
+    _fetch_merge_page_emails,
+    _fetch_sitemap_urls,
+    _fetch_url_text,
+    _filter_final_emails_by_dns,
+    _filter_final_emails_by_dns_async,
+    _mail_domain_exists_in_dns_sync,
+    _parse_sitemap_locs,
+    _run_fetch_merge_async,
 )

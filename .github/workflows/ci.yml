@@ -28,7 +28,7 @@ jobs:
       # dependency-light test suite. Tests that need heavy deps skip themselves
       # via pytest.importorskip.
       - name: Install tooling
-        run: python -m pip install --upgrade pip ruff pytest beautifulsoup4
+        run: python -m pip install --upgrade pip ruff pytest beautifulsoup4 tldextract
 
       - name: Lint (enforced scope)
         run: >

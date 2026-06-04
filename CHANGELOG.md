@@ -24,11 +24,20 @@ and this project aims to adhere to [Semantic Versioning](https://semver.org/spec
 
 ### Changed
 - Split the 1,855-line `lib/reference_db/agent_utils.py` into focused modules:
-  `agent_constants.py` (config/regex/prompts), `agent_helpers.py` (deterministic
-  email/HTML/domain parsing, web fetch/BFS, DNS — **no OpenAI dependency**), and
-  `agent_llm.py` (OpenAI-backed phases/filters). `agent_utils.py` remains a thin
-  facade that re-exports the full public surface, so `from .agent_utils import …`
-  call sites are unchanged.
+  `agent_constants.py` (config/regex/prompts), `agent_helpers.py` (deterministic,
+  network-free email/HTML/domain parsing), `agent_web.py` (HTTP fetch, BFS
+  crawling, DNS), and `agent_llm.py` (OpenAI-backed phases/filters).
+  `agent_utils.py` remains a thin facade that re-exports the full public surface,
+  so `from .agent_utils import …` call sites are unchanged. None of
+  `agent_constants`/`agent_helpers`/`agent_web` import `openai`.
+- Made `lib/reference_db/__init__` import its heavy submodules
+  (`IdentityMatcher`/`CharacterBert`) lazily (PEP 562), so the agent submodules
+  can be imported and unit-tested without torch/faiss/transformers.
+
+### Added
+- Unit tests for the deterministic agent helpers (`tests/test_agent_helpers.py`,
+  12 cases covering email extraction, Cloudflare deobfuscation, and host/domain
+  normalization), runnable in CI without the ML stack.
 - Cleaned up the core modules (`lib/reference_db/*`, `lib/encoder/IdentityBert.py`,
   `lib/utilities/*`, `lib/data/Dataset.py`, `lib/data/RenderDataset.py`):
   replaced the `from typing import *` star-import with explicit names, removed
