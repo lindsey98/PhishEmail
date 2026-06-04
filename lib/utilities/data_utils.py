@@ -258,12 +258,16 @@ def find_first_last_indices(all_tokens: List[str], entity_tokens: List[str]):
     entity_len = len(entity_tokens)
     indices = []
 
+    # Lowercase the entity tokens too: all_tokens is compared in lowercase below,
+    # so leaving entity_tokens cased would miss any entity containing uppercase.
+    lower_entity_tokens = [token.lower() for token in entity_tokens]
+
     # Track the first and last occurrence indices
     first_index = None
     last_index = None
 
     for i in range(len(all_tokens) - entity_len + 1):
-        if [token.lower() for token in all_tokens[i:i + entity_len]] == entity_tokens:
+        if [token.lower() for token in all_tokens[i:i + entity_len]] == lower_entity_tokens:
             if first_index is None:
                 first_index = (i, i + entity_len)
             last_index = (i, i + entity_len)

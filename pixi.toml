@@ -43,6 +43,7 @@ faiss-cpu = "*"
 "transformers" = "==4.46.3"
 "paddlepaddle" = "*"
 "paddleocr"= "*"
+"playwright" = "*"
 "pdfkit" = { git = "https://github.com/akhilnarang/python-pdfkit.git", rev="add-timeout-option" }
 
 [tool.pixi.feature.cuda]
