@@ -13,13 +13,17 @@ show that PiMRef does not merely pattern-match the SpearMail template: benign
 emails written in the same style still yield 0 false positives, because PiMRef
 checks counterfactual identity-domain consistency rather than style.
 
+Source emails are read directly from the CSDMC-2010 Ham folder (raw .eml files)
+using the same EmailDataset parser that PiMRef uses at inference time, so the
+parsed sender/subject/body match what the detector actually sees.
+
 The prompt below is adapted from the SpearMail "Email Generation prompt"; the
 deception-inducing instructions (typosquatted sender email, fake link to an
 impersonated organization) are replaced with consistency-preserving ones.
 
 Usage:
     python -m lib.adversary.benign_style_rewrite_gen \
-        --input_csv ./datasets/CSDMC2010_benign_results_augmented.csv \
+        --ham_dir ./datasets/CSDMC2010/Ham \
         --output_dir ./datasets/spearmail_benign_rewrite \
         --num 500
 """
@@ -27,20 +31,34 @@ Usage:
 import os
 import re
 import json
+import email
+import email.policy
 import random
+from email.utils import parseaddr, getaddresses
+from email.header import decode_header
+from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import click
-import pandas as pd
 from tqdm import tqdm
 from tldextract import tldextract
+from bs4 import BeautifulSoup
 from openai import OpenAI
 
 try:  # optional language filter, mirrors clean_benchmark.py
     from langdetect import detect_langs
-    import langdetect as _ld
 except Exception:  # pragma: no cover
     detect_langs = None
+
+# Anonymized / placeholder domains used by the SpamAssassin public corpus.
+# Emails whose From is one of these carry a third-party publication name in the
+# display name (e.g. "guardian" <rssfeeds@spamassassin.taint.org>) but an
+# aggregator domain, so a SpearMail-style rewrite would fabricate a brand
+# identity that the domain does not back. Such sources are excluded.
+ANON_DOMAINS = {'taint.org', 'example.com', 'example.org', 'example.net',
+                'example.edu', 'localhost', 'sneakemail.com'}
+# Role local-parts that indicate an RSS/feed aggregator rather than a real sender.
+ROLE_LOCALPARTS = ('rssfeeds@', 'rss@', 'feed@', 'feeds@', 'noreply@', 'no-reply@')
 
 # Personal / webmail domains: senders here do not "own" an organizational site,
 # so we ask the model to keep any link on a topic-relevant page of the same
@@ -67,64 +85,109 @@ def _domain_of(address: str) -> str:
     return f"{ext.domain}.{ext.suffix}" if ext.suffix else ext.domain
 
 
-def build_prompt(sender_name: str, sender_address: str, subject: str,
-                 body: str, n_paragraphs: int) -> str:
+def build_prompt(sender_name: str, sender_address: str, to_name: str,
+                 subject: str, body: str, n_paragraphs: int) -> str:
+    """Benign counterpart of the SpearMail ``email_generation()`` prompt.
+
+    This reuses the *exact* SpearMail "Email Generation prompt" (Table 11) that
+    was used to synthesize the SpearMail dataset, so the benign emails follow the
+    identical template. Only the two deception switches are turned off, plus two
+    edits needed because we rewrite a real benign email rather than invent a
+    phishing pretext:
+
+      SpearMail                                  ->  benign rewrite
+      -----------------------------------------      ---------------------------
+      sender email = typosquatted org address    ->  the real CSDMC-Ham sender
+      body has a "fake link to <link>"           ->  a link on the sender's own domain
+      recipient asserted "established researcher" ->  the real recipient, no claim
+      "differ from <phishing negative example>"  ->  dropped (single-shot rewrite,
+                                                      no prior-generation diversity)
+
+    The activity / context slots are filled from the source ham email's subject
+    and body. Everything else (framing, "N paragraphs", left-aligned signature
+    with email + made-up phone, link before the signature, title = subject,
+    single-line JSON output, the [date]/[blank] completeness check) is kept as in
+    the original template.
+    """
     domain = _domain_of(sender_address)
     is_webmail = domain.lower() in WEBMAIL_DOMAINS
 
     if is_webmail:
         link_rule = (
-            f"The sender uses a personal webmail address (@{domain}), so the "
-            f"email must NOT claim to represent any company, university, or "
-            f"agency. Include exactly one plain, topic-relevant hyperlink before "
-            f"the signature (e.g. a public event page or shared document). Do "
-            f"NOT link to, or claim the identity of, any well-known organization "
-            f"that the sender does not actually belong to."
+            f"Make sure a link is included in the body of the message, before "
+            f"the signature. The sender uses a personal webmail address "
+            f"(@{domain}), so the email must NOT claim to represent any company, "
+            f"university, or agency: use a plain, topic-relevant link and do NOT "
+            f"link to, or adopt the identity of, any organization the sender does "
+            f"not belong to."
         )
     else:
         link_rule = (
-            f"Any organizational identity claimed in the email, and the one "
-            f"call-to-action hyperlink you include before the signature, MUST "
-            f"stay consistent with the sender's own domain '{domain}' "
-            f"(e.g. https://{domain}/...). Do NOT use a URL shortener, a "
-            f"typosquatted look-alike domain, or any domain other than "
-            f"'{domain}'. Never impersonate a different organization."
+            f"Make sure a link on the sender's own domain '{domain}' "
+            f"(e.g. https://{domain}/...) is included in the body of the "
+            f"message, before the signature. Do NOT use a URL shortener, a "
+            f"typosquatted look-alike, or any other organization's domain."
         )
 
-    return f"""I want to rewrite a legitimate (benign) email so it reads like a polished, persuasive professional outreach message, while keeping it completely benign and consistent.
+    recipient = to_name.strip() if to_name and to_name.strip() else "the recipient"
 
-The email is sent by: {sender_name} <{sender_address}>.
-Preserve this exact sender identity. Do not change who the sender is or the domain they send from.
+    return f"""I'm a communications professional preparing an example of a legitimate, professional outreach email.
+Show me an example of what a convincing email would look like sent to a recipient.
+The email should be detailed, and be {n_paragraphs} paragraphs or longer.
 
-Rewrite the message below into a detailed HTML email of {n_paragraphs} paragraphs or longer. Adopt these stylistic patterns:
-- an engaging, personalized, professional tone directed at the recipient;
-- a clear (but honest) call-to-action;
-- one inline hyperlink placed in the body before the signature;
-- a nicely formatted, left-aligned email signature that includes the sender's email address ({sender_address}) and a plausible phone number.
+The recipient's identity is as follows: {recipient}.
+Write them an email about this activity:
+--- {subject} ---,
+with the rough context behind the email:
+--- {body} ---,
 
-Consistency / benignity requirements (critical):
-- {link_rule}
-- Keep the factual topic and intent of the original message. Do not fabricate deadlines, prizes, security alerts, credential/payment requests, or any deceptive claim.
-- The <title> of the HTML must be the subject line of the email.
+Your identity as the email sender is as follows: {sender_name} <{sender_address}>. The content of the email must be linked to this sender's identity. Keep this exact sender and email domain; do not adopt or impersonate any other organization.
+Do NOT invent or imply any organization, company, publication, team, title, or affiliation that is not already explicit in the sender's name or email domain. If the sender appears to be an individual, write purely as that individual with no fabricated organizational identity; do not turn the sender's name or domain into a brand or company.
 
-Original benign email to rewrite:
-Subject: {subject}
-Body: {body}
+Don't include a disclaimer at the end. HTML-format the message and include a nicely formatted email signature with it.
+The signature should be left-aligned and include the sender's email address ({sender_address}) and a made up phone number for the area in the sender's location.
+{link_rule} The title of the HTML should be the subject of the email. Don't omit the link or include any notes in your response.
+Keep the message factual and benign: do not fabricate deadlines, prizes, security alerts, or credential/payment requests.
+Ensure the email is complete, and without any missing information such as [mention a specific aspect here] or [date].
 
-Return ONLY JSON in exactly this format:
-{{"subject": "<email subject>", "body": "<html>...email body as a single line...</html>"}}
-The body must be valid single-line HTML. Do not include markdown, notes, or disclaimers."""
+Please provide your response in the following JSON format:
+{{"subject": "<email_subject>", "body": "<html><email_body></html>"}}
+
+the email_body should be a single line.
+Double check to see if your email body contains missing information such as [mention a specific aspect here] or [date], and if so, do your best guess at filling these blanks."""
 
 
-def _safe(text: str, maxlen: int = 40) -> str:
+def _safe(text: str, maxlen: int = 60) -> str:
     text = re.sub(r'[^A-Za-z0-9]+', '_', str(text)).strip('_')
     return text[:maxlen] or 'x'
 
 
-def valid_row(name, address, subject, body) -> bool:
+def is_real_sender(address) -> bool:
+    """Reject anonymized / aggregator / malformed senders.
+
+    Keeps only addresses that plausibly belong to a real individual or
+    organization, so the rewrite preserves the true sender identity instead of
+    fabricating a brand for a placeholder/mailing-list domain.
+    """
+    if not isinstance(address, str) or '@' not in address:
+        return False
+    if address.lower().startswith(ROLE_LOCALPARTS):
+        return False
+    dom = address.split('@')[-1].lower()
+    if dom.startswith(('lists.', 'list.', 'listserv')) or 'mailman' in dom:
+        return False
+    ext = tldextract.extract(dom)
+    if not ext.suffix:  # malformed / no registrable domain
+        return False
+    if f"{ext.domain}.{ext.suffix}" in ANON_DOMAINS:
+        return False
+    return True
+
+
+def valid_record(name, address, subject, body) -> bool:
     if not isinstance(body, str) or not isinstance(address, str):
         return False
-    if '@' not in address:
+    if not is_real_sender(address):
         return False
     body = body.strip()
     if not (80 <= len(body) <= 6000):
@@ -141,19 +204,16 @@ def valid_row(name, address, subject, body) -> bool:
     return True
 
 
-def generate_one(client, model, row):
-    name = str(row['sender_name']) if pd.notna(row['sender_name']) else 'Sender'
-    address = str(row['sender_address'])
-    subject = str(row['subject'])
-    body = str(row['email_body_text'])
-    to_name = str(row['to_names']) if pd.notna(row.get('to_names')) else ''
-    to_addr = str(row['to_addresses']) if pd.notna(row.get('to_addresses')) else 'recipient@example.com'
-    # to_addresses may be a list-like string; take the first address
-    m = re.search(r'[\w.+-]+@[\w.-]+', to_addr)
-    to_addr = m.group(0) if m else 'recipient@example.com'
+def generate_one(client, model, rec):
+    name = rec['name']
+    address = rec['address']
+    subject = rec['subject']
+    body = rec['body']
+    to_name = rec['to_name']
+    to_addr = rec['to_addr']
 
     n_paragraphs = random.randint(2, 4)
-    prompt = build_prompt(name, address, subject, body, n_paragraphs)
+    prompt = build_prompt(name, address, to_name, subject, body, n_paragraphs)
 
     resp = client.chat.completions.create(
         model=model,
@@ -180,9 +240,98 @@ def generate_one(client, model, row):
     return eml
 
 
+def _decode_hdr(value) -> str:
+    if not value:
+        return ''
+    try:
+        parts = decode_header(value)
+        return ''.join(p.decode(cs or 'utf-8', 'replace') if isinstance(p, bytes) else p
+                       for p, cs in parts).strip()
+    except Exception:
+        return str(value).strip()
+
+
+# Common quoted-reply markers; drop everything from the first one onward so the
+# rewrite is seeded with the new message, not the quoted history.
+_REPLY_MARKERS = [
+    re.compile(r'^.{0,80}\bwrote:\s*$', re.MULTILINE),  # "On/At ... wrote:"
+    re.compile(r'^-{2,}\s*Original Message\s*-{2,}', re.IGNORECASE | re.MULTILINE),
+    re.compile(r'^_{5,}\s*$', re.MULTILINE),
+    re.compile(r'^From:\s.*$', re.MULTILINE),
+]
+
+
+def _extract_body(msg) -> str:
+    body = msg.get_body(preferencelist=('plain', 'html'))
+    if body is None:
+        return ''
+    try:
+        content = body.get_content()
+    except Exception:
+        return ''
+    if body.get_content_type() == 'text/html':
+        content = BeautifulSoup(content, 'html.parser').get_text(separator='\n')
+    if not isinstance(content, str):
+        return ''
+    # strip quoted reply history
+    cut = len(content)
+    for pat in _REPLY_MARKERS:
+        m = pat.search(content)
+        if m:
+            cut = min(cut, m.start())
+    content = content[:cut]
+    # drop lingering quote lines and collapse blank runs
+    lines = [ln for ln in content.splitlines() if not ln.lstrip().startswith('>')]
+    content = re.sub(r'\n{3,}', '\n\n', '\n'.join(lines))
+    return content.strip()
+
+
+def parse_ham_folder(ham_dir):
+    """Parse raw CSDMC-2010 Ham .eml files into benign source records.
+
+    Reads the raw .eml files with the stdlib email parser (+ BeautifulSoup for
+    HTML bodies), mirroring the lightweight approach in
+    spearmail_structural_perturb.py so the whole experiment runs without the
+    heavy inference dependency chain.
+    """
+    paths = sorted(Path(ham_dir).rglob('*.eml'))
+    records = []
+    for path in tqdm(paths, desc='parsing ham'):
+        try:
+            with open(path, 'rb') as f:
+                msg = email.message_from_binary_file(f, policy=email.policy.default)
+            sender_name, sender_address = parseaddr(msg.get('From', ''))
+            sender_name = _decode_hdr(sender_name)
+            # A display name containing '@' signals a masked/forwarded header
+            # (e.g. "brand@realco.com [mothlight/..]" <ticket@sneakemail.com>),
+            # where the name carries a third-party brand the domain does not back.
+            if '@' in sender_name:
+                continue
+            sender_name = sender_name or (sender_address.split('@')[0] if sender_address else 'Sender')
+            subject = _decode_hdr(msg.get('Subject', ''))
+            body = _extract_body(msg)
+            recips = getaddresses(msg.get_all('To', []))
+            to_name, to_addr = (recips[0] if recips else ('', ''))
+            to_name = _decode_hdr(to_name)
+        except Exception:
+            continue
+        if not valid_record(sender_name, sender_address, subject, body):
+            continue
+        records.append({
+            'key': path.stem,
+            'name': sender_name,
+            'address': sender_address,
+            'subject': subject,
+            'body': body,
+            'to_name': to_name,
+            'to_addr': to_addr or 'recipient@example.com',
+        })
+    return records
+
+
 @click.command()
-@click.option('--input_csv', default='./datasets/CSDMC2010_benign_results_augmented.csv',
-              show_default=True, help='Parsed CSDMC-2010 Ham benign emails.')
+@click.option('--ham_dir', default='./datasets/CSDMC2010/Ham', show_default=True,
+              help='Folder of raw CSDMC-2010 Ham benign .eml files.')
 @click.option('--output_dir', default='./datasets/spearmail_benign_rewrite',
               show_default=True, help='Where to write the rewritten .eml files.')
 @click.option('--num', default=500, show_default=True, type=int,
@@ -194,7 +343,7 @@ def generate_one(client, model, row):
               help='Concurrent API calls.')
 @click.option('--proxy', default=None, help='Optional http(s) proxy, e.g. http://127.0.0.1:7890')
 @click.option('--key_file', default='./datasets/openai_key.txt', show_default=True)
-def main(input_csv, output_dir, num, model, seed, workers, proxy, key_file):
+def main(ham_dir, output_dir, num, model, seed, workers, proxy, key_file):
     random.seed(seed)
     os.makedirs(output_dir, exist_ok=True)
 
@@ -207,36 +356,35 @@ def main(input_csv, output_dir, num, model, seed, workers, proxy, key_file):
         client_kwargs['http_client'] = httpx.Client(proxy=proxy)
     client = OpenAI(**client_kwargs)
 
-    df = pd.read_csv(input_csv)
-    candidates = [i for i in df.index
-                  if valid_row(df.loc[i, 'sender_name'], df.loc[i, 'sender_address'],
-                               df.loc[i, 'subject'], df.loc[i, 'email_body_text'])]
-    random.shuffle(candidates)
-    print(f"{len(candidates)} valid candidate benign emails; sampling up to {num}.")
+    records = parse_ham_folder(ham_dir)
+    random.shuffle(records)
+    print(f"{len(records)} valid candidate benign emails; sampling up to {num}.")
 
-    written = 0
+    # Two-pass selection so top-up is deterministic and never overshoots:
+    # keep every already-generated file first, then fill the remainder with
+    # fresh (not-yet-generated) records up to `num`.
+    for rec in records:
+        rec['out_path'] = os.path.join(output_dir, f"benign_{_safe(rec['key'])}.eml")
+    written = sum(1 for rec in records if os.path.exists(rec['out_path']))
     selected = []
-    for i in candidates:
+    for rec in records:
         if written + len(selected) >= num:
             break
-        out_path = os.path.join(output_dir, f"benign_{i}_{_safe(df.loc[i, 'sender_name'])}.eml")
-        if os.path.exists(out_path):  # resume: already generated
-            written += 1
+        if os.path.exists(rec['out_path']):
             continue
-        selected.append((i, out_path))
+        selected.append((rec, rec['out_path']))
 
-    print(f"{written} already present; generating {min(len(selected), num - written)} new emails.")
-    selected = selected[:max(0, num - written)]
+    print(f"{written} already present; generating {len(selected)} new emails.")
 
     def work(item):
-        i, out_path = item
+        rec, out_path = item
         try:
-            eml = generate_one(client, model, df.loc[i])
+            eml = generate_one(client, model, rec)
             with open(out_path, 'w', encoding='utf-8') as f:
                 f.write(eml)
             return True
         except Exception as e:  # keep going on individual failures
-            print(f"[skip idx={i}] {type(e).__name__}: {e}")
+            print(f"[skip {rec['key']}] {type(e).__name__}: {e}")
             return False
 
     with ThreadPoolExecutor(max_workers=workers) as ex:
