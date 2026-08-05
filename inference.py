@@ -74,7 +74,8 @@ def _load_existing_rows(csv_path: str):
 @click.option("--auto_translate", is_flag=True, default=False, help='Whether to translate the email (including subject)')
 @click.option("--fast_text", is_flag=True, default=False, help='Skip Playwright render + OCR when a usable text body already exists (much faster on text-heavy corpora; changes the text the detector reads, so validate on a subset).')
 @click.option("--ocr_gpu", is_flag=True, default=False, help='Use GPU PaddleOCR (needs a paddlepaddle-gpu build).')
-def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed, auto_translate, fast_text, ocr_gpu):
+@click.option("--relax_match", is_flag=True, default=False, help='Loosen identity matching (was the old default). Off = strict matching, which avoids false brand matches like American Airlines -> American Express and lowers false positives.')
+def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed, auto_translate, fast_text, ocr_gpu, relax_match):
     '''
     PiMRef main inference function
     :param email_dir: a directory containing all eml files, also support .mbox and .pst format
@@ -95,7 +96,7 @@ def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed, auto
                                   gpt_assistant=None,
                                   check_action=True,
                                   threshold=Config.thre,
-                                  relax_match=True)  # todo: relax_match!
+                                  relax_match=relax_match)  # strict by default; --relax_match to loosen
 
     if '.mbox' in email_dir:
         mbox_to_eml(email_dir, email_dir.replace('.mbox', ''))

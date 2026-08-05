@@ -142,9 +142,14 @@ def cli():
 @click.option('--limit', default=0, type=int, help='Cap total inbox emails (0 = all).')
 @click.option('--max-per-user', default=0, type=int, help='Cap emails per user (0 = all).')
 @click.option('--chunksize', default=50000, show_default=True, type=int)
-def prep(csv_path, out_dir, metadata, limit, max_per_user, chunksize):
+@click.option('--metadata-only', is_flag=True, default=False,
+              help='Rebuild ONLY the metadata CSV (skip writing .eml files). Use '
+                   'to recover metadata for an already-run results CSV — the '
+                   'deterministic <user>/<seq>.eml keys line up with a prior prep.')
+def prep(csv_path, out_dir, metadata, limit, max_per_user, chunksize, metadata_only):
     """Filter the raw Enron CSV to inbox mail and write .eml files + metadata."""
-    os.makedirs(out_dir, exist_ok=True)
+    if not metadata_only:
+        os.makedirs(out_dir, exist_ok=True)
     inbox_re = re.compile(r'/inbox/', re.I)
     per_user = defaultdict(int)
     meta_rows = []
@@ -178,10 +183,11 @@ def prep(csv_path, out_dir, metadata, limit, max_per_user, chunksize):
             auth = extract_auth(msg)
             seq = per_user[user]
             rel = f"{user}/{seq}.eml"
-            fp = os.path.join(out_dir, rel)
-            os.makedirs(os.path.dirname(fp), exist_ok=True)
-            with open(fp, 'w', encoding='utf-8', errors='ignore') as f:
-                f.write(raw)
+            if not metadata_only:
+                fp = os.path.join(out_dir, rel)
+                os.makedirs(os.path.dirname(fp), exist_ok=True)
+                with open(fp, 'w', encoding='utf-8', errors='ignore') as f:
+                    f.write(raw)
             meta_rows.append({
                 'join_key': rel,
                 'user': user,
@@ -286,6 +292,17 @@ def eval(results, metadata, out_dir, brand_db, dmarc_mode):
     if df.empty:
         raise click.ClickException("no rows joined between results and metadata "
                                    "(check that both refer to the same .eml set)")
+    print(f"joined {len(df)}/{len(res)} results rows against metadata")
+    # Alignment sanity check: the metadata is rebuilt deterministically, so the
+    # <user>/<seq>.eml key should map to the same email. Verify via sender address.
+    if c_send and 'sender_address' in meta.columns:
+        a = df[c_send].astype(str).str.lower().str.strip()
+        b = df['sender_address'].astype(str).str.lower().str.strip()
+        match = (a == b).mean()
+        print(f"alignment check (sender_address match): {100*match:.1f}%")
+        if match < 0.95:
+            print("  WARNING: low alignment — metadata seq numbering may not match "
+                  "the results' .eml set; regenerate prep with the same code/input.")
 
     id_domains = _load_identity_domains(brand_db) if dmarc_mode == 'header' else {}
 
