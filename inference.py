@@ -1,4 +1,7 @@
 import os
+import re
+import ast
+import json
 import time
 from tqdm import tqdm
 import csv
@@ -11,6 +14,46 @@ import click
 from lib.baselines import dfence, helphed
 from lib.utilities.data_utils import DomainUtils
 from config import Config
+
+
+def _norm_identity(matched, identities) -> str:
+    """Normalised claimed identity for a (sender, identity) whitelist key."""
+    for cand in (matched, identities):
+        s = str(cand).strip()
+        if not s or s.lower() in ('nan', 'none', 'set()', '{}', '[]',
+                                  'no matched brand', 'no prediction'):
+            continue
+        try:
+            v = ast.literal_eval(s)
+            if isinstance(v, (set, list, tuple)):
+                s = ' '.join(sorted(str(x) for x in v))
+        except (ValueError, SyntaxError):
+            pass
+        return re.sub(r'\s+', ' ', s.strip().strip('{}\'"').lower())
+    return ''
+
+
+def _wl_key(sender_address, matched, identities):
+    return (str(sender_address).lower().strip(), _norm_identity(matched, identities))
+
+
+def _load_whitelist(path):
+    wl = set()
+    if path and os.path.exists(path):
+        try:
+            for pair in json.load(open(path, encoding='utf-8')):
+                wl.add((str(pair[0]).lower(), str(pair[1])))
+        except Exception:
+            pass
+    return wl
+
+
+def _save_whitelist(path, wl):
+    try:
+        json.dump(sorted([list(x) for x in wl]), open(path, 'w', encoding='utf-8'),
+                  ensure_ascii=False, indent=0)
+    except Exception as e:
+        Logger.spit(f"could not save whitelist: {e}", warning=True, caller_prefix='Main')
 
 TODAY = datetime.today()
 TODAY_DATE = TODAY.strftime("%Y-%m-%d")
@@ -75,7 +118,9 @@ def _load_existing_rows(csv_path: str):
 @click.option("--fast_text", is_flag=True, default=False, help='Skip Playwright render + OCR when a usable text body already exists (much faster on text-heavy corpora; changes the text the detector reads, so validate on a subset).')
 @click.option("--ocr_gpu", is_flag=True, default=False, help='Use GPU PaddleOCR (needs a paddlepaddle-gpu build).')
 @click.option("--relax_match", is_flag=True, default=False, help='Loosen identity matching (was the old default). Off = strict matching, which avoids false brand matches like American Airlines -> American Express and lowers false positives.')
-def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed, auto_translate, fast_text, ocr_gpu, relax_match):
+@click.option("--interactive", is_flag=True, default=False, help='When an email is flagged, show it and ask whether to whitelist the (sender, claimed-identity). Terminal prompt — forwards over SSH for remote runs.')
+@click.option("--whitelist", default='./datasets/whitelist.json', show_default=True, help='Persistent (sender, claimed-identity) whitelist; consulted every run, updated on interactive y.')
+def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed, auto_translate, fast_text, ocr_gpu, relax_match, interactive, whitelist):
     '''
     PiMRef main inference function
     :param email_dir: a directory containing all eml files, also support .mbox and .pst format
@@ -116,6 +161,14 @@ def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed, auto
         os.makedirs(vis_dir, exist_ok=True)
     Logger.set_debug_on()
     Logger.spit(f'Loaded the testing dataset = {len(dataset)} emails', caller_prefix="Main", debug=True)
+
+    # (sender, claimed-identity) whitelist — consulted every run; grown on the
+    # interactive prompt. Lets a legitimate flagged sender be confirmed once and
+    # never alert again (RC-Q1 human-in-the-loop mitigation).
+    whitelist_pairs = _load_whitelist(whitelist)
+    if whitelist_pairs:
+        Logger.spit(f"Loaded {len(whitelist_pairs)} whitelist pair(s) from {whitelist}",
+                    caller_prefix="Main", debug=True)
 
     # ------------------------------------------------------------------ #
     seen_paths, seen_subjects = _load_existing_rows(csv_file_path)
@@ -240,6 +293,35 @@ def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed, auto
                                                                                        relations=relations,
                                                                                        sender_domains=sender_domains,
                                                                                        recipient_domains=recipient_domains)
+
+        # ---- (sender, claimed-identity) whitelist: suppress known-good pairs,
+        #      and (interactive) ask the user about newly-flagged ones ----------
+        if is_inconsistent:
+            wkey = _wl_key(sender_address, matched_identity, identities)
+            if wkey in whitelist_pairs:
+                is_inconsistent = False
+                matched_identity = f"{matched_identity} [whitelisted]"
+                Logger.spit(f"Suppressed by whitelist: {wkey}", debug=True, caller_prefix='Main')
+            elif interactive:
+                print("\n" + "=" * 70)
+                print("  ⚠  FLAGGED as possible impersonation")
+                print(f"  From    : {sender_name} <{sender_address}>")
+                print(f"  Claims  : {matched_identity}")
+                print(f"  Subject : {subject}")
+                print(f"  Link/CTA: {next_step_of_engagement}")
+                print(f"  File    : {email_file_path}")
+                try:
+                    ans = input("  False positive? Whitelist this sender? [y/N] ").strip().lower()
+                except EOFError:
+                    ans = 'n'
+                if ans == 'y':
+                    whitelist_pairs.add(wkey)
+                    _save_whitelist(whitelist, whitelist_pairs)
+                    is_inconsistent = False
+                    matched_identity = f"{matched_identity} [whitelisted]"
+                    print("  -> whitelisted; this sender/identity won't alert again.")
+                else:
+                    print("  -> kept as phishing.")
 
         # Append the new row via the persistent writer, flushing each row so a
         # crash/resume mid-run keeps the work already completed.

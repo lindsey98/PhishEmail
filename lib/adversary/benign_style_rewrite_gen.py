@@ -1,25 +1,27 @@
 """Rebuttal experiment RA-Q1/Q2.
 
-Generate benign emails that adopt the *surface patterns* of SpearMail
-(personalized professional outreach: HTML body, engaging tone, a call-to-action
-hyperlink, a formatted signature with contact details) by asking an LLM to
-rewrite genuine CSDMC-2010 Ham benign emails in that style.
+Generate benign emails that adopt SpearMail's *surface presentation* (clean HTML,
+a courteous greeting, a simple professional signature) by asking an LLM to rewrite
+genuine CSDMC-2010 Ham benign emails in that style — while staying strictly
+faithful to each original's meaning.
 
-The rewrites are kept *benign and identity-consistent*: the sender identity of
-the original ham email is preserved, and any hyperlink / claimed organization is
-constrained to the sender's own email domain. There is no typosquatting,
-impersonation, or deceptive call-to-action. The point of the experiment is to
-show that PiMRef does not merely pattern-match the SpearMail template: benign
-emails written in the same style still yield 0 false positives, because PiMRef
-checks counterfactual identity-domain consistency rather than style.
+Crucially, the rewrite does NOT fabricate intent. SpearMail's template always
+injects a call-to-action pseudo-link; a faithful benign rewrite must not. So:
 
-Source emails are read directly from the CSDMC-2010 Ham folder (raw .eml files)
-using the same EmailDataset parser that PiMRef uses at inference time, so the
-parsed sender/subject/body match what the detector actually sees.
+  - the real sender identity (name + address) is preserved, no impersonation;
+  - if the original does not ask the recipient to do anything, the rewrite adds
+    no call-to-action, invitation, or link;
+  - links are preserved only if present in the original, using the original URLs
+    verbatim (never invented, never relocated to the sender's domain);
+  - no invented organizations, titles, phone numbers, deadlines, or padding.
 
-The prompt below is adapted from the SpearMail "Email Generation prompt"; the
-deception-inducing instructions (typosquatted sender email, fake link to an
-impersonated organization) are replaced with consistency-preserving ones.
+The point of the experiment is to show PiMRef does not merely pattern-match the
+SpearMail template: benign emails restyled to look like SpearMail still yield 0
+false positives, because PiMRef checks counterfactual identity-domain
+consistency rather than surface style.
+
+Source emails are read directly from the CSDMC-2010 Ham folder (raw .eml files);
+anonymized/aggregator/masked senders are filtered out (see is_real_sender).
 
 Usage:
     python -m lib.adversary.benign_style_rewrite_gen \
@@ -60,101 +62,69 @@ ANON_DOMAINS = {'taint.org', 'example.com', 'example.org', 'example.net',
 # Role local-parts that indicate an RSS/feed aggregator rather than a real sender.
 ROLE_LOCALPARTS = ('rssfeeds@', 'rss@', 'feed@', 'feeds@', 'noreply@', 'no-reply@')
 
-# Personal / webmail domains: senders here do not "own" an organizational site,
-# so we ask the model to keep any link on a topic-relevant page of the same
-# webmail-style personal footprint and never to claim a branded identity.
-WEBMAIL_DOMAINS = {
-    'gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com', 'protonmail.com',
-    'zoho.com', 'icloud.com', 'aol.com', 'yandex.com', 'gmx.com', 'cox.net',
-    'tutanota.com', '163.com', 'qq.com', '126.com', 'comcast.net', 'sbcglobal.net',
-    'verizon.net', 'me.com', 'live.com', 'msn.com',
-}
-
 SYSTEM_CONTEXT = (
     "You are helping build a benign email dataset to stress-test a phishing "
-    "detector. You rewrite a genuine, legitimate email so that it adopts the "
-    "stylistic and structural patterns of a persuasive professional outreach "
-    "email (the same surface style as a spear-phishing invitation), while "
-    "remaining entirely benign, truthful, and internally consistent. You never "
-    "introduce deception, impersonation, credential requests, or fake urgency."
+    "detector. You take a genuine, legitimate email and rewrite it into a more "
+    "polished, professionally formatted (SpearMail-style) version WITHOUT "
+    "changing what it actually says, asks, or offers. You are faithful to the "
+    "original's intent and facts: you never add a call-to-action, link, "
+    "invitation, organization, title, or urgency that the original did not have."
 )
 
 
-def _domain_of(address: str) -> str:
-    ext = tldextract.extract(address.split('@')[-1])
-    return f"{ext.domain}.{ext.suffix}" if ext.suffix else ext.domain
-
-
 def build_prompt(sender_name: str, sender_address: str, to_name: str,
-                 subject: str, body: str, n_paragraphs: int) -> str:
-    """Benign counterpart of the SpearMail ``email_generation()`` prompt.
+                 subject: str, body: str, orig_urls) -> str:
+    """Faithful, style-only benign rewrite prompt.
 
-    This reuses the *exact* SpearMail "Email Generation prompt" (Table 11) that
-    was used to synthesize the SpearMail dataset, so the benign emails follow the
-    identical template. Only the two deception switches are turned off, plus two
-    edits needed because we rewrite a real benign email rather than invent a
-    phishing pretext:
+    Adopts SpearMail's *surface presentation* (clean HTML, a courteous greeting,
+    a simple professional signature) but preserves the original email's
+    communicative intent exactly. In particular it does NOT fabricate a
+    call-to-action or link: SpearMail's template always injects a pseudo-link,
+    which is precisely the thing we must not add to a benign email that never
+    asked the recipient to do anything.
 
-      SpearMail                                  ->  benign rewrite
-      -----------------------------------------      ---------------------------
-      sender email = typosquatted org address    ->  the real CSDMC-Ham sender
-      body has a "fake link to <link>"           ->  a link on the sender's own domain
-      recipient asserted "established researcher" ->  the real recipient, no claim
-      "differ from <phishing negative example>"  ->  dropped (single-shot rewrite,
-                                                      no prior-generation diversity)
-
-    The activity / context slots are filled from the source ham email's subject
-    and body. Everything else (framing, "N paragraphs", left-aligned signature
-    with email + made-up phone, link before the signature, title = subject,
-    single-line JSON output, the [date]/[blank] completeness check) is kept as in
-    the original template.
+    Link handling: the caller passes the URLs found in the *original* email. If
+    there are none, the rewrite adds none. If there are some, only those exact
+    URLs may appear (never invented, never relocated to the sender's domain).
     """
-    domain = _domain_of(sender_address)
-    is_webmail = domain.lower() in WEBMAIL_DOMAINS
-
-    if is_webmail:
-        link_rule = (
-            f"Make sure a link is included in the body of the message, before "
-            f"the signature. The sender uses a personal webmail address "
-            f"(@{domain}), so the email must NOT claim to represent any company, "
-            f"university, or agency: use a plain, topic-relevant link and do NOT "
-            f"link to, or adopt the identity of, any organization the sender does "
-            f"not belong to."
-        )
-    else:
-        link_rule = (
-            f"Make sure a link on the sender's own domain '{domain}' "
-            f"(e.g. https://{domain}/...) is included in the body of the "
-            f"message, before the signature. Do NOT use a URL shortener, a "
-            f"typosquatted look-alike, or any other organization's domain."
-        )
-
     recipient = to_name.strip() if to_name and to_name.strip() else "the recipient"
 
-    return f"""I'm a communications professional preparing an example of a legitimate, professional outreach email.
-Show me an example of what a convincing email would look like sent to a recipient.
-The email should be detailed, and be {n_paragraphs} paragraphs or longer.
+    if orig_urls:
+        links_rule = (
+            "The original email contains the following link(s). If (and only if) "
+            "the original meaning calls for keeping a link, use ONLY these exact "
+            "URLs, unchanged — never invent a new link, never edit these, and "
+            "never replace them with the sender's own domain:\n"
+            + "\n".join(f"  - {u}" for u in orig_urls)
+        )
+    else:
+        links_rule = (
+            "The original email contains NO links and does not ask the recipient "
+            "to do anything. Do NOT add any link, button, or call-to-action of "
+            "any kind."
+        )
 
-The recipient's identity is as follows: {recipient}.
-Write them an email about this activity:
---- {subject} ---,
-with the rough context behind the email:
---- {body} ---,
+    return f"""I want to rewrite a legitimate (benign) email into a more polished, professionally formatted version, WITHOUT changing what it actually says or asks.
 
-Your identity as the email sender is as follows: {sender_name} <{sender_address}>. The content of the email must be linked to this sender's identity. Keep this exact sender and email domain; do not adopt or impersonate any other organization.
-Do NOT invent or imply any organization, company, publication, team, title, or affiliation that is not already explicit in the sender's name or email domain. If the sender appears to be an individual, write purely as that individual with no fabricated organizational identity; do not turn the sender's name or domain into a brand or company.
+The email is sent by: {sender_name} <{sender_address}>. Keep this exact sender identity and email domain.
+The recipient is: {recipient}.
 
-Don't include a disclaimer at the end. HTML-format the message and include a nicely formatted email signature with it.
-The signature should be left-aligned and include the sender's email address ({sender_address}) and a made up phone number for the area in the sender's location.
-{link_rule} The title of the HTML should be the subject of the email. Don't omit the link or include any notes in your response.
-Keep the message factual and benign: do not fabricate deadlines, prizes, security alerts, or credential/payment requests.
-Ensure the email is complete, and without any missing information such as [mention a specific aspect here] or [date].
+Rewrite the message below as clean HTML with a courteous greeting and a simple professional signature (the sender's real name and email address only). Improve the wording and formatting; do not change the substance.
 
-Please provide your response in the following JSON format:
-{{"subject": "<email_subject>", "body": "<html><email_body></html>"}}
+Faithfulness rules (critical):
+- Preserve the original's communicative intent exactly. If the original does NOT invite or ask the recipient to do anything, the rewrite must NOT invite or ask them to do anything either — no call-to-action, no "click here", no invitation, no request.
+- Do not invent any content, facts, events, deadlines, phone numbers, organizations, publications, teams, titles, or affiliations that are not in the original. If the sender looks like an individual, write purely as that individual.
+- {links_rule}
+- Keep roughly the same length and scope as the original; do not pad it with new material.
+- The <title> of the HTML must be the subject line of the email.
 
-the email_body should be a single line.
-Double check to see if your email body contains missing information such as [mention a specific aspect here] or [date], and if so, do your best guess at filling these blanks."""
+Original email:
+Subject: {subject}
+Body: {body}
+
+Return ONLY JSON in exactly this format:
+{{"subject": "<email subject>", "body": "<html>...email body as a single line...</html>"}}
+The body must be valid single-line HTML. Do not include markdown, notes, or disclaimers."""
 
 
 def _safe(text: str, maxlen: int = 60) -> str:
@@ -212,8 +182,7 @@ def generate_one(client, model, rec):
     to_name = rec['to_name']
     to_addr = rec['to_addr']
 
-    n_paragraphs = random.randint(2, 4)
-    prompt = build_prompt(name, address, to_name, subject, body, n_paragraphs)
+    prompt = build_prompt(name, address, to_name, subject, body, rec.get('orig_urls', []))
 
     resp = client.chat.completions.create(
         model=model,
@@ -259,6 +228,36 @@ _REPLY_MARKERS = [
     re.compile(r'^_{5,}\s*$', re.MULTILINE),
     re.compile(r'^From:\s.*$', re.MULTILINE),
 ]
+
+
+_URL_RE = re.compile(r'https?://[^\s"\'<>)\]]+', re.I)
+
+
+def _extract_links(msg, cap: int = 12):
+    """URLs present in the *original* email (inline text + <a href>), so the
+    rewrite can preserve real links verbatim and never invent one."""
+    urls = []
+    for part in msg.walk():
+        ctype = part.get_content_type()
+        if ctype not in ('text/plain', 'text/html'):
+            continue
+        try:
+            payload = part.get_content()
+        except Exception:
+            continue
+        if not isinstance(payload, str):
+            continue
+        if ctype == 'text/html':
+            urls += re.findall(r'href=["\']([^"\']+)["\']', payload, re.I)
+        urls += _URL_RE.findall(payload)
+    seen = []
+    for u in urls:
+        u = u.strip().rstrip('.,);]>')
+        if not u.lower().startswith(('http://', 'https://')):
+            continue
+        if u not in seen:
+            seen.append(u)
+    return seen[:cap]
 
 
 def _extract_body(msg) -> str:
@@ -313,6 +312,7 @@ def parse_ham_folder(ham_dir):
             recips = getaddresses(msg.get_all('To', []))
             to_name, to_addr = (recips[0] if recips else ('', ''))
             to_name = _decode_hdr(to_name)
+            orig_urls = _extract_links(msg)
         except Exception:
             continue
         if not valid_record(sender_name, sender_address, subject, body):
@@ -325,6 +325,7 @@ def parse_ham_folder(ham_dir):
             'body': body,
             'to_name': to_name,
             'to_addr': to_addr or 'recipient@example.com',
+            'orig_urls': orig_urls,
         })
     return records
 
@@ -343,9 +344,14 @@ def parse_ham_folder(ham_dir):
               help='Concurrent API calls.')
 @click.option('--proxy', default=None, help='Optional http(s) proxy, e.g. http://127.0.0.1:7890')
 @click.option('--key_file', default='./datasets/openai_key.txt', show_default=True)
-def main(ham_dir, output_dir, num, model, seed, workers, proxy, key_file):
+@click.option('--exclude_keys', default='', help='Comma-separated source stems (e.g. '
+              'TRAIN_03706) to permanently exclude; top-up then draws fresh emails '
+              'from beyond the original sample instead of regenerating these.')
+def main(ham_dir, output_dir, num, model, seed, workers, proxy, key_file, exclude_keys):
     random.seed(seed)
     os.makedirs(output_dir, exist_ok=True)
+    exclude = {k.strip().replace('benign_', '').replace('.eml', '')
+               for k in exclude_keys.split(',') if k.strip()}
 
     if not os.environ.get('OPENAI_API_KEY') and os.path.exists(key_file):
         os.environ['OPENAI_API_KEY'] = open(key_file).read().strip()
@@ -358,6 +364,12 @@ def main(ham_dir, output_dir, num, model, seed, workers, proxy, key_file):
 
     records = parse_ham_folder(ham_dir)
     random.shuffle(records)
+    if exclude:
+        # Drop excluded keys AFTER the shuffle so the remaining sample order (and
+        # thus the already-generated files) is preserved; top-up pulls the next
+        # non-excluded, not-yet-generated records.
+        records = [r for r in records if r['key'] not in exclude]
+        print(f"excluded {len(exclude)} keys: {sorted(exclude)}")
     print(f"{len(records)} valid candidate benign emails; sampling up to {num}.")
 
     # Two-pass selection so top-up is deterministic and never overshoots:

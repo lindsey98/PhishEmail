@@ -609,5 +609,89 @@ def scan_req2(email_dir, brand_db, out, exclude, min_brand_len, impersonator_bra
     print(f"candidates -> {out}  (manually confirm legitimacy; drop substring false hits)")
 
 
+@cli.command()
+@click.option('--results', required=True, help='PiMRef results CSV to review.')
+@click.option('--whitelist', default='./datasets/whitelist.json', show_default=True,
+              help='Persistent (sender, claimed-identity) whitelist (JSON).')
+@click.option('--out', default=None, help='Reviewed results CSV (adds whitelisted / pred_after).')
+@click.option('--apply-only', is_flag=True, default=False,
+              help='Apply the existing whitelist without prompting (batch/re-run).')
+def review(results, whitelist, out, apply_only):
+    """Interactive human-in-the-loop whitelist (RC-Q1 mitigation).
+
+    For each email PiMRef flagged as phishing, show it and ask whether to
+    whitelist the (sender_address, claimed_identity) pair. Whitelisted pairs are
+    suppressed now and in every future run (the whitelist persists to JSON), so a
+    legitimate sender only ever prompts once. Answer y=whitelist (false positive),
+    N=keep flagged, s=skip for now, q=quit.
+    """
+    df = pd.read_csv(results, engine='python')
+
+    def col(*names):
+        for n in names:
+            if n in df.columns:
+                return n
+        return None
+    c_pred = col('our_pred', 'pred')
+    c_send = col('sender_address', 'from')
+    c_match = col('matched_identity')
+    c_ids = col('sender_identities', 'sender_identity')
+    c_subj = col('subject')
+    if not (c_pred and c_send):
+        raise click.ClickException(f"results CSV missing columns; have {list(df.columns)}")
+
+    wl = set()
+    if os.path.exists(whitelist):
+        try:
+            for pair in json.load(open(whitelist)):
+                wl.add((str(pair[0]).lower(), str(pair[1])))
+        except Exception:
+            pass
+
+    def key(r):
+        ident = _norm_identity(r[c_match] if c_match else '', r[c_ids] if c_ids else '')
+        return (str(r[c_send]).lower().strip(), ident)
+
+    def save():
+        json.dump(sorted([list(x) for x in wl]), open(whitelist, 'w'), ensure_ascii=False, indent=0)
+
+    flagged = df[df[c_pred].map(_is_phish)]
+    print(f"{len(flagged)} flagged email(s); {len(wl)} whitelist pair(s) loaded.")
+    newly = 0
+    for _, r in flagged.iterrows():
+        k = key(r)
+        if k in wl:
+            continue  # already whitelisted -> auto-suppressed
+        if apply_only:
+            continue
+        print("-" * 64)
+        print(f"  sender : {r[c_send]}")
+        print(f"  claims : {r[c_match] if c_match else '(n/a)'}")
+        if c_subj:
+            print(f"  subject: {str(r[c_subj])[:70]}")
+        try:
+            ans = input("  Whitelist this sender? [y/N/s/q] ").strip().lower()
+        except EOFError:
+            break
+        if ans == 'q':
+            break
+        if ans == 'y':
+            wl.add(k)
+            newly += 1
+            save()  # persist immediately (crash-safe)
+
+    df['whitelisted'] = df.apply(lambda r: key(r) in wl, axis=1)
+    df['pred_after_whitelist'] = df[c_pred].map(_is_phish) & (~df['whitelisted'])
+    before = int(df[c_pred].map(_is_phish).sum())
+    after = int(df['pred_after_whitelist'].sum())
+    print("=" * 64)
+    print(f"flagged before: {before}   after whitelist: {after}   "
+          f"(suppressed {before - after}; {newly} newly whitelisted this run)")
+    save()
+    out = out or (os.path.splitext(results)[0] + '_reviewed.csv')
+    df.to_csv(out, index=False)
+    print(f"whitelist -> {whitelist}   reviewed results -> {out}")
+
+
 if __name__ == '__main__':
     cli()
