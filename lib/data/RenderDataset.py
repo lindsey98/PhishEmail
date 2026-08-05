@@ -1,0 +1,620 @@
+import email
+import email.header
+import os
+import re
+import email
+import email.header
+import hashlib
+import html
+from ..data import EmailDataset, OCR
+from ..utilities import Logger
+from ..utilities.data_utils import normalization
+from typing import Union, Tuple, List
+from playwright.sync_api import sync_playwright
+# pip install playwright
+# playwright install
+
+class RenderDataset(EmailDataset):
+    _CallerPrefix = "Dataset Loader (render the eml)"
+
+    def __init__(self, root_path, ocr_model: OCR, dumpDir: str = "temp", translate_on=False,
+                 save_imgs=False, skip_ocr_for_text: bool = False, text_ocr_min_chars: int = 30):
+        super().__init__(root_path, translate_on)
+        self.ocr_model = ocr_model
+        self.dumpDir = dumpDir
+        os.makedirs(dumpDir, exist_ok=True)
+        self.save_imgs = save_imgs
+        # When True, emails that already have a usable plain/HTML text body skip
+        # the (expensive) Playwright render + OCR entirely. Behaviour-changing:
+        # the detector then reads the extracted body instead of OCR'd text.
+        self.skip_ocr_for_text = skip_ocr_for_text
+        self.text_ocr_min_chars = text_ocr_min_chars
+        # Persistent Playwright objects — launched once, reused for every email
+        # (launching a fresh Chromium per email was the dominant cost).
+        self._pw = None
+        self._browser = None
+        self._context = None
+        self._page = None
+
+    # ---------------------- Playwright HTML → PNG ---------------------- #
+    def _ensure_browser(self):
+        """Lazily start a single Chromium instance/page reused across emails."""
+        if self._page is not None:
+            return
+        from playwright.sync_api import sync_playwright
+        self._pw = sync_playwright().start()
+        self._browser = self._pw.chromium.launch()
+        self._context = self._browser.new_context(
+            viewport={"width": 1024, "height": 800},
+            device_scale_factor=1,  # don't 2x the pixels
+        )
+        self._page = self._context.new_page()
+
+    def close(self):
+        """Tear down the reused browser. Safe to call multiple times."""
+        for attr in ("_page", "_context", "_browser"):
+            obj = getattr(self, attr, None)
+            if obj is not None:
+                try:
+                    obj.close()
+                except Exception:
+                    pass
+            setattr(self, attr, None)
+        if getattr(self, "_pw", None) is not None:
+            try:
+                self._pw.stop()
+            except Exception:
+                pass
+            self._pw = None
+
+    def __del__(self):
+        try:
+            self.close()
+        except Exception:
+            pass
+
+    def html_to_png_playwright(self, full_html: str, output_path: str) -> bool:
+        MAX_HEIGHT = 20000  # px; safely under OpenCV's 32767 limit
+        VIEWPORT_W = 1024
+        try:
+            self._ensure_browser()
+            page = self._page
+            page.set_content(full_html, wait_until="domcontentloaded", timeout=15000)
+            content_h = page.evaluate(
+                "() => Math.max("
+                "document.body.scrollHeight, "
+                "document.documentElement.scrollHeight)"
+            )
+            clip_h = min(content_h, MAX_HEIGHT)
+            page.screenshot(
+                path=output_path,
+                clip={"x": 0, "y": 0, "width": VIEWPORT_W, "height": clip_h},
+            )
+            return True
+        except Exception as e:
+            Logger.spit(f"[ERROR] Playwright render failed: {e}", debug=True)
+            # a crashed/hung page can poison later renders — reset the browser
+            self.close()
+            return False
+
+    # ---------------------- Sanitization for text-salting ---------------------- #
+    @staticmethod
+    def sanitize_html(html_body: str) -> str:
+        """
+        Sanitize HTML to mitigate text-salting / invisible text:
+        - Remove hidden spans (width:0, max-width:0, overflow:hidden, opacity:0, etc.)
+        - Remove script/style blocks
+        - Strip zero-width / bidi chars
+        - Strip obviously bad style attributes from other tags
+        """
+        if not html_body:
+            return ""
+
+        # 1) Remove zero-width and bidi control characters
+        zero_width_chars = [
+            "\u200b", "\u200c", "\u200d", "\u200e", "\u200f",
+            "\u202a", "\u202b", "\u202c", "\u202d", "\u202e",
+            "\u2060", "\u2066", "\u2067", "\u2068", "\u2069",
+            "\ufeff",
+        ]
+        for ch in zero_width_chars:
+            html_body = html_body.replace(ch, "")
+
+        # 2) Remove script and style blocks completely
+        html_body = re.sub(r"(?is)<(script|style).*?>.*?</\1>", "", html_body)
+
+        # 3) Remove hidden spans entirely (tag + contents)
+        suspicious_keys = [
+            "display:none",
+            "visibility:hidden",
+            "opacity:0",
+            "color:transparent",
+            "font-size:0",
+            "font-size:1px",
+            "width:0",
+            "width:0px",
+            "max-width:0",
+            "max-width:0px",
+            "overflow:hidden",
+            "text-indent:-9999px",
+            "text-indent: -9999px",
+        ]
+
+        span_re = re.compile(
+            r'<span\b[^>]*style=(["\'])(?P<style>.*?)\1[^>]*>.*?</span>',
+            re.IGNORECASE | re.DOTALL
+        )
+
+        def remove_hidden_span(m: re.Match) -> str:
+            style = m.group("style").lower()
+            if any(k in style for k in suspicious_keys):
+                # Drop the span + its content
+                return ""
+            return m.group(0)
+
+        html_body = span_re.sub(remove_hidden_span, html_body)
+
+        # 4) For *other* tags, strip only the bad style attributes
+        def strip_bad_style_attr(m: re.Match) -> str:
+            quote = m.group(1)
+            style = m.group(2)
+            lower_style = style.lower()
+            if any(k in lower_style for k in suspicious_keys):
+                # Remove style attribute entirely
+                return ""
+            return f' style={quote}{style}{quote}'
+
+        html_body = re.sub(
+            r'style=(["\'])(.*?)\1',
+            strip_bad_style_attr,
+            html_body,
+            flags=re.IGNORECASE | re.DOTALL
+        )
+
+        return html_body
+
+    # ---------------------- EML → single PNG via Playwright ---------------------- #
+    def render_eml(self, data: bytes, dumpName="new") -> Tuple[Union[bool, str], str]:
+        """
+        Render the eml as a single PNG image via Playwright.
+
+        Steps:
+          - Build a single sanitized HTML body from all text/* parts.
+          - Wrap with a “safe” stylesheet that normalizes fonts/colors.
+          - Use Playwright (Chromium) to render full-page screenshot.
+          - Return (image_path or False, visible_text_fallback).
+        """
+
+        textTypes = ['text/plain', 'text/html']
+        imageTypes = ['image/gif', 'image/jpeg', 'image/png']
+        # You *can* use PDFs/attachments separately if you want, but for pure
+        # anti-salting you usually only care about main body rendering.
+        # pdfTypes = ['application/pdf']
+
+        msg = email.message_from_bytes(data)
+
+        # Collect text body as HTML fragments
+        body_html_fragments: List[str] = []
+
+        for part in msg.walk():
+            mimeType = part.get_content_type()
+            if part.is_multipart():
+                Logger.spit('[INFO] Multipart found, continue', debug=True)
+                continue
+
+            Logger.spit('[INFO] Found MIME part: %s' % mimeType, debug=True)
+
+            # -------- text --------
+            if mimeType in textTypes:
+                charset = part.get_content_charset('utf-8')
+                raw_email_content = part.get_payload(decode=True)
+                transfer_encoding = part.get('Content-Transfer-Encoding', '').lower()
+
+                if raw_email_content:
+                    if transfer_encoding == 'quoted-printable':
+                        payload = self.decode_quoted_printable(raw_email_content, charset)
+                    else:
+                        try:
+                            payload = raw_email_content.decode(charset, 'replace')
+                        except LookupError:
+                            payload = raw_email_content.decode('utf-8', 'replace')
+                else:
+                    payload = raw_email_content
+
+                # Basic cleanup of control chars that break layout
+                dirtyChars = ['\r']
+                if isinstance(payload, bytes):
+                    payload = str(payload)
+                for char in dirtyChars:
+                    payload = payload.replace(char, '')
+
+                # Convert text/plain to simple HTML, keep text/html as-is
+                if mimeType == 'text/plain':
+                    safe_text = html.escape(payload or "")
+                    html_fragment = f"<pre>{safe_text}</pre>"
+                else:  # text/html
+                    html_fragment = payload or ""
+
+                body_html_fragments.append(html_fragment)
+
+            elif mimeType in imageTypes:
+                Logger.spit('[INFO] image/* part found; currently ignored for main body rendering', debug=True)
+                continue
+
+        # Build final HTML for the body
+        html_visible_text = ""
+        resultImagePath = os.path.join(self.dumpDir, f'{dumpName}.png')
+
+        if body_html_fragments:
+            # Join fragments with a simple separator
+            combined_body_html  = "\n<hr />\n".join(body_html_fragments)
+            sanitized_body_html = self.sanitize_html(combined_body_html)
+
+            # Wrap with a controlled stylesheet to neutralize obfuscating formatting
+            style_block = """
+                <style>
+                  * {
+                    font-family: sans-serif !important;
+                    font-size: 12pt !important;
+                  }
+                  body {
+                    margin: 1cm;
+                    background-color: #ffffff;
+                  }
+                  a {
+                    text-decoration: underline !important;
+                  }
+                </style>
+            """
+            full_html = (
+                "<!DOCTYPE html>"
+                "<html><head><meta charset='utf-8'/>"
+                f"{style_block}"
+                "</head><body>"
+                f"{sanitized_body_html}"
+                "</body></html>"
+            )
+
+            # Visible text fallback (for when OCR fails completely)
+            html_visible_text = re.sub(r"<[^>]+>", " ", full_html)
+            html_visible_text = " ".join(html_visible_text.split())
+
+            # Render HTML → PNG via Playwright
+            ok = self.html_to_png_playwright(full_html, resultImagePath)
+            if ok:
+                return resultImagePath, html_visible_text
+            else:
+                # Rendering failed; no image, but still return visible text
+                return False, html_visible_text
+
+        # No renderable content -> no image, but still return (possibly empty) visible text
+        return False, html_visible_text
+
+    # ---------------------- Dataset logic ---------------------- #
+    def __getitem__(self, idx):
+        email_file_path = self.file_list[idx]
+        email_content   = self.load_email_content(email_file_path)
+
+        headers = str(email_content._headers)
+
+        sender_name, sender_address = self.extract_sender(email_content)
+        to_names, to_addresses      = self.extract_recipients(email_content)
+        # fixme: kick sender_address out?
+        to_addresses     = list(set(to_addresses) - set(sender_address))
+        reply_to_address = self.extract_reply_to_address(email_content)
+        if reply_to_address is None:
+            reply_to_address = sender_address
+
+        subject = self.extract_subject(email_content)
+        subject = self.auto_translate(subject)
+        sender_name = normalization(sender_name)
+        subject     = normalization(subject)
+
+        text_content, html_content_orig = self.extract_text_content(email_content)
+
+        has_usable_text = bool(text_content) and len(text_content.strip()) >= self.text_ocr_min_chars
+        if self.skip_ocr_for_text and has_usable_text:
+            # Fast path: a usable text body was already extracted, so skip the
+            # expensive Playwright render + OCR round-trip for this email.
+            pass
+        else:
+            with open(email_file_path, "rb") as f:
+                msg_bytes = f.read()
+            resultImage, html_content = self.render_eml(msg_bytes, dumpName=os.path.basename(email_file_path))
+
+            if resultImage is not False:
+                text_content_from_ocr = self.ocr_model.ocr(resultImage)
+                if not self.save_imgs and os.path.exists(resultImage):
+                    os.remove(resultImage)
+                text_content = text_content_from_ocr
+                # Fallback only if OCR really failed (very short), using sanitized visible text
+                if len((text_content or "").strip()) < 10:
+                    text_content = html_content or text_content_from_ocr
+
+        text_content = self.remove_prev_messages(text_content)
+        text_content = self.clean_text_content(text_content)
+        text_content = self.auto_translate(text_content)
+        text_content = normalization(text_content)
+        text_content = self.unfragment_text(text_content)
+
+        return (
+            email_file_path,
+            (sender_name, sender_address),
+            (to_names, to_addresses),
+            reply_to_address,
+            subject,
+            text_content,
+            headers,
+        )
+
+
+# class RenderDataset(EmailDataset):
+#     _CallerPrefix = "Dataset Loader (render the eml)"
+#
+#     def __init__(self, root_path, ocr_model: OCR, dumpDir: str="temp", translate_on=False, save_imgs=False):
+#         super().__init__(root_path, translate_on)
+#         self.ocr_model = ocr_model
+#         self.dumpDir = dumpDir
+#         os.makedirs(dumpDir, exist_ok=True)
+#         self.save_imgs = save_imgs
+#
+#     @staticmethod
+#     def pdfs_to_combined_image(pdf_list: List[str], dpi=200) -> Union[Image.Image, bool]:
+#         '''
+#         Merge multiple pdfs into a single image
+#         :param pdf_list:
+#         :param dpi:
+#         :return:
+#         '''
+#
+#         images = []
+#
+#         # Convert each PDF to images
+#         for pdf in pdf_list:
+#             try:
+#                 pages = convert_from_path(pdf, dpi=dpi)
+#                 images.extend(pages)  # Append all pages as images
+#             except pdf2image.exceptions.PDFPageCountError as e:
+#                 continue
+#
+#         # Combine the images
+#         if len(images):
+#             combo = RenderDataset.concat_images(images)
+#             return combo
+#         return False
+#
+#     @staticmethod
+#     def concat_images(images: List[Image.Image]) -> Image.Image:
+#         '''
+#         Contact images into a single one
+#         :param images:
+#         :return:
+#         '''
+#
+#         bgColor = (255, 255, 255)
+#         widths, heights = zip(*(i.size for i in images))
+#         new_width = max(widths)
+#         new_height = sum(heights)
+#         new_im = Image.new('RGB', (new_width, new_height), color=bgColor)
+#         offset = 0
+#         for im in images:
+#             x = 0
+#             new_im.paste(im, (x, offset))
+#             offset += im.size[1]
+#         return new_im
+#
+#     @staticmethod
+#     def kill_wkhtmltopdf_processes():
+#         '''
+#         Clean all pdf rendering processes
+#         :return:
+#         '''
+#
+#         try:
+#             subprocess.run(['pkill', 'wkhtmltopdf'], check=True)
+#             Logger.spit("All wkhtmltopdf processes have been terminated.", measure_diversity.py=True)
+#         except subprocess.CalledProcessError:
+#             Logger.spit("No wkhtmltopdf processes found or failed to terminate.", measure_diversity.py=True)
+#
+#     def render_eml(self, data: bytes, dumpName="new") -> (Union[bool, str], str):
+#         """
+#         Render the eml as pdfs, then combine the pdfs into a final image
+#         """
+#
+#         textTypes = ['text/plain', 'text/html']
+#         imageTypes = ['image/gif', 'image/jpeg', 'image/png']
+#         pdfTypes = ['application/pdf']
+#
+#         imgkitOptions = {
+#             'load-error-handling': 'ignore',
+#             'load-media-error-handling': 'ignore',
+#             'enable-local-file-access': "",
+#             "quiet": None
+#         }
+#         imagesList = []
+#
+#         msg = email.message_from_bytes(data)
+#         html_content = ""
+#
+#         for part in msg.walk():
+#             mimeType = part.get_content_type()
+#             if part.is_multipart():
+#                 Logger.spit('[INFO] Multipart found, continue', measure_diversity.py=True)
+#                 continue
+#
+#             Logger.spit('[INFO] Found MIME part: %s' % mimeType, measure_diversity.py=True)
+#
+#             # -------- text/* 部分：统一渲染成 PDF --------
+#             if mimeType in textTypes:
+#                 charset = part.get_content_charset('utf-8')
+#                 raw_email_content = part.get_payload(decode=True)
+#                 transfer_encoding = part.get('Content-Transfer-Encoding', '').lower()
+#
+#                 if raw_email_content:
+#                     if transfer_encoding == 'quoted-printable':
+#                         payload = self.decode_quoted_printable(raw_email_content, charset)
+#                     else:
+#                         try:
+#                             payload = raw_email_content.decode(charset, 'replace')
+#                         except LookupError:
+#                             payload = raw_email_content.decode('utf-8', 'replace')
+#                 else:
+#                     payload = raw_email_content
+#
+#                 dirtyChars = ['\n', '\\n', '\t', '\\t', '\r', '\\r']
+#                 if isinstance(payload, bytes):
+#                     payload = str(payload)
+#                 for char in dirtyChars:
+#                     payload = payload.replace(char, '')
+#
+#                 html_content += payload or ""
+#
+#                 # --- NEW: 不管 text/plain 还是 text/html 都转成 PDF ---
+#                 if mimeType == 'text/plain':
+#                     # 包一层简单 HTML
+#                     safe_text = html.escape(payload or "")
+#                     html_payload = f"<html><body><pre>{safe_text}</pre></body></html>"
+#                     pdf_source = html_payload
+#                 else:  # text/html
+#                     pdf_source = payload or ""
+#
+#                 m = hashlib.md5()
+#                 m.update(pdf_source.encode('utf-8'))
+#                 pdfPath = m.hexdigest() + '.pdf'
+#                 try:
+#                     pdfkit.from_string(pdf_source,
+#                                        os.path.join(self.dumpDir, pdfPath),
+#                                        options=imgkitOptions,
+#                                        timeout=5)
+#                     Logger.spit('[INFO] Decoded %s' % pdfPath, measure_diversity.py=True)
+#                     imagesList.append(os.path.join(self.dumpDir, pdfPath))
+#                 except Exception as e:
+#                     Logger.spit('[WARNING] Decoding this MIME part returned error', measure_diversity.py=True)
+#
+#             # -------- image/*: 转成 PDF --------
+#             elif mimeType in imageTypes:
+#                 imgdata = part.get_payload(decode=True)
+#                 if not imgdata:
+#                     continue
+#
+#                 m = hashlib.md5()
+#                 m.update(imgdata)
+#                 imgName = m.hexdigest()
+#                 imagePath = imgName + '.png'
+#                 pdfPath = imgName + '.pdf'
+#
+#                 try:
+#                     with open(os.path.join(self.dumpDir, imagePath), 'wb') as f:
+#                         f.write(imgdata)
+#                 except Exception:
+#                     Logger.spit('[WARNING] Decoding this MIME part returned error', measure_diversity.py=True)
+#                     continue
+#
+#                 try:
+#                     image = Image.open(os.path.join(self.dumpDir, imagePath))
+#                 except PIL.UnidentifiedImageError:
+#                     Logger.spit('[INFO] Unidentified Image Error', measure_diversity.py=True)
+#                     os.remove(os.path.join(self.dumpDir, imagePath))
+#                     continue
+#
+#                 image.convert('RGB').save(os.path.join(self.dumpDir, pdfPath), "PDF", resolution=100.0)
+#                 imagesList.append(os.path.join(self.dumpDir, pdfPath))
+#                 os.remove(os.path.join(self.dumpDir, imagePath))
+#                 Logger.spit('[INFO] Decoded %s' % pdfPath, measure_diversity.py=True)
+#
+#             # -------- application/pdf: 直接保存并加入列表 --------
+#             elif mimeType in pdfTypes:
+#                 pdfdata = part.get_payload(decode=True)
+#                 if not pdfdata:
+#                     continue
+#                 m = hashlib.md5()
+#                 m.update(pdfdata)
+#                 pdfPath = m.hexdigest() + '.pdf'
+#                 try:
+#                     with open(os.path.join(self.dumpDir, pdfPath), 'wb') as f:
+#                         f.write(pdfdata)
+#                     imagesList.append(os.path.join(self.dumpDir, pdfPath))
+#                     Logger.spit('[INFO] Saved attached PDF %s' % pdfPath, measure_diversity.py=True)
+#                 except Exception:
+#                     Logger.spit('[WARNING] Saving attached PDF returned error', measure_diversity.py=True)
+#
+#         resultImage = os.path.join(self.dumpDir, f'{dumpName}.png')
+#         if len(imagesList) > 0:
+#             combo = self.pdfs_to_combined_image(imagesList)
+#             for i in imagesList:
+#                 if os.path.exists(i):
+#                     os.remove(i)
+#             if combo is False:
+#                 return False, html_content
+#             combo.save(resultImage)
+#             return resultImage, html_content
+#         else:
+#             return False, html_content
+#
+#     def __getitem__(self, idx):
+#         email_file_path = self.file_list[idx]
+#         email_content = self.load_email_content(email_file_path)
+#
+#         headers = str(email_content._headers)
+#
+#         sender_name, sender_address = self.extract_sender(email_content)
+#         to_names, to_addresses = self.extract_recipients(email_content)
+#         # fixme: kick sender_address out?
+#         to_addresses = list(set(to_addresses) - set(sender_address))
+#         reply_to_address = self.extract_reply_to_address(email_content)
+#         if reply_to_address is None:
+#             reply_to_address = sender_address
+#
+#         subject = self.extract_subject(email_content)
+#         subject = self.auto_translate(subject)
+#         sender_name = normalization(sender_name)
+#         subject = normalization(subject)
+#
+#         text_content, html_content = self.extract_text_content(email_content)
+#         # if len(text_content) < 100 or len(text_content) > 512*2:  # fixme: too short or too long => extract OCR text from HTML
+#         with open(email_file_path, "rb") as f:
+#             msg_bytes = f.read()
+#         resultImage, html_content = self.render_eml(msg_bytes, dumpName=os.path.basename(email_file_path))
+#         RenderDataset.kill_wkhtmltopdf_processes()
+#
+#         if resultImage is not False:
+#             text_content_from_ocr = self.ocr_model.ocr(resultImage)
+#             if not self.save_imgs:
+#                 os.remove(resultImage)
+#             text_content = text_content_from_ocr
+#             if len(text_content) < 50:
+#                 text_content = html_content
+#             # if len(text_content) > 512*2:
+#             #     text_content = text_content_from_ocr
+#             # else:
+#             #     text_content = text_content_from_ocr + text_content
+#
+#         text_content = self.remove_prev_messages(text_content)
+#         text_content = self.clean_text_content(text_content)
+#         text_content = self.auto_translate(text_content)
+#         text_content = normalization(text_content)
+#         text_content = self.unfragment_text(text_content)
+#
+#         return email_file_path, \
+#                (sender_name, sender_address), \
+#                 (to_names, to_addresses), \
+#                 reply_to_address, \
+#                 subject, \
+#                 text_content, \
+#                 headers
+#
+
+
+if __name__ == '__main__':
+    rootDir = "./temp.eml"
+    dumpDir = "./datasets/phishpot_imgs/"
+    Logger.set_debug_on()
+    ocr_model = OCR()
+    dataset = RenderDataset(rootDir, ocr_model=ocr_model, dumpDir=dumpDir)
+
+    for i in range(len(dataset)):
+        email_file_path, (sender_name, sender_address), \
+        (to_names, to_addresses), reply_to_address, \
+        subject, email_body_text, header =   dataset[i]
+
+        print()
