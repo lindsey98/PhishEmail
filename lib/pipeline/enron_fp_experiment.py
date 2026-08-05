@@ -73,6 +73,14 @@ def reg_domain(domain_or_addr: str) -> str:
     return f"{ext.domain}.{ext.suffix}" if ext.suffix else ''
 
 
+def sender_key(sender_address) -> str:
+    """Whitelist sender key: full address for shared webmail, else the domain, so
+    a dedicated service's varying local-parts (sec24winter@, sec24fall@, ...) are
+    covered by one confirmation while shared webmail stays per-address."""
+    s = str(sender_address).lower().strip()
+    return s if reg_domain(s) in WEBMAIL_DOMAINS else reg_domain(s)
+
+
 def join_key(path: str) -> str:
     """Stable join key = '<user>/<filename>', robust to path prefixes so the
     PiMRef results CSV and the metadata CSV line up regardless of how
@@ -644,13 +652,13 @@ def review(results, whitelist, out, apply_only):
     if os.path.exists(whitelist):
         try:
             for pair in json.load(open(whitelist)):
-                wl.add((str(pair[0]).lower(), str(pair[1])))
+                wl.add((sender_key(pair[0]), str(pair[1])))  # migrate old address-keys
         except Exception:
             pass
 
     def key(r):
         ident = _norm_identity(r[c_match] if c_match else '', r[c_ids] if c_ids else '')
-        return (str(r[c_send]).lower().strip(), ident)
+        return (sender_key(r[c_send]), ident)
 
     def save():
         json.dump(sorted([list(x) for x in wl]), open(whitelist, 'w'), ensure_ascii=False, indent=0)

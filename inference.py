@@ -16,8 +16,34 @@ from lib.utilities.data_utils import DomainUtils
 from config import Config
 
 
+# Shared webmail domains: whitelist by FULL address here (the domain is shared by
+# many untrusted senders). For any other domain (a dedicated org/relay/service
+# like hotcrp.com), whitelist by DOMAIN so the same service's varying per-message
+# local-parts (sec24winter@, sec24fall@, ...) are all covered by one confirmation.
+WEBMAIL_DOMAINS = {
+    'gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'aol.com', 'msn.com',
+    'live.com', 'me.com', 'icloud.com', 'protonmail.com', 'gmx.com',
+    '163.com', '126.com', 'qq.com', 'foxmail.com', 'sina.com', '139.com',
+    'aliyun.com', 'yeah.net', 'sbcglobal.net', 'earthlink.net', 'comcast.net',
+}
+
+
+def _reg_domain(addr) -> str:
+    from tldextract import tldextract
+    d = str(addr).split('@')[-1].strip().lower()
+    ext = tldextract.extract(d)
+    return f"{ext.domain}.{ext.suffix}" if ext.suffix else d
+
+
+def _sender_key(sender_address) -> str:
+    """Whitelist sender key: full address for shared webmail, else the domain."""
+    s = str(sender_address).lower().strip()
+    dom = _reg_domain(s)
+    return s if dom in WEBMAIL_DOMAINS else dom
+
+
 def _norm_identity(matched, identities) -> str:
-    """Normalised claimed identity for a (sender, identity) whitelist key."""
+    """Normalised claimed identity (the impersonated target) for a whitelist key."""
     for cand in (matched, identities):
         s = str(cand).strip()
         if not s or s.lower() in ('nan', 'none', 'set()', '{}', '[]',
@@ -34,15 +60,18 @@ def _norm_identity(matched, identities) -> str:
 
 
 def _wl_key(sender_address, matched, identities):
-    return (str(sender_address).lower().strip(), _norm_identity(matched, identities))
+    return (_sender_key(sender_address), _norm_identity(matched, identities))
 
 
 def _load_whitelist(path):
+    """Load and MIGRATE stored pairs to the (sender-key, target) scheme so old
+    full-address entries (e.g. sec24winter@hotcrp.com) normalise to the domain
+    key and immediately cover the service's other addresses."""
     wl = set()
     if path and os.path.exists(path):
         try:
             for pair in json.load(open(path, encoding='utf-8')):
-                wl.add((str(pair[0]).lower(), str(pair[1])))
+                wl.add((_sender_key(pair[0]), str(pair[1])))
         except Exception:
             pass
     return wl
@@ -308,10 +337,11 @@ def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed, auto
                 print(f"  From    : {sender_name} <{sender_address}>")
                 print(f"  Claims  : {matched_identity}")
                 print(f"  Subject : {subject}")
-                print(f"  Link/CTA: {next_step_of_engagement}")
+                print(f"  Link/CTA: {actions}")
                 print(f"  File    : {email_file_path}")
+                print(f"  Whitelist scope: mail from '{wkey[0]}' claiming '{wkey[1]}'")
                 try:
-                    ans = input("  False positive? Whitelist this sender? [y/N] ").strip().lower()
+                    ans = input("  False positive? Whitelist this? [y/N] ").strip().lower()
                 except EOFError:
                     ans = 'n'
                 if ans == 'y':
@@ -319,7 +349,7 @@ def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed, auto
                     _save_whitelist(whitelist, whitelist_pairs)
                     is_inconsistent = False
                     matched_identity = f"{matched_identity} [whitelisted]"
-                    print("  -> whitelisted; this sender/identity won't alert again.")
+                    print(f"  -> whitelisted; '{wkey[0]}' claiming '{wkey[1]}' won't alert again.")
                 else:
                     print("  -> kept as phishing.")
 
