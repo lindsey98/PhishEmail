@@ -1,5 +1,5 @@
 
-from lib.reference_db.CharacterBert import CharacterBertModel, CharacterIndexer
+from .CharacterBert import CharacterBertModel, CharacterIndexer
 from transformers import BertTokenizer
 import os
 import torch.nn.functional as F
@@ -9,21 +9,24 @@ from tqdm import tqdm
 import numpy as np
 import json
 from typing import List, Tuple, Union, Optional, Set, Any
-from openai import OpenAI
 import re
 from tldextract import tldextract
-from lib.utilities.gpt_utils import assistant_completion
-from lib.utilities.logger import Logger, Timer
+ext = tldextract.TLDExtract(cache_dir='./lib/reference_db')
+from ..utilities.gpt_utils import chat_completion
+from ..utilities.data_utils import clean_string, DomainUtils
+from ..utilities import Logger, Timer
+from ..reference_db.db_expansion_agent import lookup_emails
+from typing import Union, List, Set
 import difflib
-os.environ['http_proxy'] = 'http://127.0.0.1:7890'
-os.environ['https_proxy'] = 'http://127.0.0.1:7890'
-
 
 class CharacterBERT:
     _CallerPrefix = "CharacterBert"
 
-    def __init__(self, model_id: str='./checkpoints/characterbert-typos-st/', return_cls: bool=True, do_l2_norm: bool=True) -> None:
-        self.tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+    def __init__(self, model_id: str,
+                 return_cls: bool=True,
+                 do_l2_norm: bool=True) -> None:
+
+        self.tokenizer = BertTokenizer.from_pretrained(model_id)
         self.model = CharacterBertModel.from_pretrained(model_id)
         self.model.eval()
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -58,30 +61,43 @@ class CharacterBERT:
 class BaseFaissIPRetriever:
     _CallerPrefix = "BaseFaissIPRetriever"
 
-    def __init__(self, tags: List[str], init_reps: Optional[np.ndarray]=None, embed_model: Optional[CharacterBERT]=None):
+    def __init__(self, tags: List[str],
+                 init_reps: Optional[np.ndarray]=None,
+                 embed_model: Optional[CharacterBERT]=None,
+                 index_type: str = "Flat"):
         self.tags = tags
 
         if init_reps is None:
             assert embed_model is not None
             self.embed_model = embed_model
-            Logger.spit("No cached representations, build index from scratch ..", caller_prefix=BaseFaissIPRetriever._CallerPrefix, debug=True)
-            init_reps = self.build_reps_from_scratch()
+            Logger.spit("No cached representations, build index from scratch ..", caller_prefix=BaseFaissIPRetriever._CallerPrefix)
+            init_reps = self.build_reps_from_scratch(self.tags)
 
         assert len(tags) == init_reps.shape[0], "Number of tags must match the number of representations."
-        self.index = faiss.IndexFlatIP(init_reps.shape[1])
-        self.index.train(init_reps)
-        self.index.add(init_reps)
-        Logger.spit("Index base of size {} with dimension {} is trained".format(init_reps.shape[0], init_reps.shape[1]),
-                    caller_prefix=BaseFaissIPRetriever._CallerPrefix,
-                    debug=True)
+        # Create index based on the specified index type
+        if index_type == "Flat":
+            self.index = faiss.IndexFlatIP(init_reps.shape[1])
+        elif index_type == "IVF":
+            nlist = 100  # Number of clusters
+            self.index = faiss.IndexIVFFlat(faiss.IndexFlatIP(init_reps.shape[1]), init_reps.shape[1], nlist)
+            self.index.train(init_reps)
+        elif index_type == "HNSW":
+            self.index = faiss.IndexHNSWFlat(init_reps.shape[1], 32)  # 32 is the default value for the number of neighbors
+            self.index.train(init_reps)
+        else:
+            raise ValueError(f"Unsupported index type: {index_type}")
 
-    def build_reps_from_scratch(self):
+        self.index.add(init_reps)  # Add vectors to the index
+        Logger.spit("Index base of size {} with dimension {} is trained".format(init_reps.shape[0], init_reps.shape[1]),
+                    caller_prefix=BaseFaissIPRetriever._CallerPrefix)
+
+    def build_reps_from_scratch(self, tag_list):
         index_reps = np.empty((0, 768))
         batch_size = 128
-        tag_list = self.tags
         for i in range(0, len(tag_list), batch_size):
             batch = tag_list[i:min(i + batch_size, len(tag_list))]  # Get the next batch of brand names
-            batch_embeddings, time = self.embed_model(batch).cpu().numpy()  # Predict embeddings for the batch
+            batch_preds = self.embed_model(batch)
+            batch_embeddings, time = batch_preds[0].cpu().numpy(), batch_preds[1]  # Predict embeddings for the batch
             index_reps = np.concatenate((index_reps, batch_embeddings), axis=0)  # Append new embeddings
         return index_reps
 
@@ -91,10 +107,15 @@ class BaseFaissIPRetriever:
         tag_results = np.array(self.tags)[indices]
         return scores, indices, tag_results, timer.interval
 
-    def add(self, p_reps: np.ndarray, p_tags: List[str]) -> None:
+    def add(self, p_reps: Optional[np.ndarray], p_tags: List[str]) -> None:
+        if p_reps is not None:
+            self.index.add(p_reps)
+        else:
+            p_reps = self.build_reps_from_scratch(p_tags)
+            self.index.add(p_reps)
         assert len(p_tags) == p_reps.shape[0], "Number of tags must match the number of representations."
-        self.index.add(p_reps)
         self.tags.extend(p_tags) # fixme: save the updated index again?
+
 
     def batch_search(self, q_reps: np.ndarray, k: int, batch_size: int) -> Tuple[np.ndarray, np.ndarray, np.ndarray, float]:
         num_query = q_reps.shape[0]
@@ -117,24 +138,26 @@ class BaseFaissIPRetriever:
         return all_scores, all_indices, all_tags, total_searching_time
 
 
-class BrandMatcher:
-    _CallerPrefix = "BrandMatcher"
+class IdentityMatcher:
+    _CallerPrefix = "IdentityMatcher"
 
     def __init__(self,
-                brand_index_db: BaseFaissIPRetriever,
-                internal_relation_index_db: BaseFaissIPRetriever,
+                brand_index_db: Optional[BaseFaissIPRetriever],
+                internal_relation_index_db: Optional[BaseFaissIPRetriever],
                 embed_model: CharacterBERT,
-                brand_domain_map_path: str,
+                brand_domain_map_path: Optional[str],
                 knowledge_base_expansion: bool=False,
-                gpt_client: Optional[OpenAI]=None, gpt_assistant: Optional[Any]=None,
+                gpt_client: Optional[Any]=None, gpt_assistant: Optional[Any]=None,
                 check_action: bool=True,
-                threshold: float=0.95):
+                threshold: float=0.95,
+                relax_match: bool=False):
 
         self.brand_index_db = brand_index_db
         self.internal_relation_index_db = internal_relation_index_db
         self.brand_domain_map_path = brand_domain_map_path
-        with open(self.brand_domain_map_path, 'r') as file:
-            self.brand_domain_map = json.load(file)
+        if brand_domain_map_path:
+            with open(self.brand_domain_map_path, 'r', encoding='utf-8') as file:
+                self.brand_domain_map = json.load(file)
 
         self.knowledge_expansion = knowledge_base_expansion
         self.check_action = check_action
@@ -142,63 +165,52 @@ class BrandMatcher:
         self.threshold = threshold
         self.gpt_client = gpt_client
         self.gpt_assistant = gpt_assistant
+        self.relax_match = relax_match
+        # if relax match is set, the matcher will try to match all reported identities.
+        # Otherwise, the matcher will only match the most common, most confident identity.
+
 
     @staticmethod
-    def contains_domain(text: str) -> Tuple[bool, Optional[List[str]]]:
-
-        # Search for the pattern in the given text
-        matches = re.findall(r'\b(?:[a-zA-Z0-9-]+\s?\.\s?)+[a-zA-Z]{2,}\b', text)
-
-        # Clean up the matches by removing any spaces and checking if the TLD is valid
-        cleaned_matches = []
-        for match in matches:
-            cleaned_match = match.replace(' ', '')
-            # Extract the TLD and check if it's valid
-            tld = tldextract.extract(cleaned_match).suffix
-            if tld:
-                cleaned_matches.append(cleaned_match)
-
-        # Return True if a domain name is found, otherwise False
-        return bool(cleaned_matches), cleaned_matches if cleaned_matches else None
-
-    @staticmethod
-    def filter_duplicates(strings: Union[List[str], Set[str]], threshold: float=0.8) -> List[str]:
-        filtered = []
+    def filter_duplicates(strings: Union[List[str], Set[str]], threshold: float=0.5) -> List[List[str]]:
+        clusters = []
         for string in strings:
             # Remove "from:" or any case variation with optional spaces
             string = re.sub(r'(?i)from\s*:?', '', string)
             # Remove leading "##"
             string = re.sub(r'^\s*#+', '', string)
             string = string.strip()
-            if len(string) == 0:
+            if len(string) <= 1:
                 continue
+
             # Check similarity with already filtered strings
             similar_found = False
-            for i, f in enumerate(filtered):
-                if len(f) == 0:
-                    continue
-                if difflib.SequenceMatcher(None, string, f).ratio() > threshold:
+            for i, cluster in enumerate(clusters):
+                if any(difflib.SequenceMatcher(None, string, existing).ratio() > threshold for existing in cluster):
                     similar_found = True
-                    # Keep the longer string
-                    if len(string) > len(f):
-                        filtered[i] = string
+                    # Add the string to the existing cluster
+                    clusters[i].append(string)
+                    break
+                if any(string in existing or existing in string for existing in cluster):
+                    similar_found = True
+                    clusters[i].append(string)
                     break
             if not similar_found:
-                filtered.append(string)
-        return filtered
+                clusters.append([string])
 
-    def find_closest_match(self, query: str, value_index_db: BaseFaissIPRetriever) -> Tuple[Optional[float], Optional[str]]:
+        return clusters
 
-        query_embed, embedding_time = self.embed_model([query.lower()]).cpu().numpy() # 1 x Embed_dim
+    def find_closest_match(self, query: str, value_index_db: BaseFaissIPRetriever,
+                           thre: float) -> Tuple[Optional[float], Optional[str]]:
+
+        query_embed, embedding_time = self.embed_model([query.lower()])
+        query_embed = query_embed.cpu().numpy().astype('float32') # use float32 to speed up?
         score, index, tag, searching_time = value_index_db.search(query_embed, 1) # 1-NN
 
         score = score.tolist()[0][0]
         tag = tag.tolist()[0][0]
 
-        thre = self.threshold
-
-        if len(query) <= 3: # require exact match, because I observe a FP case where 'pay' is matched to 'pay now'
-            thre = 1
+        if len(query) <= 3: # require exact match if query is too short, because I observe a FP case where 'pay' is matched to 'pay now'
+            thre = 0.99
 
         if score >= thre:
             return score, tag
@@ -206,127 +218,193 @@ class BrandMatcher:
             return None, None
 
     def expand_knowledge_base(self, queried_identity: str) -> Tuple[Optional[List[str]], float]:
+        # lookup_emails handles OpenAI client lifecycle internally; we no longer
+        # need self.gpt_client / openai.api_key / openai.proxy at this layer.
 
         with Timer() as timer:
-            search_email = assistant_completion(client=self.gpt_client, query=queried_identity, assistant_id=self.gpt_assistant.id)
+            try:
+                emails = lookup_emails(queried_identity)
+            except Exception as e:
+                Logger.spit(
+                    f'lookup_emails raised for {queried_identity!r}: {e!r}',
+                    caller_prefix=IdentityMatcher._CallerPrefix,
+                    warning=True,
+                )
+                emails = []
+
         searching_time = timer.interval
-        Logger.spit(f'Searching {queried_identity} in GPT, return {search_email}, searching time = {searching_time}', caller_prefix=BrandMatcher._CallerPrefix, debug=True)
+        Logger.spit(
+            f'Searching {queried_identity} via lookup_emails, \t'
+            f'Return {emails}, \t'
+            f'Searching time = {searching_time}',
+            caller_prefix=IdentityMatcher._CallerPrefix,
+        )
 
-        email_regex = re.compile(
-            r'^\[?([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})(,\s*[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})*\]?$')
+        if not emails:
+            return None, searching_time
 
-        if email_regex.fullmatch(search_email):  # if the return are valid email addresses
-            emails = search_email.strip('[]').split(',')
-            official_emails = list(set([email.split('@')[1].strip() for email in emails]))
+        # Extract unique mail domains. lookup_emails already validated each string with a strict email regex, so email.split('@')[1] is safe.
+        official_emails = list({
+            (e.split('@', 1)[1] if '@' in e else e).strip().lower()
+            for e in emails
+        })
 
-            # update index DB
-            queried_identity_embed, embedding_time = self.embed_model([queried_identity.lower()]).cpu().numpy()
-            self.brand_index_db.add(queried_identity_embed, [queried_identity.lower()])
+        # Update the FAISS brand index (unchanged behaviour).
+        queried_identity_embed, _embedding_time = self.embed_model([queried_identity.lower()])
+        queried_identity_embed = queried_identity_embed.cpu().numpy()
+        self.brand_index_db.add(queried_identity_embed, [queried_identity.lower()])
+        # fixme: it doesnt save the index db
 
-            # update the reference list
-            self.brand_domain_map[queried_identity.lower()] = official_emails
-            with open(self.brand_domain_map_path, 'w') as file:
-                json.dump(self.brand_domain_map, file, indent=4)
+        # Persist the brand -> domain mapping (unchanged behaviour).
+        self.brand_domain_map[queried_identity.lower()] = official_emails
+        # with open(self.brand_domain_map_path, 'w') as file:
+        #     json.dump(self.brand_domain_map, file, indent=4)
 
-            return official_emails, searching_time
+        return official_emails, searching_time
 
-        return None, searching_time
-
-    def handle_external_emails(self, identities: Set[str]) -> Tuple[Union[None, str], Union[None, List[str]]]:
-
-        for potential_organization in identities:
+    def handle_external_emails(self, identities: Set[str]) -> Tuple[Union[None, Set[str]], Union[None, Set[str]]]:
+        '''
+        Match to external organizations
+        :param identities:
+        :return:
+        '''
+        closest_match_set = set()
+        official_domains_set = set()
+        for it, potential_organization in enumerate(identities):
             if potential_organization.startswith("##"): # noisy prediction
                 continue
 
             # Match against known brands or directly extract domains
-            matched_score, closest_match = self.find_closest_match(query=potential_organization, value_index_db=self.brand_index_db)
-            contains_a_domain, extracted_domains = self.contains_domain(potential_organization)
+            matched_score, closest_match = self.find_closest_match(query=potential_organization,
+                                                                   value_index_db=self.brand_index_db,
+                                                                   thre=self.threshold)
+            # contains_a_domain, extracted_domains = DomainUtils.contains_domain(potential_organization)
+            # todo: I remove the contains domain checking, because this may introduce FP (pte.ltd or matches to a domain but the official email address doesnt use this domain)
 
             if closest_match:
                 official_emails = self.brand_domain_map[closest_match]
-                official_domains = [tldextract.extract(x).domain + '.' + tldextract.extract(x).suffix for x in official_emails]
-                return closest_match, official_domains
+                official_domains = DomainUtils.extract_domain_set(official_emails)
+                closest_match_set.add(closest_match)
+                official_domains_set = official_domains_set.union(official_domains)
 
-            elif contains_a_domain:
-                return extracted_domains[0], extracted_domains
+            # elif contains_a_domain:
+            #     return list(extracted_domains)[0], extracted_domains
 
-            elif self.knowledge_expansion:
+            elif self.knowledge_expansion and it < 1: # fixme: only search for the first claimed identity
                 updated_emails, searching_time = self.expand_knowledge_base(potential_organization)
                 if updated_emails:
-                    return potential_organization, updated_emails
+                    closest_match_set.add(potential_organization)
+                    official_domains_set = official_domains_set.union(updated_emails)
 
-        return None, None
+        return closest_match_set, official_domains_set
 
     def handle_internal_emails(self, relations: Set[str]) -> Tuple[bool, Optional[str]]:
+        '''
+        Match to internal roles
+        :param relations:
+        :return:
+        '''
         for relation in relations:
-            matched_score, closest_match = self.find_closest_match(query=relation, value_index_db=self.internal_relation_index_db)
+            matched_score, closest_match = self.find_closest_match(query=relation,
+                                                                   value_index_db=self.internal_relation_index_db,
+                                                                   thre=self.threshold - 0.05) # fixme: relax the threshold a bit
             if closest_match:  # internal
                 return True, closest_match
         return False, None
 
-
-    def __call__(self, identities: Set[str], actions: Set[str], relations: Set[str],
-                 sender_domain: Optional[str], recipient_domains: List[str]) -> Tuple[Optional[bool], str, float]:
+    def __call__(self, identities: List[str], actions: Set[str], relations: List[str],
+                 sender_domains: Set[str], recipient_domains: Set[str],
+                 top_k_identities: int = 1) -> Tuple[Optional[bool], Union[Set[str], str], float]:
 
         total_time = 0
         # Check sender organization or relation
-        if len(identities) == 0:
-            Logger.spit('No predicted identity', caller_prefix=BrandMatcher._CallerPrefix, debug=True)
-            return None, 'No Prediction', total_time
+        if len(identities) == 0 and len(relations) == 0:
+            Logger.spit('No predicted identity', caller_prefix=IdentityMatcher._CallerPrefix)
+            return False, 'No Prediction', total_time
 
-        identities = set(self.filter_duplicates(identities))
-        sender_org_rel_combined = identities.union(relations)
+        identities = [clean_string(x) for x in identities]
+        relations = [clean_string(x) for x in relations]
+        combined_set = identities + relations  # Identities first, then relations
+        # Did the NER extract a concrete organization identity (not just a role)?
+        has_org_identity = len([x for x in identities if x and x.strip()]) > 0
 
-        with Timer() as timer:
-            matched_brand, official_email_domains = self.handle_external_emails(identities)
-        total_time += timer.interval
+        if self.relax_match == False: # if relax_match is False, only try to match the top-1 identity with the highest confidence. May introduce FNs when the NER didnt rank the true identity as top-1.
+            identities = self.filter_duplicates(identities)  # Returns a list in desired order
+            first_cluster_identities = set()
+            for this_set in identities:
+                first_cluster_identities = first_cluster_identities.union(this_set)
+                clean_this_set_representative_str = re.sub(r'[@!:;.]', '', this_set[0]).strip()
+                if len(clean_this_set_representative_str) > 3:
+                    break
+
+            with Timer() as timer:
+                matched_brand_set, official_email_domains_set = self.handle_external_emails(first_cluster_identities)
+            total_time += timer.interval
+        else: # if relax_match is True, match to ANY recognized identity. This has risk of FP, e.g. the true identity is outside knowledge base, but some other identities are inside.
+            with Timer() as timer:
+                matched_brand_set, official_email_domains_set = self.handle_external_emails(identities)
+            total_time += timer.interval
 
         # Report mismatches or missing email specifications
-        if official_email_domains and (sender_domain is None or sender_domain not in official_email_domains):
+        if official_email_domains_set and (not DomainUtils.domain_set_overlap(sender_domains, official_email_domains_set)):
             if self.check_action:
                 if len(actions) > 0:
-                    Logger.spit(f'[!] Matched brand = {matched_brand}, inconsistent identity-address found, and contains at least 1 instruction', caller_prefix=BrandMatcher._CallerPrefix, debug=True)
-                    return True, matched_brand, total_time
+                    Logger.spit(f'[!Phish] Matched brand = "{matched_brand_set}", inconsistent identity-address found with sender address as "{sender_domains}", and contains at least 1 instruction',
+                                caller_prefix=IdentityMatcher._CallerPrefix)
+                    return True, matched_brand_set, total_time
                 else:
-                    Logger.spit(f'Matched brand = {matched_brand}, inconsistent identity-address found, but does not contain any instruction => Benign', caller_prefix=BrandMatcher._CallerPrefix, debug=True)
-                    return False, matched_brand, total_time
+                    Logger.spit(f'Matched brand = "{matched_brand_set}", inconsistent identity-address found, but does not contain any instruction => Benign',
+                                caller_prefix=IdentityMatcher._CallerPrefix)
+                    return False, matched_brand_set, total_time
             else:
-                Logger.spit(f'[!] Matched brand = {matched_brand}, inconsistent identity-address found', caller_prefix=BrandMatcher._CallerPrefix, debug=True)
-                return True, matched_brand, total_time
+                Logger.spit(f'[!Phish] Matched brand = "{matched_brand_set}", inconsistent identity-address found with sender address as "{sender_domains}"',
+                            caller_prefix=IdentityMatcher._CallerPrefix)
+                return True, matched_brand_set, total_time
 
-        if official_email_domains:  # do not further check the internal relations
-            Logger.spit('Consistent identity-address => Benign', caller_prefix=BrandMatcher._CallerPrefix, debug=True)
+        if official_email_domains_set:  # do not further check the internal relations
+            Logger.spit('Consistent identity-address => Benign', caller_prefix=IdentityMatcher._CallerPrefix)
             return False, 'Consistent', total_time
 
-        # Check internal relations
+        # Check internal relations — ONLY when NO organization identity was
+        # extracted. If the sender presented a concrete org identity (even one
+        # absent from the KB), do NOT fall back to a generic internal-role match:
+        # being addressed as "colleague" must not turn an external org email
+        # (e.g. a conference CFP from saiconference.com) into an internal-role
+        # impersonation.
+        if not has_org_identity:
+            with Timer() as timer:
+                is_internal_emails, imitated_role = self.handle_internal_emails(combined_set)
+            total_time += timer.interval
 
-        with Timer() as timer:
-            is_internal_emails, imitated_role = self.handle_internal_emails(sender_org_rel_combined)
-        total_time += timer.interval
-
-        if is_internal_emails and (sender_domain is None or sender_domain not in recipient_domains):
-            if self.check_action:
-                if len(actions) > 0:
-                    Logger.spit(f'[!] Imitating an internal role {imitated_role} but from an external domain, and contains at least 1 instruction', caller_prefix=BrandMatcher._CallerPrefix, debug=True)
-                    return True, 'Internal', total_time
+            if is_internal_emails and (not DomainUtils.domain_set_overlap(sender_domains, recipient_domains)):
+                if self.check_action:
+                    if len(actions) > 0:
+                        Logger.spit(f'[!Phish] Imitating an internal role "{imitated_role}" but from an external domain with sender address as "{sender_domains}", and contains at least 1 instruction',
+                                    caller_prefix=IdentityMatcher._CallerPrefix)
+                        return True, f'Internal: {imitated_role}', total_time
+                    else:
+                        Logger.spit(f'Imitating an internal role "{imitated_role}" but from an external domain, but does not contain any instruction => Benign',
+                                    caller_prefix=IdentityMatcher._CallerPrefix)
+                        return False, f'Internal: {imitated_role}', total_time
                 else:
-                    Logger.spit(f'Imitating an internal role {imitated_role} but from an external domain, but does not contain any instruction => Benign', caller_prefix=BrandMatcher._CallerPrefix, debug=True)
-                    return False, 'Internal', total_time
-            else:
-                Logger.spit(f'[!] Imitating an internal role {imitated_role} but from an external domain', caller_prefix=BrandMatcher._CallerPrefix, debug=True)
-                return True, 'Internal', total_time
+                    Logger.spit(f'[!Phish] Imitating an internal role "{imitated_role}" but from an external domain with sender address as "{sender_domains}"',
+                                caller_prefix=IdentityMatcher._CallerPrefix)
+                    return True, f'Internal: {imitated_role}', total_time
 
-        Logger.spit('Does not match to any known identity or internal role => Benign', caller_prefix=BrandMatcher._CallerPrefix, debug=True)
+            if is_internal_emails:
+                Logger.spit('Consistent sender-recipient-address => Benign', caller_prefix=IdentityMatcher._CallerPrefix)
+                return False, f'Consistent: {imitated_role}', total_time
+
+        Logger.spit('Does not match to any known brand / internal role => Benign',
+                    caller_prefix=IdentityMatcher._CallerPrefix)
         return False, 'No Matched Brand', total_time
 
 
-
 if __name__ == '__main__':
+    '''Build database'''
+    model = CharacterBERT("./checkpoints/characterbert-typos-st")
 
-    ## Build database
-    model = CharacterBERT()
-
-    brand_domain_map_path = './datasets/company_database.json'
+    brand_domain_map_path = './checkpoints/company_database_knowphish.json'
     with open(brand_domain_map_path, 'r') as file:
         brand_domain_map = json.load(file)
 
@@ -336,72 +414,71 @@ if __name__ == '__main__':
     brand_name_list = list(brand_domain_map.keys())
     for i in tqdm(range(0, len(brand_name_list), batch_size)):
         batch = brand_name_list[i:min(i + batch_size, len(brand_name_list))]  # Get the next batch of brand names
-        batch_embeddings = model(batch).cpu().numpy()  # Predict embeddings for the batch
+        batch_embeddings, _ = model(batch)
+        batch_embeddings = batch_embeddings.cpu().numpy()  # Predict embeddings for the batch
         index_reps = np.concatenate((index_reps, batch_embeddings), axis=0)  # Append new embeddings
         tags.extend(batch)  # Collect tags
 
-    np.save('./datasets/company_database_names.npy', np.asarray(tags))
-    np.save('./datasets/company_database_reps.npy', index_reps)
+    np.save('./checkpoints/company_database_names.npy', np.asarray(tags))
+    np.save('./checkpoints/company_database_reps.npy', index_reps)
 
-    Internal_Relations = ['admin',
-                             'mail admin',
-                          'admin portal',
-                             'administrator',
-                             'mail team',
-                             'mail service',
-                          'mail server administrator',
-                             'mail desk',
-                             'webmail service',
-                             'mail delivery system',
-                             'employee',
-                             'staff',
-                             'colleague',
-                             'e-mail',
-                             'email',
-                             'mailbox',
-                             'server',
-                             'faculty',
-                             'manager',
-                             'student',
-                             'human resource',
-                             'human resource team',
-                             'HR team',
-                             'Finance',
-                             'it department',
-                             'it support',
-                             'it service support',
-                             'Payroll',
-                             'helpdesk',
-                             'help desk',
-                             'support desk',
-                             'technical support',
-                             'desk support',
-                             'help center',
-                             'support team',
-                             'administration',
-                             'administrative',
-                             'supervisor',
-                             'tech support',
-                             'mail notification',
-                             'it maintenance services',
-                             'webmail panel',
-                             'it report',
-                             'itdesk',
-                             'system support',
-                             'tech team',
-                             'mail security',
-                             'webmaster',
-                             'webmailservice',
-                             'technical assistance',
-                             'webmail team'
-                             ]
+    # Internal_Relations = [
+    #                       'admin',
+    #                       'mail admin',
+    #                       'admin portal',
+    #                       'administrator',
+    #                       'administration',
+    #                       'administrative',
+    #
+    #                       'mail team',
+    #                       'mail service',
+    #                       'mail server administrator',
+    #                       'mail desk',
+    #                       'webmail service',
+    #                       'mail delivery system',
+    #                       # 'e-mail',
+    #                       # 'email',
+    #                       'mailbox',
+    #                       'mail support',
+    #                       'email storage',
+    #                       'mail notification',
+    #                       'webmail panel',
+    #                       'mail security',
+    #                       'webmaster',
+    #                       'webmailservice',
+    #                       'webmail team',
+    #                       'webmail mail service team'
+    #
+    #                       'employee',
+    #                       'staff',
+    #                       'colleague',
+    #                       'faculty',
+    #                       # 'manager',
+    #                       'student',
+    #                       # 'supervisor',
+    #
+    #                       # 'human resource',
+    #                       'human resource team',
+    #                       'HR team',
+    #                       'HR',
+    #                       'human resources department',
+    #
+    #                       'Finance team'
+    #                       'IT department',
+    #                       'IT support',
+    #                       'IT service support',
+    #                       'Payroll',
+    #                       'IT maintenance services',
+    #                       'IT report',
+    #                       'IT Desk',
+    #
+    #                       'internal company',
+    #                       ]
+    #
+    # tags = [x.lower() for x in Internal_Relations]
+    # embed, _ = model(tags)
+    # embed = embed.cpu().numpy()
+    #
+    # np.save('./checkpoints/internal_relation_names.npy', np.asarray(tags))
+    # np.save('./checkpoints/internal_relation_reps.npy', embed)
 
-    index_reps = np.empty((0, 768))
-    tags = []
-    for internal_relation in tqdm(Internal_Relations):
-        embed = model([internal_relation.lower()]).cpu().numpy()
-        index_reps = np.concatenate((index_reps, embed), axis=0)
-        tags.append(internal_relation)
-
-    np.save('./datasets/internal_relation_names.npy', np.asarray(tags))
-    np.save('./datasets/internal_relation_reps.npy', index_reps)

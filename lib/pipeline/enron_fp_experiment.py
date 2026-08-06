@@ -42,7 +42,6 @@ import json
 import email
 import email.policy
 from email.utils import parseaddr, parsedate_to_datetime
-from email.header import decode_header
 from collections import defaultdict
 
 import click
@@ -421,7 +420,7 @@ def _plot_convergence(timeline, out_dir):
     cum_adaptive = [t[2] for t in timeline]
     cum_inter = [t[3] for t in timeline]
     fig, ax1 = plt.subplots(figsize=(8, 5))
-    ax1.plot(idx, cum_static, label='cumulative FP (static PiMRef)', color='#c0392b')
+    ax1.plot(idx, cum_static,   label='cumulative FP (static PiMRef)', color='#c0392b')
     ax1.plot(idx, cum_adaptive, label='cumulative FP (adaptive)', color='#27ae60')
     ax1.plot(idx, cum_inter, label='cumulative whitelist adds (interactions)',
              color='#2980b9', linestyle='--')
@@ -433,188 +432,6 @@ def _plot_convergence(timeline, out_dir):
     out = os.path.join(out_dir, 'convergence.png')
     fig.savefig(out, dpi=150)
     print(f"convergence plot -> {out}")
-
-
-@cli.command()
-@click.option('--results', required=True, help='PiMRef inference output CSV over a benign corpus.')
-@click.option('--brand-db', default='./datasets/company_database.json', show_default=True)
-@click.option('--out', default=None, help='Write the isolated subset CSV here (for manual confirmation).')
-def subset(results, brand_db, out):
-    """Isolate the meta-review Requirement #2 hard subset and report FPR.
-
-    Requirement #2 asks for the false-positive rate specifically on *legitimate*
-    emails that CLAIM one organization but ARRIVE from a different domain
-    (Figure 13: org identity + personal/webmail/third-party sender). Testing a
-    whole benign corpus does not answer this — most mail is identity-consistent.
-
-    This keeps only rows where PiMRef's own identity module matched a KNOWN brand
-    whose official domain(s) do NOT contain the sender's registrable domain, i.e.
-    exactly "org X claimed, sent from non-X domain". FPR = fraction PiMRef flags.
-
-    Caveats to apply before reporting:
-      - Confirm the rows are genuinely legitimate (spot-check / manual pass).
-      - Re-run inference with strict matching (default now) to drop fuzzy
-        mis-matches such as "American Airlines" -> "American Express".
-      - Reuse this on the 2025 researcher corpus and on collected modern-ESP
-        newsletters (Mailchimp/SendGrid/Substack), which are better modern
-        representatives than the 2001 Enron dump.
-    """
-    db = json.load(open(brand_db))
-    brand_dom = {k.strip().lower(): {reg_domain(x) for x in v if x} for k, v in db.items()}
-    df = pd.read_csv(results, engine='python')
-
-    def col(*names):
-        for n in names:
-            if n in df.columns:
-                return n
-        return None
-    c_pred = col('our_pred', 'pred')
-    c_send = col('sender_address', 'from')
-    c_match = col('matched_identity')
-    if not (c_pred and c_send and c_match):
-        raise click.ClickException(f"results CSV missing columns; have {list(df.columns)}")
-
-    def brand_of(v):
-        s = str(v).strip()
-        if not (s.startswith('{') or s.startswith('[')):
-            return None
-        try:
-            val = ast.literal_eval(s)
-            if isinstance(val, (set, list, tuple)) and val:
-                return str(list(val)[0]).strip().lower()
-        except (ValueError, SyntaxError):
-            pass
-        return None
-
-    rows = []
-    for _, r in df.iterrows():
-        b = brand_of(r[c_match])
-        if not b or b not in brand_dom:
-            continue
-        sd = reg_domain(r[c_send])
-        if not sd or sd in brand_dom[b]:
-            continue  # consistent (or unpar%seable) — not a Req#2 case
-        rows.append({
-            'sender': r[c_send],
-            'sender_domain': sd,
-            'claimed_brand': b,
-            'brand_official_domains': ';'.join(sorted(brand_dom[b])),
-            'subject': r.get('subject', ''),
-            'flagged_phishing': bool(_is_phish(r[c_pred])),
-        })
-    sub = pd.DataFrame(rows)
-    n = len(sub)
-    print(f"\n=== Requirement #2 subset (org claimed, sent from other domain) ===")
-    print(f"corpus rows: {len(df)}   subset: {n}")
-    if n:
-        fp = int(sub['flagged_phishing'].sum())
-        print(f"FPR on this hard subset: {fp}/{n} = {100*fp/n:.2f}%")
-        print("(report honestly; pair with the RC-Q1 knowledge-base / user-interaction "
-              "mitigation. Re-run with strict matching to drop fuzzy mis-matches.)")
-    out = out or (os.path.splitext(results)[0] + '_req2_subset.csv')
-    sub.to_csv(out, index=False)
-    print(f"subset -> {out}  (spot-check these are genuinely legitimate)")
-
-
-def _decode_hdr(value) -> str:
-    if not value:
-        return ''
-    try:
-        return ''.join(p.decode(c or 'utf-8', 'replace') if isinstance(p, bytes) else p
-                       for p, c in decode_header(value)).strip()
-    except Exception:
-        return str(value).strip()
-
-
-@cli.command(name='scan-req2')
-@click.option('--email-dir', required=True,
-              help='Folder scanned recursively for .eml (e.g. a volunteer inbox).')
-@click.option('--brand-db', default='./datasets/company_database.json', show_default=True)
-@click.option('--out', default='./datasets/req2_candidates.csv', show_default=True)
-@click.option('--exclude', default=r'phish|junk|spam|honeypot|deleted|/sent', show_default=True,
-              help='Regex on the path to skip (non-benign folders).')
-@click.option('--min-brand-len', default=5, show_default=True, type=int,
-              help='Ignore KB brand names shorter than this (cuts short-name noise).')
-@click.option('--impersonator-brands', default=3, show_default=True, type=int,
-              help='Drop any sender address that claims >= this many distinct brands '
-                   '(synthetic/impersonation, not a legitimate org sender).')
-def scan_req2(email_dir, brand_db, out, exclude, min_brand_len, impersonator_brands):
-    """Pre-filter raw .eml for meta-review Requirement #2 candidates.
-
-    Heuristic (matches how the field/ set was built): keep emails whose From
-    DISPLAY NAME names a known organization (KB brand) while the sender's
-    registrable domain is NOT that org's official domain — i.e. "claims org X,
-    sent from a non-X domain". Splits into (A) third-party/relay domain and
-    (B) personal-webmail sender. Drops impersonators (one address claiming many
-    brands).
-
-    This is a SUBSTRING pre-filter over display names, not PiMRef's matcher, so:
-      - it has some false hits (e.g. 'intel' in 'IntelliSys'); confirm manually;
-      - the reportable FPR should come from running PiMRef (strict) on the
-        confirmed set and then the `subset` command.
-    """
-    db = json.load(open(brand_db))
-    brands = {k.strip().lower(): {reg_domain(x) for x in v if x}
-              for k, v in db.items() if len(k) >= min_brand_len and any(v)}
-    pat = re.compile('|'.join(re.escape(b) for b in sorted(brands, key=len, reverse=True)))
-    exc = re.compile(exclude, re.I) if exclude else None
-
-    rows = []
-    scanned = 0
-    for root, _, files in os.walk(email_dir):
-        if 'inbox' not in root.lower():
-            continue
-        if exc and exc.search(root):
-            continue
-        for fn in files:
-            if not fn.lower().endswith('.eml'):
-                continue
-            fp = os.path.join(root, fn)
-            scanned += 1
-            try:
-                with open(fp, 'rb') as fh:
-                    msg = email.message_from_binary_file(fh, policy=email.policy.default)
-            except Exception:
-                continue
-            nm, addr = parseaddr(msg.get('From', ''))
-            nm = _decode_hdr(nm)
-            if '@' not in addr or '@' in nm or not nm:
-                continue
-            sd = reg_domain(addr)
-            if not sd:
-                continue
-            m = pat.search(nm.lower())
-            if not m:
-                continue
-            b = m.group(0)
-            if b not in brands or sd in brands[b]:
-                continue
-            cat = 'B: personal-webmail claims org' if sd in WEBMAIL_DOMAINS \
-                else 'A: org via third-party domain'
-            rows.append({
-                'file': fp, 'from_name': nm, 'from_addr': addr, 'sender_domain': sd,
-                'matched_brand': b, 'brand_domains': ';'.join(sorted(brands[b])),
-                'category': cat, 'subject': _decode_hdr(msg.get('Subject', ''))[:80],
-            })
-
-    df = pd.DataFrame(rows)
-    if not df.empty and impersonator_brands:
-        by = df.groupby('from_addr')['matched_brand'].nunique()
-        drop = set(by[by >= impersonator_brands].index)
-        n_imp = int(df['from_addr'].isin(drop).sum())
-        df = df[~df['from_addr'].isin(drop)]
-    else:
-        n_imp = 0
-
-    print(f"\n=== scan-req2 ({email_dir}) ===")
-    print(f"benign inbox .eml scanned: {scanned}")
-    print(f"dropped as impersonators (>= {impersonator_brands} brands/sender): {n_imp}")
-    print(f"Req#2 candidates: {len(df)}")
-    if not df.empty:
-        print(df['category'].value_counts().to_string())
-        print(f"distinct (sender, brand): {df.groupby(['from_addr','matched_brand']).ngroups}")
-    df.to_csv(out, index=False)
-    print(f"candidates -> {out}  (manually confirm legitimacy; drop substring false hits)")
 
 
 @cli.command()
