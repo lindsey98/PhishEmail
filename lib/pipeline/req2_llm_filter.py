@@ -174,13 +174,14 @@ def _parse_one(fp):
         return None
 
 
-def parse_dir(email_dir, exclude, workers=None):
+def parse_dir(email_dir, exclude, folder_filter='inbox', workers=None):
     exc = re.compile(exclude, re.I) if exclude else None
+    ff = (folder_filter or '').lower()   # empty -> scan every folder
     paths = []
     for root, dirs, files in os.walk(email_dir):
         # 剪枝：被排除的子树直接不进
         dirs[:] = [d for d in dirs if not (exc and exc.search(os.path.join(root, d)))]
-        if 'inbox' not in root.lower():
+        if ff and ff not in root.lower():
             continue
         paths.extend(os.path.join(root, fn) for fn in files
                      if fn.lower().endswith('.eml'))
@@ -192,31 +193,88 @@ def parse_dir(email_dir, exclude, workers=None):
     return recs
 
 
+def parse_hf(name, split, sender_col, subject_col, body_col, label_col, benign_label, limit):
+    """Read benign rows (label == benign_label) with `sender` = 'Name <addr>'.
+
+    `name` is a LOCAL path — a .parquet file, or a directory of .parquet files
+    (each file is a split; all of them are read). No `datasets` lib / network.
+    """
+    import glob
+    import pandas as pd
+    if os.path.isdir(name):
+        files = sorted(glob.glob(os.path.join(name, '*.parquet')))
+    elif os.path.isfile(name):
+        files = [name]
+    else:
+        raise click.ClickException(f"not a local parquet file/dir: {name}")
+
+    recs = []
+    for fp in files:
+        cols = [c for c in {sender_col, subject_col, body_col, label_col} if c]
+        df = pd.read_parquet(fp, columns=cols)
+        if benign_label != '' and label_col in df.columns:
+            df = df[df[label_col].astype(str).str.strip() == str(benign_label)]
+        tag = os.path.splitext(os.path.basename(fp))[0]
+
+        def _s(v):
+            return '' if pd.isna(v) else str(v)
+
+        for idx, r in df.iterrows():
+            nm, addr = parseaddr(_s(r.get(sender_col)))
+            if '@' not in addr:
+                continue
+            recs.append({'file': f"{tag}:{idx}", 'name': nm or '',
+                         'addr': addr, 'domain': _reg(addr),
+                         'subject': _s(r.get(subject_col)),
+                         'body': _s(r.get(body_col))})
+            if limit and len(recs) >= limit:
+                return recs
+    return recs
+
+
 FIELDS = ['file', 'from_name', 'from_addr', 'sender_domain', 'is_personal_webmail',
           'subject', 'claimed_organization', 'from_address_is_official', 'label', 'reason']
 
 
 @click.command()
 @click.option('--email-dir', default='datasets/field', show_default=True)
+@click.option('--hf-dataset', default=None, help='Local .parquet file OR directory of parquet splits to classify (all *.parquet in the dir are read) instead of a local --email-dir.')
+@click.option('--hf-split', default='all', show_default=True, help='Unused for a local parquet directory (every *.parquet is read).')
+@click.option('--hf-sender-col', default='sender', show_default=True)
+@click.option('--hf-subject-col', default='subject', show_default=True)
+@click.option('--hf-body-col', default='text', show_default=True)
+@click.option('--hf-label-col', default='label', show_default=True)
+@click.option('--hf-benign-label', default='0', show_default=True,
+              help="Dataset label value that means benign/ham (kept). '' keeps all rows.")
 @click.option('--eval-dir', default='datasets/field_req2_eval', show_default=True,
               help='label=1 emails (org claimed, From domain differs) copied here (+ _manifest.csv).')
 @click.option('--out', default='datasets/req2_llm_classified.csv', show_default=True,
               help='All classifications (also used to resume).')
 @click.option('--exclude', default=r'phish|junk|spam|honeypot|deleted|/sent', show_default=True)
+@click.option('--folder-filter', default='inbox', show_default=True,
+              help="Only scan folders whose path contains this substring. Empty "
+                   "string ('') scans every folder — use it for CSDMC-Ham etc.")
 @click.option('--workers', default=8, show_default=True, type=int)
 @click.option('--limit', default=0, type=int, help='Classify at most N (0=all).')
 @click.option('--model', default='glm-5.2', show_default=True)
 @click.option('--base-url', default='https://api.modelarts-maas.com/openai/v1', show_default=True)
 @click.option('--key-file', default='./datasets/maas_key.txt', show_default=True)
-def main(email_dir, eval_dir, out, exclude, model, workers, limit, key_file, base_url):
+def main(email_dir, hf_dataset, hf_split, hf_sender_col, hf_subject_col, hf_body_col,
+         hf_label_col, hf_benign_label, eval_dir, out, exclude, folder_filter,
+         model, workers, limit, key_file, base_url):
     api_key = os.environ.get('MAAS_API_KEY') or (
         open(key_file).read().strip() if os.path.exists(key_file) else None)
     if not api_key:
         raise click.ClickException('no API key: set MAAS_API_KEY or provide --key-file')
     client = OpenAI(api_key=api_key, base_url=base_url)
 
-    recs = parse_dir(email_dir, exclude)
-    print(f"{len(recs)} emails parsed from {email_dir}")
+    if hf_dataset:
+        recs = parse_hf(hf_dataset, hf_split, hf_sender_col, hf_subject_col,
+                        hf_body_col, hf_label_col, hf_benign_label, limit)
+        print(f"{len(recs)} benign rows from HF {hf_dataset} [{hf_split}]")
+    else:
+        recs = parse_dir(email_dir, exclude, folder_filter)
+        print(f"{len(recs)} emails parsed from {email_dir}")
 
     done = set()
     if os.path.exists(out):
@@ -255,8 +313,14 @@ def main(email_dir, eval_dir, out, exclude, model, workers, limit, key_file, bas
     fout.close()
     print(f"newly classified: {len(todo)}   label=1 among them: {n_match}")
 
-    # rebuild eval dir from ALL positives in the classified CSV
-    _export_positives(out, eval_dir)
+    if hf_dataset:
+        # HF rows have no source .eml to copy; positives are label=1 rows in `out`.
+        n = sum(1 for r in _csv.DictReader(open(out, newline='', encoding='utf-8'))
+                if str(r.get('label')).strip() in ('1', 'True', 'true'))
+        print(f"HF mode: {n} Req#2 positives (label=1) in {out} (no .eml export)")
+    else:
+        # rebuild eval dir from ALL positives in the classified CSV
+        _export_positives(out, eval_dir)
 
 
 def _export_positives(out, eval_dir):

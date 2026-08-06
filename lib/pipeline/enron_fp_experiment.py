@@ -518,5 +518,161 @@ def review(results, whitelist, out, apply_only):
     print(f"whitelist -> {whitelist}   reviewed results -> {out}")
 
 
+@cli.command(name='materialize-req2')
+@click.option('--classified', required=True,
+              help='req2_llm_filter output CSV (has a "file" column like "train:123").')
+@click.option('--parquet-dir', default='./datasets/seven_phishing', show_default=True,
+              help='Directory of the source parquet splits the classifier ran on.')
+@click.option('--out-dir', default='./datasets/req2_eml', show_default=True,
+              help='Where to write the reconstructed .eml files + metadata.')
+@click.option('--label', default='1', show_default=True,
+              help='Keep classified rows with this label (1 = Req#2 positive: '
+                   'body claims an org whose domain != the From address).')
+@click.option('--user', default='req2', show_default=True,
+              help='Single synthetic recipient (the whitelist is scoped per-user).')
+@click.option('--body-col', default='text', show_default=True)
+@click.option('--subject-col', default='subject', show_default=True)
+@click.option('--sender-col', default='sender', show_default=True)
+@click.option('--receiver-col', default='receiver', show_default=True)
+@click.option('--date-col', default='date', show_default=True)
+def materialize_req2(classified, parquet_dir, out_dir, label, user,
+                     body_col, subject_col, sender_col, receiver_col, date_col):
+    """Gather the Req#2-positive emails into one folder so PiMRef can run on them.
+
+    Emits a metadata CSV compatible with the `eval` command. Auto-detects the
+    'file' column format in the classified CSV:
+
+      * real .eml path (field study, e.g. datasets/field/<user>/inbox/mbox/x.eml):
+        the .eml is copied verbatim; user, timestamp and real DMARC/DKIM/SPF auth
+        headers are extracted from it.
+      * "split:index" key (a parquet source, e.g. seven_phishing): the .eml is
+        reconstructed from the parquet row (single synthetic --user, no auth).
+
+    Full recipe:
+
+        # 1) collect the flagged-benign emails + metadata
+        python -m lib.pipeline.enron_fp_experiment materialize-req2 \
+            --classified ./datasets/req2_llm_classified.csv \
+            --out-dir ./datasets/req2_eml
+
+        # 2) run PiMRef with the ORIGINAL knowledge base (text-only -> --fast_text)
+        python apps/cli/inference.py --email_dir ./datasets/req2_eml \
+            --output_csv ./datasets/req2_results.csv --fast_text
+
+        # 3) static vs adaptive (whitelist+DMARC) FPR + interaction count + plot
+        python -m lib.pipeline.enron_fp_experiment eval \
+            --results ./datasets/req2_results.csv \
+            --metadata ./datasets/req2_eml/req2_meta.csv \
+            --out-dir ./datasets/req2_fp_out
+    """
+    import shutil
+
+    def _s(v):
+        return '' if pd.isna(v) else str(v)
+
+    cdf = pd.read_csv(classified, engine='python')
+    if 'file' not in cdf.columns:
+        raise click.ClickException(f"classified CSV has no 'file' column; found {list(cdf.columns)}")
+    if 'label' in cdf.columns and label != '':
+        cdf = cdf[cdf['label'].astype(str).str.strip() == str(label)]
+    print(f"{len(cdf)} classified rows with label={label}")
+
+    os.makedirs(out_dir, exist_ok=True)
+    _parts = {}
+
+    def get_part(split):
+        if split not in _parts:
+            fp = os.path.join(parquet_dir, f'{split}.parquet')
+            if not os.path.isfile(fp):
+                raise click.ClickException(f"parquet split not found: {fp}")
+            _parts[split] = pd.read_parquet(fp)
+        return _parts[split]
+
+    def user_from_path(p):
+        parts = p.replace('\\', '/').split('/')
+        if 'field' in parts and parts.index('field') + 1 < len(parts):
+            return parts[parts.index('field') + 1]
+        return parts[-2] if len(parts) >= 2 else user
+
+    meta, written, missing = [], 0, 0
+    for epoch, cr in enumerate(cdf.itertuples(index=False)):
+        fkey = str(getattr(cr, 'file', ''))
+
+        if os.path.isfile(fkey):
+            # --- real .eml path (field study): copy + extract real auth ---
+            try:
+                with open(fkey, 'r', encoding='utf-8', errors='ignore') as fh:
+                    raw = fh.read()
+                msg = email.message_from_string(raw, policy=email.policy.default)
+            except Exception:
+                missing += 1
+                continue
+            _, addr = parseaddr(msg.get('From', '') or _s(getattr(cr, 'from_addr', '')))
+            if '@' not in addr:
+                missing += 1
+                continue
+            u = user_from_path(fkey)
+            try:
+                dt = parsedate_to_datetime(msg.get('Date'))
+                ep, date_iso = dt.timestamp(), dt.isoformat()
+            except Exception:
+                ep, date_iso = epoch, ''      # keep in-stream even w/o usable Date
+            auth = extract_auth(msg)
+            a_status, a_domain = auth_status(auth), auth['auth_domain']
+            fname = os.path.basename(fkey)
+            dst_dir = os.path.join(out_dir, u)
+            os.makedirs(dst_dir, exist_ok=True)
+            shutil.copyfile(fkey, os.path.join(dst_dir, fname))
+            rel = f"{u}/{fname}"
+
+        elif ':' in fkey:
+            # --- parquet "split:index": reconstruct from the source row ---
+            split, idx = fkey.rsplit(':', 1)
+            try:
+                row = get_part(split).loc[int(idx)]
+            except (KeyError, ValueError):
+                missing += 1
+                continue
+            sender = _s(row.get(sender_col))
+            _, addr = parseaddr(sender)
+            if '@' not in addr:
+                missing += 1
+                continue
+            fname = f"{split}_{idx}.eml"
+            date = _s(row.get(date_col))
+            eml = (f"From: {sender}\n"
+                   f"To: {_s(row.get(receiver_col))}\n"
+                   f"Subject: {_s(row.get(subject_col))}\n"
+                   + (f"Date: {date}\n" if date else "")
+                   + "Content-Type: text/plain; charset=utf-8\n"
+                   f"\n{_s(row.get(body_col))}\n")
+            dst_dir = os.path.join(out_dir, user)
+            os.makedirs(dst_dir, exist_ok=True)
+            with open(os.path.join(dst_dir, fname), 'w', encoding='utf-8', errors='ignore') as fh:
+                fh.write(eml)
+            u, ep, date_iso, a_status, a_domain = user, epoch, date, 'none', ''
+            rel = f"{user}/{fname}"
+
+        else:
+            missing += 1
+            continue
+
+        meta.append({
+            'join_key': rel, 'user': u,
+            'sender_address': addr.lower(), 'from_domain': reg_domain(addr),
+            'date_iso': date_iso, 'epoch': ep,
+            'auth_status': a_status, 'auth_domain': a_domain,
+        })
+        written += 1
+
+    meta_path = os.path.join(out_dir, 'req2_meta.csv')
+    pd.DataFrame(meta).to_csv(meta_path, index=False)
+    n_auth = sum(1 for m in meta if m['auth_status'] != 'none')
+    print(f"wrote {written} .eml -> {out_dir}/<user>/   ({missing} skipped: unreadable / bad sender)")
+    print(f"emails with usable auth headers: {n_auth} "
+          f"({100*n_auth/max(written,1):.1f}%)   users: {len({m['user'] for m in meta})}")
+    print(f"metadata -> {meta_path}")
+
+
 if __name__ == '__main__':
     cli()

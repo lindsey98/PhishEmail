@@ -15,6 +15,17 @@ torch.manual_seed(seed)
 np.random.seed(seed)
 random.seed(seed)
 
+# Guards against pathological inputs (e.g. a giant base64 / HTML blob that slips
+# through text extraction). A 1.5M-token "body" would otherwise be split into
+# thousands of 512-token chunks and run as ONE forward pass -> OOM. The claimed
+# identity lives in the header + early body, so bounding the scanned length is
+# safe for real mail and only truncates degenerate inputs; the batch cap bounds
+# peak memory regardless of chunk count (results are unchanged — same chunks,
+# just processed in mini-batches).
+MAX_INPUT_TOKENS = 100_000   # cap tokens fed to the chunker (~200 chunks max)
+MAX_INPUT_CHARS = 200_000    # cap chars for the whole-text fallback pass
+NER_BATCH_CAP = 16           # max chunks per forward pass
+
 
 class IdentityBert:
     _CallerPrefix = "IdentityBert"
@@ -66,6 +77,8 @@ class IdentityBert:
         )
 
         input_ids = tokens["input_ids"]
+        if len(input_ids) > MAX_INPUT_TOKENS:
+            input_ids = input_ids[:MAX_INPUT_TOKENS]
         total_length = len(input_ids)
         batches = []
 
@@ -154,7 +167,8 @@ class IdentityBert:
         with Timer() as timer:
             # Batch this email's chunks through the pipeline in one forward pass
             # (no-op for single-chunk emails; speeds up long, multi-chunk ones).
-            entities = self.classifier_pipeline(processed_text, batch_size=max(1, len(processed_text)))
+            entities = self.classifier_pipeline(
+                processed_text, batch_size=min(NER_BATCH_CAP, max(1, len(processed_text))))
 
         entities = [y for x in entities for y in x]
         # Temporary lists to store entities with their confidence scores
@@ -209,7 +223,7 @@ class IdentityBert:
 
         if not identities:
             with Timer() as timer:
-                entities = self.classifier_pipeline([raw_text])
+                entities = self.classifier_pipeline([raw_text[:MAX_INPUT_CHARS]])
             entities = [y for x in entities for y in x]
             temp_identities: List[Tuple[str, float]] = []
 

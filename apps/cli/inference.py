@@ -16,10 +16,9 @@ from pathlib import Path
 import click
 from tqdm import tqdm
 
-from lib.baselines import dfence, helphed
 from lib.config import Config
 from lib.data import OCR, RenderDataset
-from lib.reference_db import IdentityMatcher
+from lib.reference_db.IdentityMatcher import IdentityMatcher
 from lib.utilities import Logger, resolve_email_input
 from lib.utilities.data_utils import DomainUtils
 
@@ -240,6 +239,7 @@ def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed, auto
 
         '''Baseline: D-Fence, HelpHed, Rspamd'''
         if run_dfence:
+            from lib.baselines import dfence
             _, dfence_pred, dfence_runtime = dfence.inference.test(email_file_path)
             dfence_pred = dfence_pred[0]
             Logger.spit(f"D-Fence prediction = {dfence_pred} with runtime = {dfence_runtime}",
@@ -249,6 +249,7 @@ def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed, auto
             dfence_pred, dfence_runtime = None, None
 
         if run_helphed:
+            from lib.baselines import helphed
             helphed_stacking_pred, helphed_voting_pred, helphed_stacking_runtime, helphed_voting_runtime = helphed.inference.test(email_file_path)
             helphed_stacking_pred = helphed_stacking_pred[0]
             helphed_voting_pred = helphed_voting_pred[0]
