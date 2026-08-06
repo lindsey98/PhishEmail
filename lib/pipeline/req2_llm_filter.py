@@ -74,23 +74,48 @@ def _dec(v):
 
 
 def _body(msg):
-    b = msg.get_body(preferencelist=('plain', 'html'))
-    if b is None:
-        return ''
-    try:
-        content = b.get_content()
-    except Exception:
-        return ''
-    if b.get_content_type() == 'text/html':
-        content = BeautifulSoup(content, 'html.parser').get_text(separator='\n')
-    if not isinstance(content, str):
-        return ''
+    plain, html_parts = [], []
+    for part in msg.walk():
+        if part.is_multipart():
+            continue
+        ctype = part.get_content_type()
+        if ctype not in ('text/plain', 'text/html'):
+            continue
+        raw = part.get_payload(decode=True)   # 自动处理 base64/quoted-printable
+        if not raw:
+            continue
+        charset = part.get_content_charset() or 'utf-8'
+        try:
+            text = raw.decode(charset, 'replace')
+        except LookupError:
+            text = raw.decode('utf-8', 'replace')
+        (plain if ctype == 'text/plain' else html_parts).append(text)
+
+    if plain:
+        content = '\n'.join(plain)
+    elif html_parts:
+        content = BeautifulSoup('\n'.join(html_parts), 'html.parser').get_text(separator='\n')
+    else:
+        p = msg.get_payload(decode=True)
+        if p is None:
+            p = msg.get_payload()
+            p = p.encode('utf-8', 'replace') if isinstance(p, str) else p
+        if p:
+            charset = msg.get_content_charset() or 'utf-8'
+            try:
+                text = p.decode(charset, 'replace')
+            except (LookupError, AttributeError):
+                text = str(p)
+            if '<' in text and '>' in text:
+                text = BeautifulSoup(text, 'html.parser').get_text(separator='\n')
+            plain.append(text)
+
+    content = content.replace('\r', '')
     m = _REPLY.search(content)
     if m:
         content = content[:m.start()]
     content = '\n'.join(ln for ln in content.splitlines() if not ln.lstrip().startswith('>'))
     return re.sub(r'\n{3,}', '\n\n', content).strip()
-
 
 def build_prompt(name, addr, domain, subject, body):
     return f"""From display name: {name!r}
@@ -113,11 +138,15 @@ Return ONLY JSON:
 def classify(client, model, rec):
     prompt = build_prompt(rec['name'], rec['addr'], rec['domain'], rec['subject'], rec['body'])
     resp = client.chat.completions.create(
-        model=model, response_format={"type": "json_object"}, temperature=0,
+        model=model, temperature=0,
         messages=[{"role": "system", "content": SYSTEM},
                   {"role": "user", "content": prompt}],
     )
-    d = json.loads(resp.choices[0].message.content)
+    content = resp.choices[0].message.content.strip()
+    m = re.search(r'\{.*\}', content, re.DOTALL)
+    if not m:
+        raise ValueError(f'no JSON in response: {content[:100]}')
+    d = json.loads(m.group(0))
     label = 1 if str(d.get('label', 0)).strip().lower() in ('1', 'true', 'yes') else 0
     return {
         'file': rec['file'], 'from_name': rec['name'], 'from_addr': rec['addr'],
@@ -131,27 +160,35 @@ def classify(client, model, rec):
     }
 
 
-def parse_dir(email_dir, exclude):
+def _parse_one(fp):
+    try:
+        with open(fp, 'rb') as fh:
+            msg = email.message_from_binary_file(fh, policy=email.policy.default)
+        name, addr = parseaddr(msg.get('From', ''))
+        if '@' not in addr:
+            return None
+        return {'file': fp, 'name': _dec(name), 'addr': addr,
+                'domain': _reg(addr), 'subject': _dec(msg.get('Subject', '')),
+                'body': _body(msg)}
+    except Exception:
+        return None
+
+
+def parse_dir(email_dir, exclude, workers=None):
     exc = re.compile(exclude, re.I) if exclude else None
-    recs = []
-    for root, _, files in os.walk(email_dir):
-        if 'inbox' not in root.lower() or (exc and exc.search(root)):
+    paths = []
+    for root, dirs, files in os.walk(email_dir):
+        # 剪枝：被排除的子树直接不进
+        dirs[:] = [d for d in dirs if not (exc and exc.search(os.path.join(root, d)))]
+        if 'inbox' not in root.lower():
             continue
-        for fn in files:
-            if not fn.lower().endswith('.eml'):
-                continue
-            fp = os.path.join(root, fn)
-            try:
-                with open(fp, 'rb') as fh:
-                    msg = email.message_from_binary_file(fh, policy=email.policy.default)
-                name, addr = parseaddr(msg.get('From', ''))
-                if '@' not in addr:
-                    continue
-                recs.append({'file': fp, 'name': _dec(name), 'addr': addr,
-                             'domain': _reg(addr), 'subject': _dec(msg.get('Subject', '')),
-                             'body': _body(msg)})
-            except Exception:
-                continue
+        paths.extend(os.path.join(root, fn) for fn in files
+                     if fn.lower().endswith('.eml'))
+
+    from concurrent.futures import ProcessPoolExecutor
+    with ProcessPoolExecutor(max_workers=workers) as ex:
+        recs = [r for r in tqdm(ex.map(_parse_one, paths, chunksize=32),
+                                total=len(paths), desc='parsing') if r]
     return recs
 
 
@@ -166,14 +203,17 @@ FIELDS = ['file', 'from_name', 'from_addr', 'sender_domain', 'is_personal_webmai
 @click.option('--out', default='datasets/req2_llm_classified.csv', show_default=True,
               help='All classifications (also used to resume).')
 @click.option('--exclude', default=r'phish|junk|spam|honeypot|deleted|/sent', show_default=True)
-@click.option('--model', default='gpt-4o-mini', show_default=True)
 @click.option('--workers', default=8, show_default=True, type=int)
 @click.option('--limit', default=0, type=int, help='Classify at most N (0=all).')
-@click.option('--key-file', default='./datasets/openai_key.txt', show_default=True)
-def main(email_dir, eval_dir, out, exclude, model, workers, limit, key_file):
-    if not os.environ.get('OPENAI_API_KEY') and os.path.exists(key_file):
-        os.environ['OPENAI_API_KEY'] = open(key_file).read().strip()
-    client = OpenAI()
+@click.option('--model', default='glm-5.2', show_default=True)
+@click.option('--base-url', default='https://api.modelarts-maas.com/openai/v1', show_default=True)
+@click.option('--key-file', default='./datasets/maas_key.txt', show_default=True)
+def main(email_dir, eval_dir, out, exclude, model, workers, limit, key_file, base_url):
+    api_key = os.environ.get('MAAS_API_KEY') or (
+        open(key_file).read().strip() if os.path.exists(key_file) else None)
+    if not api_key:
+        raise click.ClickException('no API key: set MAAS_API_KEY or provide --key-file')
+    client = OpenAI(api_key=api_key, base_url=base_url)
 
     recs = parse_dir(email_dir, exclude)
     print(f"{len(recs)} emails parsed from {email_dir}")
