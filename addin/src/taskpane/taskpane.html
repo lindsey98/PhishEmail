@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
     <meta charset="UTF-8" />
@@ -10,7 +10,7 @@
     <!-- Office JavaScript API -->
     <script type="text/javascript" src="https://appsforoffice.microsoft.com/lib/1.1/hosted/office.js"></script>
 
-    <!-- For more information on Fluent UI, visit https://developer.microsoft.com/fluentui#/. -->
+    <!-- Fluent UI core (Segoe UI + icons) -->
     <link rel="stylesheet" href="https://res-1.cdn.office.net/files/fabric-cdn-prod_20230815.002/office-ui-fabric-core/11.1.0/css/fabric.min.css"/>
 
     <!-- Template styles -->
@@ -18,74 +18,117 @@
     <link href="entity.css" rel="stylesheet" type="text/css" />
 </head>
 
-<body class="ms-font-m ms-welcome ms-Fabric">
-    <section id="sideload-msg" class="ms-welcome__main">
-        <h2 class="ms-font-xl">Please <a target="_blank" href="https://learn.microsoft.com/office/dev/add-ins/testing/test-debug-office-add-ins#sideload-an-office-add-in-for-testing">sideload</a> your add-in to see app body.</h2>
-    </section> 
-    <main id="app-body" class="ms-welcome__main" style="display: none;">
-        <img src="../../assets/logo.png"/>
+<body>
+    <section id="sideload-msg">
+        <h2 class="ms-font-xl">Please
+            <a target="_blank" href="https://learn.microsoft.com/office/dev/add-ins/testing/test-debug-office-add-ins#sideload-an-office-add-in-for-testing">sideload</a>
+            your add-in to see the app body.</h2>
+    </section>
+
+    <main id="app-body">
+        <!-- Brand header -->
+        <header class="app-header">
+            <div class="brand">
+                <img class="brand-logo" src="assets/logo.png" alt="PiMRef" />
+                <div class="brand-text">
+                    <span class="brand-name">PiMRef</span>
+                    <span class="brand-tagline">Sender Identity Verification</span>
+                </div>
+            </div>
+        </header>
+
         <div id="tab-container">
             <div id="tab-content">
+
+                <!-- ===================== MAIN TAB ===================== -->
                 <div id="main-tab" class="tab-panel">
-                    <p class="ms-font-l" id="">PiMRef will attempt to identify the identity of the sender in the email, and perform a cross-check to validate if the address matches this purported identity.</p>
-                    <div role="button" id="run" class="rounded-button ms-font-xl">
-                        <span>Check</span>
-                    </div>
+                    <p class="intro">
+                        PiMRef identifies the identity the sender <em>claims</em> to be, then
+                        cross-checks it against the actual sending address to catch impersonation.
+                    </p>
+
+                    <button type="button" id="run" class="btn btn-primary">
+                        <svg class="btn-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 4 5v6c0 5 3.4 8.4 8 10 4.6-1.6 8-5 8-10V5l-8-3zm0 2.2 6 2.25V11c0 3.9-2.5 6.7-6 8.05C8.5 17.7 6 14.9 6 11V6.45L12 4.2z"/></svg>
+                        <span>Analyze this email</span>
+                    </button>
+
                     <div class="loader" id="loading"></div>
+
                     <div id="results-wrapper">
-                        <div class="bar border-top border-bottom"><span class="bar-title">Results</span></div>
-                        <div id="banner" class="banner">Phishing Alert</div>
-                        <div class="section border-bottom" id="identity">
-                            <span class="title">Identity Inconsistency Check</span>
-                            <div class="results">
-                                <p>Represented Brand<br/>
-                                    <span id="represented-brand" class="italic indent">Microsoft</span> <br>
-                                    Sender Domain<br/>
-                                    <span id="sender-domain" class="italic indent">micr0s0ft.com</span> <br>
-                                </p>
-                                <p class="explanation" id="identity-explanation"></p>
-                            </div>
+                        <!-- Verdict -->
+                        <div id="banner" class="verdict">
+                            <span class="verdict-icon" id="verdict-icon"></span>
+                            <span class="verdict-label" id="verdict-label">Phishing Alert</span>
                         </div>
-                        <div class="section border-bottom" id="action">
-                            <span class="title">Required Action Check</span>
-                            <div class="results">
-                                <p class="explanation" id="action-explanation"></p>
+
+                        <!-- Identity check -->
+                        <div class="card" id="identity">
+                            <div class="card-title">
+                                <svg class="card-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm0 2c-3.3 0-8 1.7-8 5v1h16v-1c0-3.3-4.7-5-8-5z"/></svg>
+                                Identity consistency
                             </div>
-                        </div>
-                        <div class="section" id="recommendation">
-                            <span class="title">Recommended Action</span>
-                            <div class="results">
-                                <p class="explanation" id="recommendation-explanation"></p>
+                            <div class="kv">
+                                <div class="kv-row"><span class="kv-key">Represented</span><span class="kv-val" id="represented-brand">Microsoft</span></div>
+                                <div class="kv-row"><span class="kv-key">Sender domain</span><span class="kv-val mono" id="sender-domain">micr0s0ft.com</span></div>
                             </div>
+                            <p class="explanation" id="identity-explanation"></p>
                         </div>
-                        <div role="button" id="detailed-explanation" class="rounded-button ms-font-xl">
-                            <span>View Detailed Explanation</span>
+
+                        <!-- Action check -->
+                        <div class="card" id="action">
+                            <div class="card-title">
+                                <svg class="card-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 3 4 14h6l-1 7 9-11h-6l1-7z"/></svg>
+                                Requested action
+                            </div>
+                            <p class="explanation" id="action-explanation"></p>
+                        </div>
+
+                        <!-- Recommendation -->
+                        <div class="card" id="recommendation">
+                            <div class="card-title">
+                                <svg class="card-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a7 7 0 0 0-4 12.7V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.3A7 7 0 0 0 12 2zM9 20a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-1H9v1z"/></svg>
+                                Recommendation
+                            </div>
+                            <p class="explanation" id="recommendation-explanation"></p>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="actions">
+                            <button type="button" id="whitelist-btn" class="btn btn-ghost">
+                                <svg class="btn-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg>
+                                <span>Trust this sender</span>
+                            </button>
+                            <button type="button" id="detailed-explanation" class="btn btn-secondary">
+                                <span>View detailed explanation</span>
+                            </button>
                         </div>
                     </div>
                 </div>
+
+                <!-- ===================== EXPLANATION PAGE ===================== -->
                 <div id="explanation-page" class="tab-panel">
-                    <br/>
-                    <div class="section border-top"><span class="header-title">Header Information</span>
-                        <div class="results">
-                            <table class="results-table">
-                                <tbody>
-                                    <tr><td class="entry">Sender:</td><td><span id="sender-info" class="italic">ACM CCS 2025 &lt;acm2025@acmm2025.com&gt;</span></td></tr>
-                                    <tr><td class="entry">Recepient:</td><td><span id="recepient-info" class="italic">something@u.nus.edu</span></td></tr>
-                                    <tr><td class="entry">Subject:</td><td><span id="subject" class="italic">Congratulations on winning an award at ACM CCS 2025!</span></td></tr>    
-                                </tbody>
-                            </table>
-                        </div>
-                        <br/>
+                    <div class="card">
+                        <div class="card-title">Header information</div>
+                        <table class="results-table">
+                            <tbody>
+                                <tr><td class="entry">Sender</td><td><span id="sender-info" class="mono">ACM CCS 2025 &lt;acm2025@acmm2025.com&gt;</span></td></tr>
+                                <tr><td class="entry">Recipient</td><td><span id="recepient-info" class="mono">something@u.nus.edu</span></td></tr>
+                                <tr><td class="entry">Subject</td><td><span id="subject">Congratulations on winning an award at ACM CCS 2025!</span></td></tr>
+                            </tbody>
+                        </table>
                     </div>
-                    <div class="section border-top"><span class="header-title">Email Body</span>
-                        <br/>
-                        <div id="html-body">
-                        </div>
-                        <div role="button" id="return" class="rounded-button ms-font-xl">
-                            <span>Go Back</span>
-                        </div>
+
+                    <div class="card">
+                        <div class="card-title">Email body</div>
+                        <div id="html-body"></div>
                     </div>
+
+                    <button type="button" id="return" class="btn btn-secondary">
+                        <svg class="btn-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M15.4 7.4 14 6l-6 6 6 6 1.4-1.4L10.8 12z"/></svg>
+                        <span>Go back</span>
+                    </button>
                 </div>
+
             </div>
         </div>
     </main>

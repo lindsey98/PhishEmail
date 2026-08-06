@@ -1,0 +1,29 @@
+{
+  "name": "pimref-outlook-addin",
+  "version": "1.0.0",
+  "private": true,
+  "description": "PiMRef Phishing Email Detector Outlook add-in",
+  "scripts": {
+    "build": "webpack --mode production",
+    "build:dev": "webpack --mode development",
+    "dev-server": "webpack serve --mode development",
+    "watch": "webpack --mode development --watch",
+    "start": "office-addin-debugging start manifest.json",
+    "stop": "office-addin-debugging stop manifest.json",
+    "validate": "office-addin-manifest validate manifest.json"
+  },
+  "devDependencies": {
+    "@types/office-js": "^1.0.377",
+    "copy-webpack-plugin": "^12.0.2",
+    "html-webpack-plugin": "^5.6.0",
+    "office-addin-cli": "^1.6.5",
+    "office-addin-debugging": "^5.1.6",
+    "office-addin-dev-certs": "^1.13.6",
+    "office-addin-manifest": "^1.13.6",
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.4.5",
+    "webpack": "^5.91.0",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^5.0.4"
+  }
+}

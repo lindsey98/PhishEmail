@@ -5,7 +5,9 @@ import sys
 # script is run directly, e.g. `python apps/server/app.py` from the repo root.
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)))
 
+import ast
 import base64
+import json
 import re
 import string
 from email.mime.image import MIMEImage
@@ -15,11 +17,67 @@ from email.mime.text import MIMEText
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from nltk.corpus import stopwords
+from tldextract import tldextract
 
 from lib.config import Config
 from lib.data import OCR, RenderDataset
 from lib.labeling import label_headers, label_html_file
 from lib.reference_db import IdentityMatcher
+
+# ---- Whitelist (shared scheme with the CLI): key = (sender-key, target) ------
+# sender-key = full address for shared webmail, else the registrable domain, so a
+# dedicated service's varying local-parts are covered by one confirmation while
+# shared webmail stays per-address.
+WHITELIST_PATH = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, 'datasets', 'whitelist.json')
+WEBMAIL_DOMAINS = {
+    'gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'aol.com', 'msn.com',
+    'live.com', 'me.com', 'icloud.com', 'protonmail.com', 'gmx.com',
+    '163.com', '126.com', 'qq.com', 'foxmail.com', 'sina.com', '139.com',
+    'aliyun.com', 'yeah.net', 'sbcglobal.net', 'earthlink.net', 'comcast.net',
+}
+
+
+def _reg_domain(addr):
+    d = str(addr).split('@')[-1].strip().lower()
+    ext = tldextract.extract(d)
+    return f"{ext.domain}.{ext.suffix}" if ext.suffix else d
+
+
+def _sender_key(sender_address):
+    s = str(sender_address).lower().strip()
+    return s if _reg_domain(s) in WEBMAIL_DOMAINS else _reg_domain(s)
+
+
+def _norm_identity(matched, identities=()):
+    for cand in (matched, identities):
+        s = str(cand).strip()
+        if not s or s.lower() in ('nan', 'none', 'set()', '{}', '[]', 'no matched brand', 'no prediction'):
+            continue
+        try:
+            v = ast.literal_eval(s)
+            if isinstance(v, (set, list, tuple)):
+                s = ' '.join(sorted(str(x) for x in v))
+        except (ValueError, SyntaxError):
+            pass
+        return re.sub(r'\s+', ' ', s.strip().strip('{}\'"').lower())
+    return ''
+
+
+def _load_whitelist():
+    wl = set()
+    if os.path.exists(WHITELIST_PATH):
+        try:
+            for pair in json.load(open(WHITELIST_PATH, encoding='utf-8')):
+                wl.add((_sender_key(pair[0]), str(pair[1])))
+        except Exception:
+            pass
+    return wl
+
+
+def _save_whitelist(wl):
+    os.makedirs(os.path.dirname(WHITELIST_PATH), exist_ok=True)
+    json.dump(sorted([list(x) for x in wl]), open(WHITELIST_PATH, 'w', encoding='utf-8'),
+              ensure_ascii=False, indent=0)
 
 app = Flask(__name__)
 CORS(app)
@@ -134,6 +192,14 @@ def process_email():
                                                                                        sender_domains=sender_domains,
                                                                                        recipient_domains=recipient_domains)
 
+    # Whitelist suppression: a sender the user previously confirmed is legitimate
+    # (same (sender-key, target) scheme as the CLI) is no longer flagged.
+    whitelisted = False
+    if is_inconsistent:
+        wkey = (_sender_key(sender_address), _norm_identity(matched_identity, identities))
+        if wkey in _load_whitelist():
+            is_inconsistent = False
+            whitelisted = True
 
     def remove_trailing_punctuation_and_whitespace(s):
         return s.rstrip(string.punctuation + string.whitespace)
@@ -143,7 +209,7 @@ def process_email():
     print(identities_clean)
     print(actions_clean)
 
-    return is_inconsistent, matched_identity, actions_clean, identities_clean
+    return is_inconsistent, matched_identity, actions_clean, identities_clean, sender_address, whitelisted
 
 @app.route('/process', methods=['POST'])
 def process():
@@ -151,14 +217,17 @@ def process():
 
     try:
         sender, recipient, subject = build_mime_email(data)
-        is_inconsistent, matched_identity, actions, identities = process_email()
+        is_inconsistent, matched_identity, actions, identities, sender_address, whitelisted = process_email()
+        matched_identity_str = matched_identity if isinstance(matched_identity, str) else list(matched_identity)[0]
         labelled_eml = label_html_file('addin/temp.eml', identities, actions)
         labelled_sender, labelled_recipient, labelled_subject = label_headers(sender, recipient, subject, identities, actions, is_inconsistent, matched_identity)
         response = jsonify({"status": "success",
                             "isInconsistent": is_inconsistent,
-                            "matchedIdentity": matched_identity if isinstance(matched_identity, str) else list(matched_identity)[0],
+                            "matchedIdentity": matched_identity_str,
                             "identities": list(identities),
                             "actions": list(actions),
+                            "senderAddress": sender_address,
+                            "whitelisted": whitelisted,
                             "labelledHTML": labelled_eml,
                             "labelledSender": labelled_sender,
                             "labelledRecipient": labelled_recipient,
@@ -168,6 +237,24 @@ def process():
     except Exception as e:
         response = jsonify({"status": "error", "message": str(e)})
         return response
+
+@app.route('/whitelist', methods=['POST'])
+def whitelist():
+    """Add a (sender, claimed-identity) pair to the persistent whitelist so the
+    sender is no longer flagged for that claimed identity."""
+    data = request.get_json() or {}
+    sender = data.get('sender', '')
+    matched_identity = data.get('matchedIdentity', '')
+    if not sender:
+        return jsonify({"status": "error", "message": "missing sender"})
+    try:
+        wl = _load_whitelist()
+        key = (_sender_key(sender), _norm_identity(matched_identity, data.get('identities', [])))
+        wl.add(key)
+        _save_whitelist(wl)
+        return jsonify({"status": "success", "senderKey": key[0], "target": key[1]})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)})
 
 @app.route('/addin/<path:path>')
 def send_report(path):
