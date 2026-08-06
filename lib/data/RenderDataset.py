@@ -18,45 +18,83 @@ from ..utilities.data_utils import normalization
 class RenderDataset(EmailDataset):
     _CallerPrefix = "Dataset Loader (render the eml)"
 
-    def __init__(self, root_path, ocr_model: OCR, dumpDir: str = "temp", translate_on=False, save_imgs=False):
+    def __init__(self, root_path, ocr_model: OCR, dumpDir: str = "temp", translate_on=False,
+                 save_imgs=False, skip_ocr_for_text: bool = False, text_ocr_min_chars: int = 30):
         super().__init__(root_path, translate_on)
         self.ocr_model = ocr_model
         self.dumpDir = dumpDir
         os.makedirs(dumpDir, exist_ok=True)
         self.save_imgs = save_imgs
+        # When True, emails that already have a usable plain/HTML text body skip
+        # the (expensive) Playwright render + OCR entirely. Behaviour-changing:
+        # the detector then reads the extracted body instead of OCR'd text.
+        self.skip_ocr_for_text = skip_ocr_for_text
+        self.text_ocr_min_chars = text_ocr_min_chars
+        # Persistent Playwright objects — launched once, reused for every email
+        # (launching a fresh Chromium per email was the dominant cost).
+        self._pw = None
+        self._browser = None
+        self._context = None
+        self._page = None
 
     # ---------------------- Playwright HTML → PNG ---------------------- #
-    @staticmethod
-    def html_to_png_playwright(full_html: str, output_path: str) -> bool:
+    def _ensure_browser(self):
+        """Lazily start a single Chromium instance/page reused across emails."""
+        if self._page is not None:
+            return
+        from playwright.sync_api import sync_playwright
+
+        self._pw = sync_playwright().start()
+        self._browser = self._pw.chromium.launch()
+        self._context = self._browser.new_context(
+            viewport={"width": 1024, "height": 800},
+            device_scale_factor=1,  # don't 2x the pixels
+        )
+        self._page = self._context.new_page()
+
+    def close(self):
+        """Tear down the reused browser. Safe to call multiple times."""
+        for attr in ("_page", "_context", "_browser"):
+            obj = getattr(self, attr, None)
+            if obj is not None:
+                try:
+                    obj.close()
+                except Exception:
+                    pass
+            setattr(self, attr, None)
+        if getattr(self, "_pw", None) is not None:
+            try:
+                self._pw.stop()
+            except Exception:
+                pass
+            self._pw = None
+
+    def __del__(self):
+        try:
+            self.close()
+        except Exception:
+            pass
+
+    def html_to_png_playwright(self, full_html: str, output_path: str) -> bool:
         MAX_HEIGHT = 20000  # px; safely under OpenCV's 32767 limit
         VIEWPORT_W = 1024
-
         try:
-            from playwright.sync_api import sync_playwright
-
-            with sync_playwright() as p:
-                browser = p.chromium.launch()
-                context = browser.new_context(
-                    viewport={"width": VIEWPORT_W, "height": 800},
-                    device_scale_factor=1,  # don't 2x the pixels
-                )
-                page = context.new_page()
-                page.set_content(full_html, wait_until="domcontentloaded")
-
-                # Measure the actual content height
-                content_h = page.evaluate(
-                    "() => Math.max(document.body.scrollHeight, document.documentElement.scrollHeight)"
-                )
-                clip_h = min(content_h, MAX_HEIGHT)
-
-                page.screenshot(
-                    path=output_path,
-                    clip={"x": 0, "y": 0, "width": VIEWPORT_W, "height": clip_h},
-                )
-                browser.close()
+            self._ensure_browser()
+            page = self._page
+            page.set_content(full_html, wait_until="domcontentloaded", timeout=15000)
+            content_h = page.evaluate(
+                "() => Math.max(document.body.scrollHeight, document.documentElement.scrollHeight)"
+            )
+            clip_h = min(content_h, MAX_HEIGHT)
+            page.screenshot(
+                path=output_path,
+                clip={"x": 0, "y": 0, "width": VIEWPORT_W, "height": clip_h},
+            )
             return True
         except Exception as e:
             Logger.spit(f"[ERROR] Playwright render failed: {e}", debug=True)
+            # a crashed/hung page can poison later renders — reset the browser
+            self.close()
             return False
 
     # ---------------------- Sanitization for text-salting ---------------------- #
@@ -280,18 +318,24 @@ class RenderDataset(EmailDataset):
 
         text_content, html_content_orig = self.extract_text_content(email_content)
 
-        with open(email_file_path, "rb") as f:
-            msg_bytes = f.read()
-        resultImage, html_content = self.render_eml(msg_bytes, dumpName=os.path.basename(email_file_path))
+        has_usable_text = bool(text_content) and len(text_content.strip()) >= self.text_ocr_min_chars
+        if self.skip_ocr_for_text and has_usable_text:
+            # Fast path: a usable text body was already extracted, so skip the
+            # expensive Playwright render + OCR round-trip for this email.
+            pass
+        else:
+            with open(email_file_path, "rb") as f:
+                msg_bytes = f.read()
+            resultImage, html_content = self.render_eml(msg_bytes, dumpName=os.path.basename(email_file_path))
 
-        if resultImage is not False:
-            text_content_from_ocr = self.ocr_model.ocr(resultImage)
-            if not self.save_imgs and os.path.exists(resultImage):
-                os.remove(resultImage)
-            text_content = text_content_from_ocr
-            # Fallback only if OCR really failed (very short), using sanitized visible text
-            if len((text_content or "").strip()) < 10:
-                text_content = html_content or text_content_from_ocr
+            if resultImage is not False:
+                text_content_from_ocr = self.ocr_model.ocr(resultImage)
+                if not self.save_imgs and os.path.exists(resultImage):
+                    os.remove(resultImage)
+                text_content = text_content_from_ocr
+                # Fallback only if OCR really failed (very short), using sanitized visible text
+                if len((text_content or "").strip()) < 10:
+                    text_content = html_content or text_content_from_ocr
 
         text_content = self.remove_prev_messages(text_content)
         text_content = self.clean_text_content(text_content)

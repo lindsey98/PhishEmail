@@ -12,6 +12,10 @@ logger.setLevel(logging.ERROR)
 
 class OCR(PaddleOCR):
     def __init__(self, **kwargs):
+        # Angle classification is unused (ocr() is always called with cls=False),
+        # so don't load it. Pass use_gpu=True (and other PaddleOCR kwargs) through
+        # for a further speedup when a GPU build of paddle is installed.
+        kwargs.setdefault("use_angle_cls", False)
         super().__init__(**kwargs, use_space_char=True)
 
     def ocr(self, img: Union[str, np.ndarray, Image.Image], det=True, rec=True, cls=False) -> str:

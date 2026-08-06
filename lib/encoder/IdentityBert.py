@@ -152,7 +152,9 @@ class IdentityBert:
             processed_text
         )  # fixme: I find the results will be different if I do tokenization here
         with Timer() as timer:
-            entities = self.classifier_pipeline(processed_text)
+            # Batch this email's chunks through the pipeline in one forward pass
+            # (no-op for single-chunk emails; speeds up long, multi-chunk ones).
+            entities = self.classifier_pipeline(processed_text, batch_size=max(1, len(processed_text)))
 
         entities = [y for x in entities for y in x]
         # Temporary lists to store entities with their confidence scores

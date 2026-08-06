@@ -5,7 +5,10 @@ import sys
 # script is run directly, e.g. `python apps/cli/inference.py` from the repo root.
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)))
 
+import ast
 import csv
+import json
+import re
 import time
 from datetime import datetime
 from pathlib import Path
@@ -19,6 +22,72 @@ from lib.data import OCR, RenderDataset
 from lib.reference_db import IdentityMatcher
 from lib.utilities import Logger, resolve_email_input
 from lib.utilities.data_utils import DomainUtils
+
+# Shared webmail domains: whitelist by FULL address here (the domain is shared by
+# many untrusted senders). Any other domain (a dedicated org/relay/service like
+# hotcrp.com) is whitelisted by DOMAIN so the same service's varying per-message
+# local-parts (sec24winter@, sec24fall@, ...) are covered by one confirmation.
+WEBMAIL_DOMAINS = {
+    'gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'aol.com', 'msn.com',
+    'live.com', 'me.com', 'icloud.com', 'protonmail.com', 'gmx.com',
+    '163.com', '126.com', 'qq.com', 'foxmail.com', 'sina.com', '139.com',
+    'aliyun.com', 'yeah.net', 'sbcglobal.net', 'earthlink.net', 'comcast.net',
+}
+
+
+def _reg_domain(addr) -> str:
+    from tldextract import tldextract
+    d = str(addr).split('@')[-1].strip().lower()
+    ext = tldextract.extract(d)
+    return f"{ext.domain}.{ext.suffix}" if ext.suffix else d
+
+
+def _sender_key(sender_address) -> str:
+    """Whitelist sender key: full address for shared webmail, else the domain."""
+    s = str(sender_address).lower().strip()
+    return s if _reg_domain(s) in WEBMAIL_DOMAINS else _reg_domain(s)
+
+
+def _norm_identity(matched, identities) -> str:
+    """Normalised claimed identity (the impersonated target) for a whitelist key."""
+    for cand in (matched, identities):
+        s = str(cand).strip()
+        if not s or s.lower() in ('nan', 'none', 'set()', '{}', '[]', 'no matched brand', 'no prediction'):
+            continue
+        try:
+            v = ast.literal_eval(s)
+            if isinstance(v, (set, list, tuple)):
+                s = ' '.join(sorted(str(x) for x in v))
+        except (ValueError, SyntaxError):
+            pass
+        return re.sub(r'\s+', ' ', s.strip().strip('{}\'"').lower())
+    return ''
+
+
+def _wl_key(sender_address, matched, identities):
+    return (_sender_key(sender_address), _norm_identity(matched, identities))
+
+
+def _load_whitelist(path):
+    """Load + migrate stored pairs to the (sender-key, target) scheme so old
+    full-address entries normalise to the domain key and cover a service's other
+    addresses."""
+    wl = set()
+    if path and os.path.exists(path):
+        try:
+            for pair in json.load(open(path, encoding='utf-8')):
+                wl.add((_sender_key(pair[0]), str(pair[1])))
+        except Exception:
+            pass
+    return wl
+
+
+def _save_whitelist(path, wl):
+    try:
+        json.dump(sorted([list(x) for x in wl]), open(path, 'w', encoding='utf-8'),
+                  ensure_ascii=False, indent=0)
+    except Exception as e:
+        Logger.spit(f"could not save whitelist: {e}", warning=True, caller_prefix='Main')
 
 TODAY = datetime.today()
 TODAY_DATE = TODAY.strftime("%Y-%m-%d")
@@ -80,7 +149,13 @@ def _load_existing_rows(csv_path: str):
 @click.option("--run_dfence", is_flag=True, default=False)
 @click.option("--run_helphed", is_flag=True, default=False)
 @click.option("--auto_translate", is_flag=True, default=False, help='Whether to translate the email (including subject)')
-def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed, auto_translate):
+@click.option("--fast_text", is_flag=True, default=False, help='Skip Playwright render + OCR when a usable text body already exists (much faster on text-heavy corpora; changes the text read, so validate on a subset).')
+@click.option("--ocr_gpu", is_flag=True, default=False, help='Use GPU PaddleOCR (needs a paddlepaddle-gpu build).')
+@click.option("--relax_match", is_flag=True, default=False, help='Loosen identity matching (old default). Off = strict, avoids false brand matches (e.g. American Airlines -> American Express).')
+@click.option("--interactive", is_flag=True, default=False, help='When an email is flagged, show it and ask whether to whitelist the (sender, claimed-identity).')
+@click.option("--whitelist", default='./datasets/whitelist.json', show_default=True, help='Persistent (sender, claimed-identity) whitelist; consulted every run, updated on interactive y.')
+def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed, auto_translate,
+         fast_text, ocr_gpu, relax_match, interactive, whitelist):
     '''
     PiMRef main inference function
     :param email_dir: a directory containing all eml files, also support .mbox and .pst format
@@ -101,7 +176,7 @@ def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed, auto
                                   gpt_assistant=None,
                                   check_action=True,
                                   threshold=Config.thre,
-                                  relax_match=True)  # todo: relax_match!
+                                  relax_match=relax_match)  # strict by default; --relax_match to loosen
 
     # Accept a directory, a single .eml/.txt, or a .mbox/.pst/.msg container;
     # everything is normalized to what RenderDataset can load.
@@ -112,8 +187,9 @@ def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed, auto
     if not os.path.isdir(email_dir):
         dump_base = os.path.splitext(dump_base)[0]
 
-    ocr_model = OCR()
-    dataset = RenderDataset(email_source, ocr_model=ocr_model, dumpDir=dump_base + '_imgs', save_imgs=False, translate_on=auto_translate)
+    ocr_model = OCR(use_gpu=True) if ocr_gpu else OCR()
+    dataset = RenderDataset(email_source, ocr_model=ocr_model, dumpDir=dump_base + '_imgs',
+                            save_imgs=False, translate_on=auto_translate, skip_ocr_for_text=fast_text)
 
     csv_file_path = output_csv
     if save_vis:
@@ -124,11 +200,20 @@ def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed, auto
     # ------------------------------------------------------------------ #
     seen_paths, seen_subjects = _load_existing_rows(csv_file_path)
 
-    # Write header if the file is new or empty.
+    # (sender, claimed-identity) whitelist — consulted every run; grown on the
+    # interactive prompt (RC-Q1 human-in-the-loop mitigation).
+    whitelist_pairs = _load_whitelist(whitelist)
+    if whitelist_pairs:
+        Logger.spit(f"Loaded {len(whitelist_pairs)} whitelist pair(s) from {whitelist}",
+                    caller_prefix="Main", debug=True)
+
+    # Keep a single writer open for the whole run instead of re-opening per email.
     file_is_new = not os.path.exists(csv_file_path) or os.path.getsize(csv_file_path) == 0
+    csv_file = open(csv_file_path, mode='a', newline='', encoding='utf-8', errors='ignore')
+    writer = csv.writer(csv_file)
     if file_is_new:
-        with open(csv_file_path, mode='a', newline='', encoding='utf-8') as f:
-            csv.writer(f).writerow(CSV_HEADER)
+        writer.writerow(CSV_HEADER)
+        csv_file.flush()
     else:
         Logger.spit(
             f"Resuming from {csv_file_path}: {len(seen_paths)} rows already present",
@@ -239,36 +324,70 @@ def main(email_dir, save_vis, vis_dir, output_csv, run_dfence, run_helphed, auto
                                                                                        sender_domains=sender_domains,
                                                                                        recipient_domains=recipient_domains)
 
-        # Append the new row to the CSV file
-        with open(csv_file_path, mode='a', newline='', encoding='utf-8', errors='ignore') as file:
-            writer = csv.writer(file)
-            try:
-                writer.writerow([email_file_path,
-                                 sender_name, sender_address,
-                                 to_names, to_addresses,
-                                 subject,
-                                 identities,
-                                 relations,
-                                 actions,
-                                 next_step_of_engagement,
-                                 matched_identity,
-                                 is_inconsistent,
-                                 identity_recog_runtime + identity_matching_runtime,
-                                 dfence_pred,
-                                 dfence_runtime,
-                                 helphed_stacking_pred,
-                                 helphed_stacking_runtime,
-                                 helphed_voting_pred,
-                                 helphed_voting_runtime,
-                                 ])
-            except Exception as e:
-                Logger.spit(f"Encounter error {e} when inferencing on {email_file_path}", warning=True, caller_prefix='Main')
-                continue
+        # ---- (sender, claimed-identity) whitelist: suppress known-good pairs,
+        #      and (interactive) ask the user about newly-flagged ones ----------
+        if is_inconsistent:
+            wkey = _wl_key(sender_address, matched_identity, identities)
+            if wkey in whitelist_pairs:
+                is_inconsistent = False
+                matched_identity = f"{matched_identity} [whitelisted]"
+                Logger.spit(f"Suppressed by whitelist: {wkey}", debug=True, caller_prefix='Main')
+            elif interactive:
+                print("\n" + "=" * 70)
+                print("  ⚠  FLAGGED as possible impersonation")
+                print(f"  From    : {sender_name} <{sender_address}>")
+                print(f"  Claims  : {matched_identity}")
+                print(f"  Subject : {subject}")
+                print(f"  Link/CTA: {actions}")
+                print(f"  File    : {email_file_path}")
+                print(f"  Whitelist scope: mail from '{wkey[0]}' claiming '{wkey[1]}'")
+                try:
+                    ans = input("  False positive? Whitelist this? [y/N] ").strip().lower()
+                except EOFError:
+                    ans = 'n'
+                if ans == 'y':
+                    whitelist_pairs.add(wkey)
+                    _save_whitelist(whitelist, whitelist_pairs)
+                    is_inconsistent = False
+                    matched_identity = f"{matched_identity} [whitelisted]"
+                    print(f"  -> whitelisted; '{wkey[0]}' claiming '{wkey[1]}' won't alert again.")
+                else:
+                    print("  -> kept as phishing.")
+
+        # Append the new row via the persistent writer (flush each row so a
+        # crash/resume mid-run keeps completed work).
+        try:
+            writer.writerow([email_file_path,
+                             sender_name, sender_address,
+                             to_names, to_addresses,
+                             subject,
+                             identities,
+                             relations,
+                             actions,
+                             next_step_of_engagement,
+                             matched_identity,
+                             is_inconsistent,
+                             identity_recog_runtime + identity_matching_runtime,
+                             dfence_pred,
+                             dfence_runtime,
+                             helphed_stacking_pred,
+                             helphed_stacking_runtime,
+                             helphed_voting_pred,
+                             helphed_voting_runtime,
+                             ])
+            csv_file.flush()
+        except Exception as e:
+            Logger.spit(f"Encounter error {e} when inferencing on {email_file_path}", warning=True, caller_prefix='Main')
+            continue
 
         # Mark as written — so a crash/resume within the same run doesn't redo it.
         seen_paths.add(email_file_path)
 
-        time.sleep(0.001)
+    csv_file.close()
+    try:
+        dataset.close()  # tear down the reused Playwright browser
+    except Exception:
+        pass
 
 
 if __name__ == '__main__':

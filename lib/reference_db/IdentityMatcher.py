@@ -340,6 +340,8 @@ class IdentityMatcher:
         identities = [clean_string(x) for x in identities]
         relations = [clean_string(x) for x in relations]
         combined_set = identities + relations  # Identities first, then relations
+        # Did the NER extract a concrete organization identity (not just a role)?
+        has_org_identity = len([x for x in identities if x and x.strip()]) > 0
 
         # When relax_match is False, only match the top-1 (highest-confidence) identity.
         # This may introduce FNs when the NER didn't rank the true identity first.
@@ -388,46 +390,49 @@ class IdentityMatcher:
             Logger.spit("Consistent identity-address => Benign", caller_prefix=IdentityMatcher._CallerPrefix)
             return False, "Consistent", total_time
 
-        # Check internal relations
+        # Check internal relations — ONLY when NO organization identity was
+        # extracted. If the sender presented a concrete org identity (even one
+        # absent from the KB), do NOT fall back to a generic internal-role match:
+        # being addressed as "colleague" must not turn an external org email
+        # (e.g. a conference CFP from saiconference.com) into an internal-role
+        # impersonation.
+        if not has_org_identity:
+            with Timer() as timer:
+                is_internal_emails, imitated_role = self.handle_internal_emails(combined_set)
+            total_time += timer.interval
 
-        with Timer() as timer:
-            is_internal_emails, imitated_role = self.handle_internal_emails(combined_set)
-        total_time += timer.interval
-
-        if is_internal_emails and (not DomainUtils.domain_set_overlap(sender_domains, recipient_domains)):
-            if self.check_action:
-                if len(actions) > 0:
+            if is_internal_emails and (not DomainUtils.domain_set_overlap(sender_domains, recipient_domains)):
+                if self.check_action:
+                    if len(actions) > 0:
+                        Logger.spit(
+                            f'[!Phish] Imitating an internal role "{imitated_role}" but from an external domain with sender address as "{sender_domains}", and contains at least 1 instruction',
+                            caller_prefix=IdentityMatcher._CallerPrefix,
+                        )
+                        return True, f"Internal: {imitated_role}", total_time
+                    else:
+                        Logger.spit(
+                            f'Imitating an internal role "{imitated_role}" but from an external domain, but does not contain any instruction => Benign',
+                            caller_prefix=IdentityMatcher._CallerPrefix,
+                        )
+                        return False, f"Internal: {imitated_role}", total_time
+                else:
                     Logger.spit(
-                        f'[!Phish] Imitating an internal role "{imitated_role}" but from an external domain with sender address as "{sender_domains}", and contains at least 1 instruction',
+                        f'[!Phish] Imitating an internal role "{imitated_role}" but from an external domain with sender address as "{sender_domains}"',
                         caller_prefix=IdentityMatcher._CallerPrefix,
                     )
                     return True, f"Internal: {imitated_role}", total_time
-                else:
-                    Logger.spit(
-                        f'Imitating an internal role "{imitated_role}" but from an external domain, but does not contain any instruction => Benign',
-                        caller_prefix=IdentityMatcher._CallerPrefix,
-                    )
-                    return False, f"Internal: {imitated_role}", total_time
-            else:
+
+            if is_internal_emails:
                 Logger.spit(
-                    f'[!Phish] Imitating an internal role "{imitated_role}" but from an external domain with sender address as "{sender_domains}"',
-                    caller_prefix=IdentityMatcher._CallerPrefix,
+                    "Consistent sender-recipient-address => Benign", caller_prefix=IdentityMatcher._CallerPrefix
                 )
-                return True, f"Internal: {imitated_role}", total_time
+                return False, f"Consistent: {imitated_role}", total_time
 
-        if is_internal_emails:  # do not further check the internal relations
-            Logger.spit("Consistent sender-recipient-address => Benign", caller_prefix=IdentityMatcher._CallerPrefix)
-            return False, f"Consistent: {imitated_role}", total_time
-
-        if len(identities):
-            Logger.spit(
-                "Does not match to any known identity or internal role => Benign",
-                caller_prefix=IdentityMatcher._CallerPrefix,
-            )
-            return False, "No Matched Brand", total_time
-        else:
-            Logger.spit("No predicted identity", caller_prefix=IdentityMatcher._CallerPrefix)
-            return False, "No Prediction", total_time
+        Logger.spit(
+            "Does not match to any known brand / internal role => Benign",
+            caller_prefix=IdentityMatcher._CallerPrefix,
+        )
+        return False, "No Matched Brand", total_time
 
 
 if __name__ == "__main__":

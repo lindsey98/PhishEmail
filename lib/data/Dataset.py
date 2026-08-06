@@ -231,6 +231,12 @@ class EmailDataset(Dataset):
         :return:
         """
 
+        # Skip language detection + translation entirely when translation is off.
+        # (Previously langdetect ran on every subject/body regardless, and
+        # non-English text hit the network even with the flag disabled.)
+        if not self.translate_on:
+            return text
+
         is_in_english = True
         max_retries = 3  # Number of times to retry the translation
         retry_delay = 2  # Seconds to wait before retrying
